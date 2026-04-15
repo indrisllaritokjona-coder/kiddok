@@ -1,0 +1,87 @@
+import { ChildrenService } from './children.service';
+export declare class ChildrenController {
+    private readonly childrenService;
+    constructor(childrenService: ChildrenService);
+    create(req: any, createChildDto: any): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        dateOfBirth: Date;
+        gender: string | null;
+        bloodType: string | null;
+        allergies: string | null;
+        userId: string;
+    }>;
+    findAll(req: any): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        dateOfBirth: Date;
+        gender: string | null;
+        bloodType: string | null;
+        allergies: string | null;
+        userId: string;
+    }[]>;
+    findOne(req: any, id: string): Promise<{
+        healthRecords: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            date: Date;
+            type: string;
+            symptoms: string | null;
+            diagnosis: string | null;
+            medications: string | null;
+            notes: string | null;
+            attachments: string[];
+            doctorName: string | null;
+            childId: string;
+        }[];
+        vaccines: {
+            id: string;
+            name: string;
+            createdAt: Date;
+            updatedAt: Date;
+            notes: string | null;
+            childId: string;
+            dateAdministered: Date | null;
+            dueDate: Date | null;
+            provider: string | null;
+            completed: boolean;
+        }[];
+    } & {
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        dateOfBirth: Date;
+        gender: string | null;
+        bloodType: string | null;
+        allergies: string | null;
+        userId: string;
+    }>;
+    update(req: any, id: string, updateData: any): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        dateOfBirth: Date;
+        gender: string | null;
+        bloodType: string | null;
+        allergies: string | null;
+        userId: string;
+    }>;
+    remove(req: any, id: string): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        dateOfBirth: Date;
+        gender: string | null;
+        bloodType: string | null;
+        allergies: string | null;
+        userId: string;
+    }>;
+}

@@ -1,125 +1,124 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 export interface ChildProfile {
   id: string;
+  userId: string;
   name: string;
-  age: number;
-  avatarUrl: string;
+  dateOfBirth: string;
+  bloodType?: string;
+  avatarUrl?: string; 
 }
 
-export interface Medication {
-  name: string;
-  dosage: string;
-  frequency: string;
-}
-
-export interface IllnessEpisode {
+export interface MedicalRecord { // Vaccines
   id: string;
   childId: string;
-  startDate: string;
-  endDate?: string;
-  durationDays?: number;
-  symptoms: string[];
-  temperatureLogs: { temp: number; timestamp: string }[];
-  medications: Medication[];
-  photoUrls: string[];
-}
-
-export interface MedicalRecord {
-  id: string;
-  childId: string;
-  type: 'Vaccine' | 'Lab' | 'Recommendation';
   title: string;
-  date: string;
-  notes: string;
+  dueDate: string;
+  completed: boolean;
+  notes?: string;
+}
+
+export interface IllnessEpisode { // Health Records
+  id: string;
+  childId: string;
+  title: string;
+  symptoms: string;
+  medications: string;
+  loggedAt: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class DataService {
-  // Mock Auth State
-  isAuthenticated = signal<boolean>(false);
+  private http = inject(HttpClient);
 
-  // Mock Children
-  children = signal<ChildProfile[]>([
-    { id: 'c1', name: 'Liam', age: 4, avatarUrl: 'https://api.dicebear.com/7.x/notionists/svg?seed=Liam' },
-    { id: 'c2', name: 'Emma', age: 2, avatarUrl: 'https://api.dicebear.com/7.x/notionists/svg?seed=Emma' }
-  ]);
+  // Read raw storage initially, true if string exists
+  isAuthenticated = signal<boolean>(!!localStorage.getItem('kiddok_access_token'));
+  
+  children = signal<ChildProfile[]>([]);
+  activeChildId = signal<string | null>(null);
 
-  // Active Child
-  activeChildId = signal<string>('c1');
+  illnesses = signal<IllnessEpisode[]>([]);
+  records = signal<MedicalRecord[]>([]);
 
-  // Mock Illness History
-  illnesses = signal<IllnessEpisode[]>([
-    {
-      id: 'i1',
-      childId: 'c1',
-      startDate: '2026-04-10',
-      durationDays: 3,
-      symptoms: ['Fever', 'Cough', 'Lethargy'],
-      temperatureLogs: [
-        { temp: 38.5, timestamp: '2026-04-10T10:00' },
-        { temp: 39.0, timestamp: '2026-04-10T14:30' }
-      ],
-      medications: [
-        { name: 'Paracetamol', dosage: '5ml', frequency: 'Every 6 hours' }
-      ],
-      photoUrls: []
+  constructor() {
+    if (this.isAuthenticated()) {
+      this.loadChildrenFromAPI();
     }
-  ]);
-
-  // Mock Records
-  records = signal<MedicalRecord[]>([
-    {
-      id: 'r1',
-      childId: 'c1',
-      type: 'Vaccine',
-      title: 'MMR Dose 1',
-      date: '2024-05-15',
-      notes: 'Administered at City Clinic'
-    },
-    {
-      id: 'r2',
-      childId: 'c1',
-      type: 'Lab',
-      title: 'Complete Blood Count',
-      date: '2025-10-01',
-      notes: 'All normal, platelets slightly elevated'
-    },
-    {
-      id: 'r3',
-      childId: 'c2',
-      type: 'Recommendation',
-      title: 'Dietary Supplement',
-      date: '2026-01-20',
-      notes: 'Add Vitamin D drops (400 IU daily)'
-    }
-  ]);
-
-  login(pin: string): boolean {
-    // For mockup, any 4-digit PIN is accepted
-    if (pin.length === 4) {
-      this.isAuthenticated.set(true);
-      return true;
-    }
-    return false;
   }
 
   logout() {
+    localStorage.removeItem('kiddok_access_token');
     this.isAuthenticated.set(false);
+    this.children.set([]);
+    this.activeChildId.set(null);
+  }
+
+  loadChildrenFromAPI() {
+    this.http.get<ChildProfile[]>(`${environment.apiUrl}/children`).subscribe({
+      next: (data) => {
+        // Set premium aesthetics generic avatar mapping
+        const populated = data.map(c => ({
+          ...c,
+          avatarUrl: c.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${c.name}`
+        }));
+        this.children.set(populated);
+        
+        if (populated.length > 0 && !this.activeChildId()) {
+          this.switchChild(populated[0].id);
+        } else if (populated.length === 0) {
+          this.activeChildId.set(null);
+        }
+      },
+      error: (e) => {
+        // If NestJS returns 401 Unauthorized, maybe token expired => force logout
+        if(e.status === 401) this.logout();
+      }
+    });
   }
 
   switchChild(id: string) {
     this.activeChildId.set(id);
+    this.loadChildDetails(id);
   }
 
-  addIllness(illness: Omit<IllnessEpisode, 'id' | 'childId'>) {
-    const newIllness: IllnessEpisode = {
-      ...illness,
-      id: 'i' + Math.random().toString(36).substr(2, 9),
-      childId: this.activeChildId()
-    };
-    this.illnesses.update(curr => [newIllness, ...curr]);
+  loadChildDetails(childId: string) {
+     this.http.get<any>(`${environment.apiUrl}/children/${childId}`).subscribe({
+       next: (data) => {
+         // Fill arrays with real PostgreSQL Data
+         this.illnesses.set(data.healthRecords || []);
+         this.records.set(data.vaccines || []);
+       }
+     });
+  }
+
+  // CREATE Calls
+  addChild(name: string, dateOfBirth: string) {
+    return this.http.post<ChildProfile>(`${environment.apiUrl}/children`, {
+      name, dateOfBirth, bloodType: 'Nuk dihet'
+    }).subscribe({
+      next: () => {
+         this.loadChildrenFromAPI();
+      }
+    });
+  }
+
+  addIllness(data: any) {
+    const cid = this.activeChildId();
+    if(!cid) return;
+    this.http.post(`${environment.apiUrl}/health-records/${cid}`, data).subscribe({
+      next: () => this.loadChildDetails(cid)
+    });
+  }
+
+  addVaccine(data: any) {
+    const cid = this.activeChildId();
+    if(!cid) return;
+    this.http.post(`${environment.apiUrl}/vaccines/${cid}`, data).subscribe({
+      next: () => this.loadChildDetails(cid)
+    });
   }
 }

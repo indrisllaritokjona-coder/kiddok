@@ -2,22 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  html {
-    font-family: 'Inter', system-ui, sans-serif;
+@layer utilities {
+  .glass {
+    @apply bg-white/60 backdrop-blur-lg border border-white/40 shadow-glass;
   }
-  
-  /* PWA touch highlights */
-  * {
-    -webkit-tap-highlight-color: transparent;
+  .glass-dark {
+    @apply bg-gray-900/60 backdrop-blur-lg border border-gray-700/40 shadow-glass rounded-2xl;
   }
 }
 
-/* Custom Hide Scrollbar but keep functionality */
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+body {
+  @apply bg-slate-50 text-gray-800 font-sans antialiased;
 }

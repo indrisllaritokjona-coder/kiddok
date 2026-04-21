@@ -34,6 +34,16 @@ export interface MedicalRecord {
   notes?: string;
 }
 
+export interface TemperatureEntry {
+  id: string;
+  childId: string;
+  temperature: number;
+  measuredAt: string;
+  location?: string;
+  notes?: string;
+  createdAt: string;
+}
+
 export interface IllnessEpisode {
   id: string;
   childId: string;
@@ -63,6 +73,7 @@ export class DataService {
   // Medical data (per-child) — kept local for now
   illnesses = signal<IllnessEpisode[]>([]);
   records = signal<MedicalRecord[]>([]);
+  temperatureEntries = signal<TemperatureEntry[]>([]);
 
   // Parent profile
   parentProfile = signal<ParentProfile>({ name: '', surname: '', phone: '' });
@@ -238,6 +249,45 @@ export class DataService {
     this.saveToStorage(this.CHILDREN_KEY, updated);
   }
 
+  async loadTemperatureEntries(childId: string): Promise<TemperatureEntry[]> {
+    try {
+      const entries = await firstValueFrom(
+        this.http.get<TemperatureEntry[]>(`${this.API_URL}/temperature-entries/child/${childId}`, this.getHeaders())
+      );
+      this.temperatureEntries.set(entries);
+      return entries;
+    } catch (err) {
+      console.error('[DataService] loadTemperatureEntries failed:', err);
+      return [];
+    }
+  }
+
+  async createTemperatureEntry(data: { childId: string; temperature: number; measuredAt: string; location?: string; notes?: string }): Promise<TemperatureEntry | null> {
+    try {
+      const created = await firstValueFrom(
+        this.http.post<TemperatureEntry>(`${this.API_URL}/temperature-entries`, data, this.getHeaders())
+      );
+      const updated = [created, ...this.temperatureEntries()];
+      this.temperatureEntries.set(updated);
+      return created;
+    } catch (err) {
+      console.error('[DataService] createTemperatureEntry failed:', err);
+      return null;
+    }
+  }
+
+  async deleteTemperatureEntry(id: string): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.http.delete<void>(`${this.API_URL}/temperature-entries/${id}`, this.getHeaders())
+      );
+      const updated = this.temperatureEntries().filter(e => e.id !== id);
+      this.temperatureEntries.set(updated);
+    } catch (err) {
+      console.error('[DataService] deleteTemperatureEntry failed:', err);
+    }
+  }
+
   // ─── Auth ───────────────────────────────────────────────────
 
   async login(username: string, password: string): Promise<boolean> {
@@ -339,6 +389,7 @@ export class DataService {
     this.illnesses.set(storedIllnesses ? JSON.parse(storedIllnesses) : []);
     const storedRecords = localStorage.getItem(`kiddok_records_${childId}`);
     this.records.set(storedRecords ? JSON.parse(storedRecords) : []);
+    this.loadTemperatureEntries(childId);
   }
 
   // ─── Medical Records (localStorage) ─────────────────────────

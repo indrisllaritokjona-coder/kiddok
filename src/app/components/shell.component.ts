@@ -5,12 +5,13 @@ import { I18nService } from '../core/i18n/i18n.service';
 import { Router } from '@angular/router';
 import { HomeComponent } from './home.component';
 import { DiaryComponent } from './diary.component';
+import { TemperatureDiaryComponent } from './temperature-diary.component';
 import { RecordsComponent } from './records.component';
 import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'app-shell',
-    imports: [CommonModule, FormsModule, HomeComponent, DiaryComponent, RecordsComponent],
+    imports: [CommonModule, FormsModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, RecordsComponent],
     template: `
 
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
@@ -357,6 +358,7 @@ import { FormsModule } from '@angular/forms';
               @switch (currentTab()) {
                 @case ('home') { <app-home /> }
                 @case ('diary') { <app-diary /> }
+                @case ('temperature') { <app-temperature-diary /> }
                 @case ('records') { <app-records /> }
                 @case ('settings') {
                   <div class="glass max-w-2xl mx-auto rounded-[2rem] p-10 animate-slide-up shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white">
@@ -814,6 +816,7 @@ export class ShellComponent {
     return [
       { id: 'home', icon: 'dashboard', label: t['nav.home'] },
       { id: 'diary', icon: 'edit_document', label: t['nav.diary'] },
+      { id: 'temperature', icon: 'thermostat', label: t['nav.temperatureDiary'] },
       { id: 'records', icon: 'vaccines', label: t['nav.records'] },
       { id: 'settings', icon: 'settings', label: t['nav.settings'] },
     ];

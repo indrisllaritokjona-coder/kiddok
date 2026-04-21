@@ -1,0 +1,9 @@
+{
+  "name": "KidDok",
+  "short_name": "KidDok",
+  "theme_color": "#f8fafc",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/"
+}

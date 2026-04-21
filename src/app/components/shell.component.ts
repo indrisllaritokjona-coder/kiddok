@@ -12,10 +12,11 @@ import { SidebarComponent } from './sidebar.component';
 import { HeaderComponent } from './header.component';
 import { BottomNavComponent } from './bottom-nav.component';
 import { FormsModule } from '@angular/forms';
+import { AddEditChildModalComponent } from '../features/child/add-edit-child-modal/add-edit-child-modal.component';
 
 @Component({
     selector: 'app-shell',
-    imports: [CommonModule, FormsModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, SidebarComponent, HeaderComponent, BottomNavComponent],
+    imports: [CommonModule, FormsModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent],
     template: `
 
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
@@ -31,7 +32,7 @@ import { FormsModule } from '@angular/forms';
           [currentTab]="currentTab()"
           [viewState]="viewState()"
           (childSwitchRequested)="selectChild($event)"
-          (addChildRequested)="isAddingChild.set(true)"
+          (addChildRequested)="showChildModal.set(true)"
           (switchProfileRequested)="goToSelector()"
           (backRequested)="goToSelector()"
           (localeToggleRequested)="i18n.toggleLocale()"
@@ -301,6 +302,18 @@ import { FormsModule } from '@angular/forms';
 
       <!-- Bottom Nav (Mobile) -->
       <app-bottom-nav />
+
+      <!-- ══════════════════════════════════════════
+           ADD/EDIT CHILD MODAL (Sprint 7 — 3-step wizard)
+           ══════════════════════════════════════════ -->
+      @if (showChildModal()) {
+        <app-add-edit-child-modal
+          [mode]="isAddingChild() ? 'add' : 'edit'"
+          [child]="editingChild() ?? undefined"
+          (saved)="onChildSaved($event)"
+          (cancelled)="closeModal()"
+        />
+      }
 
       <!-- ══════════════════════════════════════════
            EDIT CHILD MODAL (Overlay)
@@ -606,6 +619,7 @@ export class ShellComponent {
   }
 
   isAddingChild = signal(false);
+  showChildModal = signal(false);
   settingsSaved = signal(false);
   viewState = signal<'selector' | 'app'>('selector');
 
@@ -983,5 +997,16 @@ export class ShellComponent {
     const [y, m, d] = yyyymmdd.split('-');
     if (locale === 'sq') return d + '/' + m + '/' + y;
     return m + '/' + d + '/' + y;
+  }
+
+  // ── Child Modal ───────────────────────────────────────────────
+
+  closeModal(): void {
+    this.showChildModal.set(false);
+  }
+
+  onChildSaved(child: ChildProfile): void {
+    this.closeModal();
+    // Refresh children list is handled by DataService already
   }
 }

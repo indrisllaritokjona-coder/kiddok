@@ -8,9 +8,10 @@ import { ChildrenModule } from './children/children.module';
 import { HealthRecordsModule } from './health-records/health-records.module';
 import { VaccinesModule } from './vaccines/vaccines.module';
 import { TemperatureEntriesModule } from './temperature-entries/temperature-entries.module';
+import { GrowthEntriesModule } from './growth-entries/growth-entries.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, ChildrenModule, HealthRecordsModule, VaccinesModule, TemperatureEntriesModule],
+  imports: [PrismaModule, UsersModule, AuthModule, ChildrenModule, HealthRecordsModule, VaccinesModule, TemperatureEntriesModule, GrowthEntriesModule],
   controllers: [AppController],
   providers: [AppService],
 })

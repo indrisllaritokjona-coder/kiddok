@@ -44,6 +44,16 @@ export interface TemperatureEntry {
   createdAt: string;
 }
 
+export interface GrowthEntry {
+  id: string;
+  childId: string;
+  height: number | null;
+  weight: number | null;
+  measuredAt: string;
+  notes: string | null;
+  createdAt: string;
+}
+
 export interface IllnessEpisode {
   id: string;
   childId: string;
@@ -74,6 +84,7 @@ export class DataService {
   illnesses = signal<IllnessEpisode[]>([]);
   records = signal<MedicalRecord[]>([]);
   temperatureEntries = signal<TemperatureEntry[]>([]);
+  growthEntries = signal<GrowthEntry[]>([]);
 
   // Parent profile
   parentProfile = signal<ParentProfile>({ name: '', surname: '', phone: '' });
@@ -288,6 +299,45 @@ export class DataService {
     }
   }
 
+  async loadGrowthEntries(childId: string): Promise<GrowthEntry[]> {
+    try {
+      const entries = await firstValueFrom(
+        this.http.get<GrowthEntry[]>(`${this.API_URL}/growth-entries/child/${childId}`, this.getHeaders())
+      );
+      this.growthEntries.set(entries);
+      return entries;
+    } catch (err) {
+      console.error('[DataService] loadGrowthEntries failed:', err);
+      return [];
+    }
+  }
+
+  async createGrowthEntry(data: { childId: string; height?: number | null; weight?: number | null; measuredAt: string; notes?: string }): Promise<GrowthEntry | null> {
+    try {
+      const created = await firstValueFrom(
+        this.http.post<GrowthEntry>(`${this.API_URL}/growth-entries`, data, this.getHeaders())
+      );
+      const updated = [created, ...this.growthEntries()];
+      this.growthEntries.set(updated);
+      return created;
+    } catch (err) {
+      console.error('[DataService] createGrowthEntry failed:', err);
+      return null;
+    }
+  }
+
+  async deleteGrowthEntry(id: string): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.http.delete<void>(`${this.API_URL}/growth-entries/${id}`, this.getHeaders())
+      );
+      const updated = this.growthEntries().filter(e => e.id !== id);
+      this.growthEntries.set(updated);
+    } catch (err) {
+      console.error('[DataService] deleteGrowthEntry failed:', err);
+    }
+  }
+
   // ─── Auth ───────────────────────────────────────────────────
 
   async login(username: string, password: string): Promise<boolean> {
@@ -390,6 +440,7 @@ export class DataService {
     const storedRecords = localStorage.getItem(`kiddok_records_${childId}`);
     this.records.set(storedRecords ? JSON.parse(storedRecords) : []);
     this.loadTemperatureEntries(childId);
+    this.loadGrowthEntries(childId);
   }
 
   // ─── Medical Records (localStorage) ─────────────────────────

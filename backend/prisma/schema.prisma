@@ -36,6 +36,7 @@ model Child {
   healthRecords      HealthRecord[]
   vaccines           Vaccine[]
   temperatureEntries TemperatureEntry[]
+  growthEntries       GrowthEntry[]
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 }
@@ -87,4 +88,15 @@ model TemperatureEntry {
   location    String?
   notes       String?
   createdAt   DateTime @default(now())
+}
+
+model GrowthEntry {
+  id         String   @id @default(uuid())
+  childId    String
+  child      Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  height     Float?
+  weight     Float?
+  measuredAt DateTime
+  notes      String?
+  createdAt  DateTime @default(now())
 }

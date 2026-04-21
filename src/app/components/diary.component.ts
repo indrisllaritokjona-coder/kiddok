@@ -123,7 +123,7 @@ interface QuickAdd {
               <span class="w-2 h-2 rounded-full bg-teal-400 inline-block"></span> {{ i18n.t()['diary.today'] }}
             </div>
             <div class="flex items-center gap-2 text-xs text-slate-400 font-medium">
-              <span class="w-2 h-2 rounded-full bg-primary-500 inline-block"></span> {{ i18n.locale() === 'sq' ? 'Ka regjistrime' : 'Has entries' }}
+              <span class="w-2 h-2 rounded-full bg-primary-500 inline-block"></span> {{ i18n.t()['diary.hasEntries'] }}
             </div>
           </div>
         </div>
@@ -133,7 +133,7 @@ interface QuickAdd {
           <div class="p-5 border-b border-slate-100">
             <h3 class="font-extrabold text-gray-800 text-lg">{{ selectedDateLabel() }}</h3>
             <p class="text-slate-400 text-xs mt-1 font-medium">
-              {{ filteredEntriesForDate().length }} {{ i18n.locale() === 'sq' ? (filteredEntriesForDate().length === 1 ? 'regjistrim' : 'regjistrime') : 'entries' }}
+              {{ filteredEntriesForDate().length }} {{ i18n.t()['diary.entryCount'] }}
             </p>
           </div>
 
@@ -190,7 +190,7 @@ interface QuickAdd {
         <div class="p-5 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h3 class="font-extrabold text-gray-800 text-lg">{{ i18n.t()['diary.recentActivity'] }}</h3>
-            <p class="text-slate-400 text-xs mt-0.5 font-medium">{{ recentEntries().length }} {{ i18n.locale() === 'sq' ? 'regjistrime të funta' : 'recent entries' }}</p>
+            <p class="text-slate-400 text-xs mt-0.5 font-medium">{{ i18n.t()['diary.recentEntries'] }}</p>
           </div>
           <span class="material-icons text-slate-300">history</span>
         </div>
@@ -283,7 +283,7 @@ interface QuickAdd {
 
               <!-- Severity selector -->
               <div>
-                <label class="block text-xs font-bold text-primary-700 mb-3 uppercase tracking-wider">{{ i18n.locale() === 'sq' ? 'Seviiteti' : 'Severity' }}</label>
+                <label class="block text-xs font-bold text-primary-700 mb-3 uppercase tracking-wider">{{ i18n.t()['diary.severity.label'] }}</label>
                 <div class="flex gap-3">
                   @for (sev of severities(); track sev.value) {
                     <button (click)="newSeverity.set(sev.value)"
@@ -309,7 +309,7 @@ interface QuickAdd {
               <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">{{ i18n.t()['diary.notes'] }}</label>
               <textarea [(ngModel)]="newNotes" rows="2"
                         class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm resize-none"
-                        placeholder="Shënime shtesë..."></textarea>
+                        [placeholder]="i18n.t()['diary.notesPlaceholder']"></textarea>
             </div>
 
             <!-- Actions -->

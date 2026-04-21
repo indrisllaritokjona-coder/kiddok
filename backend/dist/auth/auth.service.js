@@ -73,6 +73,38 @@ let AuthService = class AuthService {
             }
         };
     }
+    async devLogin(userId, userData) {
+        let user = userId ? await this.usersService.findById(userId) : null;
+        if (!user) {
+            const existing = await this.usersService.findByEmail('dev@kiddok.local');
+            if (existing) {
+                user = existing;
+            }
+            else {
+                try {
+                    user = await this.usersService.createUser({
+                        email: 'dev@kiddok.local',
+                        password: 'devpass123',
+                        name: userData?.name || 'Dev Parent',
+                    });
+                }
+                catch {
+                    user = await this.usersService.findByEmail('dev@kiddok.local');
+                }
+            }
+        }
+        if (!user)
+            throw new common_1.UnauthorizedException('No dev user found');
+        const payload = { email: user.email, sub: user.id };
+        return {
+            access_token: this.jwtService.sign(payload),
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name
+            }
+        };
+    }
     async register(data) {
         return this.usersService.createUser(data);
     }

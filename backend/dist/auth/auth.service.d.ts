@@ -13,6 +13,14 @@ export declare class AuthService {
             name: any;
         };
     }>;
+    devLogin(userId: string, userData: any): Promise<{
+        access_token: string;
+        user: {
+            id: string;
+            email: string;
+            name: string;
+        };
+    }>;
     register(data: any): Promise<{
         id: string;
         email: string;

@@ -4,10 +4,9 @@ import { DataService } from '../services/data.service';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-records',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
+    selector: 'app-records',
+    imports: [CommonModule, FormsModule],
+    template: `
     <div class="px-2">
        <div class="flex items-center justify-between mb-8 flex-col sm:flex-row gap-4">
         <div>

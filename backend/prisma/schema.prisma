@@ -19,34 +19,48 @@ model User {
 }
 
 model Child {
-  id             String         @id @default(uuid())
-  name           String
-  dateOfBirth    DateTime
-  gender         String?
-  bloodType      String?
-  allergies      String?
-  userId         String
-  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  healthRecords  HealthRecord[]
-  vaccines       Vaccine[]
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id                 String         @id @default(uuid())
+  name               String
+  dateOfBirth        DateTime
+  gender             String?
+  bloodType          String?
+  allergies          String?
+  birthWeight        Float?
+  deliveryDoctor     String?
+  criticalAllergies  String?
+  medicalDocument    String?        // base64 encoded document
+  documentIssueDate  DateTime?
+  medicalNotes       String?
+  userId             String
+  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  healthRecords      HealthRecord[]
+  vaccines           Vaccine[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
 }
 
 model HealthRecord {
-  id             String   @id @default(uuid())
-  childId        String
-  child          Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
-  date           DateTime @default(now())
-  type           String   // Psh: "ILLNESS", "CHECKUP"
-  symptoms       String?
-  diagnosis      String?
-  medications    String?
-  notes          String?
-  attachments    String[] // URLs per fotot
-  doctorName     String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              String   @id @default(uuid())
+  childId         String
+  child           Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  date            DateTime @default(now())
+  type            String   // "ILLNESS", "CHECKUP", "SYMPTOM", "TEMP", "MEDICATION", "VACCINE"
+  symptoms        String?
+  diagnosis       String?
+  medications     String?
+  notes           String?
+  attachments     String[]
+  doctorName      String?
+  // Temperature log fields
+  temperature     Float?
+  temperatureTime String?
+  // Medication log fields
+  medicationName   String?
+  medicationDose   String?
+  medicationTime   String?
+  medicationEffectiveness String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model Vaccine {

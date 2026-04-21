@@ -1,152 +1,531 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { DataService } from '../services/data.service';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../environments/environment';
+import { I18nService } from '../core/i18n/i18n.service';
 
 @Component({
-  selector: 'app-pin-lock', 
-  standalone: true,
-  imports: [CommonModule],
-  template: `
-    <div class="min-h-screen bg-slate-50 flex items-center justify-center p-6 bg-hero-pattern">
-      <div class="glass rounded-3xl w-full max-w-5xl overflow-hidden flex shadow-soft animate-fade-in relative z-10 border border-white/40">
-        
-        <!-- Left Panel: Branding / Visual (Visible on md+) -->
-        <div class="hidden md:flex flex-col w-1/2 p-12 bg-gradient-to-br from-primary-500 to-primary-900 text-white relative items-start justify-between min-h-[600px]">
-          <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1544605151-df1f87920404?auto=format&fit=crop&q=80')] opacity-20 bg-cover mix-blend-overlay"></div>
-          
-          <div class="z-10 relative">
-            <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 backdrop-blur text-white mb-6 border border-white/20">
-              <span class="material-icons text-3xl">child_care</span>
-            </div>
-            <h1 class="text-4xl font-bold tracking-tight mb-4 text-white">KidDok.</h1>
-            <p class="text-primary-100 text-lg leading-relaxed">Kartelë mjekësore dixhitale. Rindërtuar për fuqinë e ekraneve të Mëdha Desktop, me databazën tuaj lokale API.</p>
-          </div>
+    selector: 'app-pin-lock',
+    imports: [CommonModule, FormsModule],
+    template: `
+    <div class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-100 to-slate-200 font-sans overflow-hidden relative">
 
-          <div class="z-10 relative glass border border-white/10 rounded-2xl p-6 mt-8 w-full hover:bg-white/10 transition-colors">
-            <div class="flex items-center gap-4 mb-2">
-              <span class="material-icons text-teal-400 text-3xl">shield</span>
-              <h3 class="font-semibold text-xl text-white">100% e Sigurtë</h3>
+      <!-- Background blobs -->
+      <div class="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-purple-200/30 blur-3xl pointer-events-none"></div>
+      <div class="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-teal-200/20 blur-3xl pointer-events-none"></div>
+
+      <!-- Login Card -->
+      <div class="relative z-10 w-full max-w-md">
+
+        <!-- Branding header -->
+        <div class="text-center mb-10">
+          <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-[#1a3c8f] to-[#0a1f5c] shadow-2xl mb-6">
+            <span class="material-icons text-4xl text-white">child_care</span>
+          </div>
+          <h1 class="text-4xl font-extrabold tracking-tight text-gray-900">KidDok<span class="text-[#1a3c8f]">.</span></h1>
+          <p class="text-slate-400 mt-2 text-sm font-medium">{{ brandSubtitle() }}</p>
+        </div>
+
+        <!-- Card -->
+        <div class="bg-white rounded-[2rem] shadow-[0_24px_80px_-12px_rgba(45,27,105,0.18)] border border-slate-100 overflow-hidden">
+
+          <!-- Card Top accent bar (e-Albania blue) -->
+          <div class="h-2 bg-gradient-to-r from-[#1a3c8f] via-[#2a5fc8] to-[#1a3c8f]"></div>
+
+          <div class="p-10">
+
+            <!-- ══════════════════════════════════════════
+                 NORMAL LOGIN VIEW
+                 ══════════════════════════════════════════ -->
+            @if (!isForgotMode()) {
+
+              <h2 class="text-2xl font-black text-gray-800 mb-1">{{ welcomeTitle() }}</h2>
+              <p class="text-slate-400 text-sm mb-8 font-medium leading-relaxed">{{ welcomeSubtitle() }}</p>
+
+              <div class="space-y-5">
+
+                <!-- NID / NIPT field -->
+                <div>
+                  <label class="block text-xs font-bold text-[#1a3c8f] mb-2.5 ml-1 uppercase tracking-wider">
+                    {{ usernameLabel() }}
+                  </label>
+                  <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 material-icons text-slate-400 text-xl">person</span>
+                    <input type="text"
+                           [(ngModel)]="userId"
+                           (blur)="touchUserId()"
+                           (input)="clearUserIdError()"
+                           [class]="userIdBorderClass()"
+                           class="w-full pl-12 pr-5 py-4 rounded-2xl border-2 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-[#1a3c8f]/10 outline-none transition-all text-gray-800 text-base placeholder-slate-300"
+                           [placeholder]="usernamePlaceholder()">
+                  </div>
+                  @if (userIdError()) {
+                    <div class="flex items-center gap-1.5 mt-2 ml-1">
+                      <span class="material-icons text-red-500 text-base">warning</span>
+                      <p class="text-red-500 text-xs font-medium">{{ userIdError() }}</p>
+                    </div>
+                  }
+                </div>
+
+                <!-- Password field -->
+                <div>
+                  <label class="block text-xs font-bold text-[#1a3c8f] mb-2.5 ml-1 uppercase tracking-wider">
+                    {{ passwordLabel() }}
+                  </label>
+                  <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 material-icons text-slate-400 text-xl">key</span>
+                    <input [type]="showPassword() ? 'text' : 'password'"
+                           [(ngModel)]="password"
+                           (blur)="touchPassword()"
+                           (input)="clearPasswordError()"
+                           [class]="passwordBorderClass()"
+                           class="w-full pl-12 pr-14 py-4 rounded-2xl border-2 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-[#1a3c8f]/10 outline-none transition-all text-gray-800 text-base"
+                           [placeholder]="passwordPlaceholder()">
+                    <button type="button" (click)="showPassword.set(!showPassword())"
+                            class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                      <span class="material-icons text-xl">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
+                    </button>
+                  </div>
+                  @if (passwordError()) {
+                    <div class="flex items-center gap-1.5 mt-2 ml-1">
+                      <span class="material-icons text-red-500 text-base">warning</span>
+                      <p class="text-red-500 text-xs font-medium">{{ passwordError() }}</p>
+                    </div>
+                  }
+                </div>
+
+                <!-- Forgot password link -->
+                <div class="text-right -mt-1">
+                  <button type="button" (click)="enterForgotMode()"
+                          class="text-xs font-semibold text-[#1a3c8f] hover:text-[#2a5fc8] transition-colors hover:underline">
+                    {{ forgotLinkText() }}
+                  </button>
+                </div>
+
+                <!-- Global error -->
+                @if (errorMsg()) {
+                  <div class="p-3.5 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-2.5 animate-fade-in">
+                    <span class="material-icons text-red-500 text-lg">error_outline</span>
+                    <p class="text-red-600 text-xs font-medium">{{ errorMsg() }}</p>
+                  </div>
+                }
+
+                <!-- Submit button -->
+                <button (click)="submit()"
+                        [disabled]="loading()"
+                        class="w-full border-2 border-[#c8102e] bg-gradient-to-r from-[#c8102e] to-[#e0173a] hover:from-[#a00d26] hover:to-[#c8102e] disabled:from-slate-300 disabled:to-slate-300 disabled:border-slate-300 text-white font-bold py-4 rounded-2xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:hover:shadow-none disabled:translate-y-0 flex items-center justify-center gap-3 text-base mt-1">
+                  @if (loading()) {
+                    <span class="material-icons text-xl animate-spin">sync</span>
+                    {{ loadingText() }}
+                  } @else {
+                    <span class="material-icons text-xl">arrow_forward</span>
+                    {{ submitText() }}
+                  }
+                </button>
+
+              </div>
+            }
+
+            <!-- ══════════════════════════════════════════
+                 FORGOT PASSWORD VIEW
+                 ══════════════════════════════════════════ -->
+            @if (isForgotMode()) {
+
+              <!-- Back link -->
+              <button (click)="backToLogin()" class="flex items-center gap-1.5 text-sm text-slate-400 hover:text-[#1a3c8f] transition-colors mb-6 -ml-1">
+                <span class="material-icons text-lg">arrow_back</span>
+                <span class="font-semibold">{{ backText() }}</span>
+              </button>
+
+              <!-- Title -->
+              <h2 class="text-2xl font-black text-[#1a3c8f] mb-1">{{ forgotTitle() }}</h2>
+              <p class="text-slate-400 text-sm mb-8 font-medium leading-relaxed">{{ forgotSubtitle() }}</p>
+
+              <div class="space-y-5">
+
+                <!-- NID confirmation field (before OTP) -->
+                @if (!otpSent()) {
+                  <div>
+                    <label class="block text-xs font-bold text-[#1a3c8f] mb-2.5 ml-1 uppercase tracking-wider">
+                      {{ confirmLabel() }}<span class="text-red-500 ml-0.5">*</span>
+                    </label>
+                    <div class="relative">
+                      <span class="absolute left-4 top-1/2 -translate-y-1/2 material-icons text-slate-400 text-xl">person</span>
+                      <input type="text"
+                             [(ngModel)]="forgotNid"
+                             (blur)="touchForgotNid()"
+                             (input)="clearForgotNidError()"
+                             [class]="forgotNidBorderClass()"
+                             class="w-full pl-12 pr-5 py-4 rounded-2xl border-2 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-[#1a3c8f]/10 outline-none transition-all text-gray-800 text-base placeholder-slate-300"
+                             [placeholder]="usernamePlaceholder()">
+                    </div>
+                    @if (forgotNidError()) {
+                      <div class="flex items-center gap-1.5 mt-2 ml-1">
+                        <span class="material-icons text-red-500 text-base">warning</span>
+                        <p class="text-red-500 text-xs font-medium">{{ forgotNidError() }}</p>
+                      </div>
+                    }
+                  </div>
+                }
+
+                <!-- Success message + OTP entry (after nid submitted) -->
+                @if (otpSent()) {
+                  <!-- Green success banner -->
+                  <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl animate-fade-in">
+                    <div class="flex items-start gap-3">
+                      <span class="material-icons text-emerald-500 text-lg mt-0.5">check_circle</span>
+                      <p class="text-emerald-700 text-xs font-medium leading-relaxed">
+                        {{ otpSuccessMsg() }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- OTP input field -->
+                  <div>
+                    <label class="block text-xs font-bold text-[#1a3c8f] mb-2.5 ml-1 uppercase tracking-wider">
+                      {{ otpLabel() }}<span class="text-red-500 ml-0.5">*</span>
+                    </label>
+                    <div class="relative">
+                      <span class="absolute left-4 top-1/2 -translate-y-1/2 material-icons text-slate-400 text-xl">lock</span>
+                      <input type="text"
+                             [(ngModel)]="otpCode"
+                             (blur)="touchOtp()"
+                             (input)="clearOtpError()"
+                             [class]="otpBorderClass()"
+                             maxlength="6"
+                             class="w-full pl-12 pr-5 py-4 rounded-2xl border-2 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-[#1a3c8f]/10 outline-none transition-all text-gray-800 text-base tracking-widest font-mono placeholder-slate-300 text-center text-lg"
+                             placeholder="● ● ● ● ● ●">
+                    </div>
+                    @if (otpError()) {
+                      <div class="flex items-center gap-1.5 mt-2 ml-1">
+                        <span class="material-icons text-red-500 text-base">warning</span>
+                        <p class="text-red-500 text-xs font-medium">{{ otpError() }}</p>
+                      </div>
+                    }
+                  </div>
+                }
+
+                <!-- Global error -->
+                @if (errorMsg()) {
+                  <div class="p-3.5 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-2.5 animate-fade-in">
+                    <span class="material-icons text-red-500 text-lg">error_outline</span>
+                    <p class="text-red-600 text-xs font-medium">{{ errorMsg() }}</p>
+                  </div>
+                }
+
+                <!-- Submit button -->
+                <button (click)="submit()"
+                        [disabled]="loading()"
+                        class="w-full border-2 border-[#c8102e] bg-gradient-to-r from-[#c8102e] to-[#e0173a] hover:from-[#a00d26] hover:to-[#c8102e] disabled:from-slate-300 disabled:to-slate-300 disabled:border-slate-300 text-white font-bold py-4 rounded-2xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:hover:shadow-none disabled:translate-y-0 flex items-center justify-center gap-3 text-base mt-1">
+                  @if (loading()) {
+                    <span class="material-icons text-xl animate-spin">sync</span>
+                    {{ loadingText() }}
+                  } @else {
+                    <span class="material-icons text-xl">arrow_forward</span>
+                    {{ submitText() }}
+                  }
+                </button>
+
+              </div>
+            }
+
+            <!-- Language toggle -->
+            <div class="mt-8 pt-6 border-t border-slate-100 flex items-center justify-center gap-3">
+              <span class="text-slate-300 text-xs font-medium">{{ languageLabel() }}</span>
+              <button (click)="i18n.setLocale('sq')"
+                      class="px-4 py-1.5 rounded-full text-xs font-bold transition-all border-2 {{ i18n.locale() === 'sq' ? 'bg-[#1a3c8f] text-white border-[#1a3c8f]' : 'bg-white text-slate-400 border-slate-200 hover:border-[#1a3c8f]' }}">
+                SQ
+              </button>
+              <button (click)="i18n.setLocale('en')"
+                      class="px-4 py-1.5 rounded-full text-xs font-bold transition-all border-2 {{ i18n.locale() === 'en' ? 'bg-[#1a3c8f] text-white border-[#1a3c8f]' : 'bg-white text-slate-400 border-slate-200 hover:border-[#1a3c8f]' }}">
+                EN
+              </button>
             </div>
-            <p class="text-primary-100/90 text-sm">Të dhënat tuaja udhëtojnë përmes urave të mbrojtura me teknologjinë NestJS, të strehuara tek PostgreSQL.</p>
+
           </div>
         </div>
 
-        <!-- Right Panel: Auth Form -->
-        <div class="w-full md:w-1/2 p-8 md:p-14 flex flex-col justify-center bg-white/80">
-          <h2 class="text-3xl font-bold text-gray-800 mb-2">{{ isRegister() ? 'Krijoni llogarinë' : 'Mirësevini!' }}</h2>
-          <p class="text-gray-500 mb-10">{{ isRegister() ? 'Bashkohuni duke u regjistruar.' : 'Hyni në llogarinë tuaj në Backend.' }}</p>
+        <!-- Footer note -->
+        <p class="text-center text-slate-300 text-xs mt-6 font-medium">{{ footerText() }}</p>
 
-          <form class="space-y-6 animate-slide-up" (submit)="$event.preventDefault(); submit()">
-            @if (isRegister()) {
-              <div class="animate-fade-in text-left">
-                <label class="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">Emri i Plotë</label>
-                <input [value]="name()" (input)="name.set($any($event.target).value)"
-                       type="text" class="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800" placeholder="Përfshini mbiemrin (Opsionale)">
-              </div>
-            }
-
-            <div class="text-left">
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">Adresa Email</label>
-              <input [value]="email()" (input)="email.set($any($event.target).value)"
-                     type="email" class="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800" placeholder="admin@kiddok.al">
-            </div>
-
-            <div class="text-left">
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">Fjalëkalimi i Fuqishëm</label>
-              <input [value]="password()" (input)="password.set($any($event.target).value)"
-                     type="password" class="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800" placeholder="********">
-            </div>
-
-            @if (errorMsg()) {
-              <div class="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 animate-fade-in text-left">
-                  <span class="material-icons text-red-500">error_outline</span>
-                  <p class="text-red-600 text-sm font-medium">{{ errorMsg() }}</p>
-              </div>
-            }
-            
-            @if (successMsg()) {
-              <div class="p-4 bg-green-50 border border-green-100 rounded-xl flex items-center gap-3 animate-fade-in text-left">
-                  <span class="material-icons text-green-500">check_circle</span>
-                  <p class="text-green-700 text-sm font-medium">{{ successMsg() }}</p>
-              </div>
-            }
-
-            <button type="submit" [disabled]="loading() || (!email() || !password())"
-                    class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-4 rounded-2xl transition-all shadow-md transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:transform-none mt-2">
-              {{ loading() ? 'Duke përpunuar...' : (isRegister() ? 'Regjistruko' : 'Hyr në Databazë') }}
-            </button>
-          </form>
-
-          <div class="mt-8 text-center border-t border-gray-100 pt-6">
-            <button (click)="toggleMode()" class="text-slate-500 hover:text-primary-600 transition-colors font-medium text-sm">
-              {{ isRegister() ? 'Keni llogari? Hyni këtu.' : 'Nuk keni ende llogari? Krijoni një!' }}
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   `
 })
 export class PinLockComponent {
   dataService = inject(DataService);
-  http = inject(HttpClient);
-  
-  isRegister = signal(false);
+  i18n = inject(I18nService);
+  router = inject(Router);
+
+  // Form state
+  userId = '';
+  password = '';
+  forgotNid = '';
+  otpCode = '';
+
+  // UI signals
+  showPassword = signal(false);
   loading = signal(false);
   errorMsg = signal('');
-  successMsg = signal('');
+  isForgotMode = signal(false);
+  otpSent = signal(false);        // true after NID submitted, shows OTP input
 
-  email = signal('');
-  password = signal('');
-  name = signal('');
+  // Field touch state
+  userIdTouched = signal(false);
+  passwordTouched = signal(false);
+  forgotNidTouched = signal(false);
+  otpTouched = signal(false);
 
-  toggleMode() {
-    this.isRegister.set(!this.isRegister());
+  // Per-field errors
+  userIdError = signal('');
+  passwordError = signal('');
+  forgotNidError = signal('');
+  otpError = signal('');
+
+  // ── Computed strings ────────────────────────────────────────
+  isSq = computed(() => this.i18n.locale() === 'sq');
+
+  brandSubtitle = computed(() =>
+    this.isSq() ? 'Paneli i Prindërve' : 'Parent Dashboard'
+  );
+  welcomeTitle = computed(() =>
+    this.isSq() ? 'Mirësevini!' : 'Welcome!'
+  );
+  welcomeSubtitle = computed(() =>
+    this.isSq()
+      ? 'Hyni në llogarinë tuaj për të menaxhuar shëndetin e fëmijës.'
+      : 'Log in to manage your child\'s health records.'
+  );
+  usernameLabel = computed(() =>
+    this.isSq() ? 'Vendosni kodin e përdoruesit' : 'Enter User ID'
+  );
+  usernamePlaceholder = computed(() =>
+    this.isSq() ? 'P.sh. elena.hoxha' : 'e.g. elena.hoxha'
+  );
+  passwordLabel = computed(() =>
+    this.isSq() ? 'Vendosni fjalëkalimin' : 'Enter Password'
+  );
+  passwordPlaceholder = computed(() =>
+    this.isSq() ? 'Fjalëkalimi juaj' : 'Your password'
+  );
+  submitText = computed(() =>
+    this.isSq() ? 'Vazhdoni me identifikimin' : 'Continue Sign In'
+  );
+  loadingText = computed(() =>
+    this.isSq() ? 'Duke u identifikuar...' : 'Authenticating...'
+  );
+  languageLabel = computed(() =>
+    this.isSq() ? 'Gjuha:' : 'Language:'
+  );
+  footerText = computed(() =>
+    this.isSq() ? 'Të dhënat tuaja janë të sigurta & të mbrojtura' : 'Your data is safe & protected'
+  );
+  forgotLinkText = computed(() =>
+    this.isSq() ? 'Keni harruar fjalëkalimin tuaj?' : 'Forgot your password?'
+  );
+  backText = computed(() =>
+    this.isSq() ? 'Kthehu' : 'Go back'
+  );
+
+  // Forgot mode computed strings
+  forgotTitle = computed(() =>
+    this.isSq() ? 'Ripërtëri fjalëkalimin' : 'Reset Password'
+  );
+  forgotSubtitle = computed(() =>
+    this.isSq()
+      ? 'Vendosni NID / NIPT për t\'u identifikuar dhe për të rikthyer qasjen në llogarinë tuaj.'
+      : 'Enter your NID / NIPT to verify your identity and recover access to your account.'
+  );
+  confirmLabel = computed(() =>
+    this.isSq() ? 'NID / NIPT' : 'NID / NIPT'
+  );
+  otpLabel = computed(() =>
+    this.isSq() ? 'Kodi i konfirmimit' : 'Confirmation Code'
+  );
+  otpSuccessMsg = computed(() =>
+    this.isSq()
+      ? 'Një kod i ri sigurie u dërgua në numrin tuaj të telefonit që përfundon me ****123.'
+      : 'A new security code was sent to your phone number ending in ****123.'
+  );
+
+  // ── Border classes ─────────────────────────────────────────
+
+  userIdBorderClass = computed(() =>
+    this.userIdTouched() && !this.userId
+      ? 'border-red-500 bg-red-50/50'
+      : 'border-slate-200 focus:border-[#1a3c8f]'
+  );
+
+  passwordBorderClass = computed(() =>
+    this.passwordTouched() && !this.password
+      ? 'border-red-500 bg-red-50/50'
+      : 'border-slate-200 focus:border-[#1a3c8f]'
+  );
+
+  forgotNidBorderClass = computed(() =>
+    this.forgotNidTouched() && !this.forgotNid
+      ? 'border-red-500 bg-red-50/50'
+      : 'border-slate-200 focus:border-[#1a3c8f]'
+  );
+
+  otpBorderClass = computed(() =>
+    this.otpTouched() && (!this.otpCode || this.otpCode.length < 6)
+      ? 'border-red-500 bg-red-50/50'
+      : 'border-slate-200 focus:border-[#1a3c8f]'
+  );
+
+  // ── Mode switching ─────────────────────────────────────────
+
+  enterForgotMode() {
+    this.isForgotMode.set(true);
+    this.otpSent.set(false);
     this.errorMsg.set('');
-    this.successMsg.set('');
+    this.userIdError.set('');
+    this.passwordError.set('');
   }
 
+  backToLogin() {
+    this.isForgotMode.set(false);
+    this.otpSent.set(false);
+    this.forgotNid = '';
+    this.otpCode = '';
+    this.forgotNidTouched.set(false);
+    this.otpTouched.set(false);
+    this.forgotNidError.set('');
+    this.otpError.set('');
+    this.errorMsg.set('');
+  }
+
+  // ── Field touch / error helpers ─────────────────────────────
+
+  touchUserId() {
+    this.userIdTouched.set(true);
+    if (!this.userId) {
+      this.userIdError.set(
+        this.isSq() ? 'Vendosni kodin e përdoruesit NID / NIPT' : 'Enter your User ID / NID / NIPT'
+      );
+    }
+  }
+
+  clearUserIdError() {
+    if (this.userId) { this.userIdError.set(''); this.errorMsg.set(''); }
+  }
+
+  touchPassword() {
+    this.passwordTouched.set(true);
+    if (!this.password) {
+      this.passwordError.set(this.isSq() ? 'Vendosni fjalëkalimin' : 'Enter your password');
+    }
+  }
+
+  clearPasswordError() {
+    if (this.password) { this.passwordError.set(''); this.errorMsg.set(''); }
+  }
+
+  touchForgotNid() {
+    this.forgotNidTouched.set(true);
+    if (!this.forgotNid) {
+      this.forgotNidError.set(
+        this.isSq()
+          ? 'Vendosni NID / NIPT për konfirmimin e identitetit tuaj'
+          : 'Enter your NID / NIPT to confirm identity'
+      );
+    }
+  }
+
+  clearForgotNidError() {
+    if (this.forgotNid) { this.forgotNidError.set(''); this.errorMsg.set(''); }
+  }
+
+  touchOtp() {
+    this.otpTouched.set(true);
+    if (!this.otpCode || this.otpCode.length < 6) {
+      this.otpError.set(
+        this.isSq()
+          ? 'Vendosni kodin e konfirmimit (6 shifra)'
+          : 'Enter the 6-digit confirmation code'
+      );
+    }
+  }
+
+  clearOtpError() {
+    if (this.otpCode) { this.otpError.set(''); this.errorMsg.set(''); }
+  }
+
+  // ── Submit ───────────────────────────────────────────────────
+
   submit() {
+    if (this.isForgotMode()) {
+      this.handleForgot();
+    } else {
+      this.handleLogin();
+    }
+  }
+
+  private handleLogin() {
+    this.userIdTouched.set(true);
+    this.passwordTouched.set(true);
+    if (!this.userId) {
+      this.userIdError.set(this.isSq() ? 'Vendosni kodin e përdoruesit NID / NIPT' : 'Enter your User ID / NID / NIPT');
+    }
+    if (!this.password) {
+      this.passwordError.set(this.isSq() ? 'Vendosni fjalëkalimin' : 'Enter your password');
+    }
+    if (!this.userId || !this.password) return;
+
     this.loading.set(true);
     this.errorMsg.set('');
-    
-    if (this.isRegister()) {
-      this.http.post(`${environment.apiUrl}/auth/register`, {
-        email: this.email(),
-        password: this.password(),
-        name: this.name()
-      }).subscribe({
-        next: () => {
-          this.successMsg.set('Llogaria juaj u krijua! Ngarkuar në sekondë në PostgreSQL. Tani logohuni.');
-          this.isRegister.set(false);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          this.errorMsg.set(err.error?.message || 'Gabim gjatë lidhjes. A i bëtë run backendit?');
-          this.loading.set(false);
-        }
-      });
-    } else {
-      this.http.post<any>(`${environment.apiUrl}/auth/login`, {
-        email: this.email(),
-        password: this.password()
-      }).subscribe({
-        next: (res) => {
-          localStorage.setItem('kiddok_access_token', res.access_token);
-          this.dataService.isAuthenticated.set(true); 
-          this.loading.set(false);
-          
-          if(this.dataService.loadChildrenFromAPI) {
-            this.dataService.loadChildrenFromAPI();
-          }
-        },
-        error: (err) => {
-          this.errorMsg.set(err.error?.message || 'Të dhënat janë të pasakta sipas databazës JWT.');
-          this.loading.set(false);
-        }
-      });
+    setTimeout(() => {
+      const success = this.dataService.login(this.userId, this.password);
+      if (success) {
+        this.router.navigate(['/child-selector']);
+      } else {
+        this.errorMsg.set(this.isSq() ? 'Kodi ose fjalëkalimi është i pasaktë.' : 'Invalid username or password.');
+        this.loading.set(false);
+      }
+    }, 700);
+  }
+
+  private handleForgot() {
+    // OTP step not yet reached — validate NID first
+    if (!this.otpSent()) {
+      this.forgotNidTouched.set(true);
+      if (!this.forgotNid) {
+        this.forgotNidError.set(
+          this.isSq()
+            ? 'Vendosni NID / NIPT për konfirmimin e identitetit tuaj'
+            : 'Enter your NID / NIPT to confirm identity'
+        );
+        return;
+      }
+      // NID valid — show OTP step
+      this.loading.set(true);
+      setTimeout(() => {
+        this.loading.set(false);
+        this.otpSent.set(true);
+      }, 900);
+      return;
     }
+
+    // OTP step — validate code
+    this.otpTouched.set(true);
+    if (!this.otpCode || this.otpCode.length < 6) {
+      this.otpError.set(
+        this.isSq()
+          ? 'Vendosni kodin e konfirmimit (6 shifra)'
+          : 'Enter the 6-digit confirmation code'
+      );
+      return;
+    }
+
+    // OTP valid — complete login
+    this.loading.set(true);
+    setTimeout(() => {
+      this.loading.set(false);
+      // Mock: treat OTP as valid, complete the "login" and redirect
+      this.dataService.login(this.forgotNid, '1234');
+      this.router.navigate(['/child-selector']);
+    }, 700);
   }
 }

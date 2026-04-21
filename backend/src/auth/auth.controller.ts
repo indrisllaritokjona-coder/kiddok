@@ -21,6 +21,17 @@ export class AuthController {
     return this.authService.login(user);
   }
 
+  // Dev bypass: login with PIN (body: { pin: "1234", name: "Ian" })
+  @Post('dev-login')
+  async devLogin(@Body() body: any) {
+    if (body.pin !== '1234') {
+      throw new UnauthorizedException('Invalid PIN');
+    }
+    // If no userId provided, create or find the fallback dev user
+    const result = await this.authService.devLogin(body.userId, { name: body.name || 'Dev Parent' });
+    return result;
+  }
+
   @UseGuards(AuthGuard('jwt'))
   @Get('profile')
   getProfile(@Request() req) {

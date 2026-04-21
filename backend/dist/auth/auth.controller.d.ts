@@ -13,5 +13,13 @@ export declare class AuthController {
             name: any;
         };
     }>;
+    devLogin(body: any): Promise<{
+        access_token: string;
+        user: {
+            id: string;
+            email: string;
+            name: string;
+        };
+    }>;
     getProfile(req: any): any;
 }

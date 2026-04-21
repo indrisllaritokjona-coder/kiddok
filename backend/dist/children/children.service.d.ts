@@ -11,6 +11,12 @@ export declare class ChildrenService {
         gender: string | null;
         bloodType: string | null;
         allergies: string | null;
+        birthWeight: number | null;
+        deliveryDoctor: string | null;
+        criticalAllergies: string | null;
+        medicalDocument: string | null;
+        documentIssueDate: Date | null;
+        medicalNotes: string | null;
         userId: string;
     }>;
     findAllByUser(userId: string): Promise<{
@@ -22,6 +28,12 @@ export declare class ChildrenService {
         gender: string | null;
         bloodType: string | null;
         allergies: string | null;
+        birthWeight: number | null;
+        deliveryDoctor: string | null;
+        criticalAllergies: string | null;
+        medicalDocument: string | null;
+        documentIssueDate: Date | null;
+        medicalNotes: string | null;
         userId: string;
     }[]>;
     findOne(id: string, userId: string): Promise<{
@@ -29,6 +41,7 @@ export declare class ChildrenService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            childId: string;
             date: Date;
             type: string;
             symptoms: string | null;
@@ -37,15 +50,20 @@ export declare class ChildrenService {
             notes: string | null;
             attachments: string[];
             doctorName: string | null;
-            childId: string;
+            temperature: number | null;
+            temperatureTime: string | null;
+            medicationName: string | null;
+            medicationDose: string | null;
+            medicationTime: string | null;
+            medicationEffectiveness: string | null;
         }[];
         vaccines: {
             id: string;
             name: string;
             createdAt: Date;
             updatedAt: Date;
-            notes: string | null;
             childId: string;
+            notes: string | null;
             dateAdministered: Date | null;
             dueDate: Date | null;
             provider: string | null;
@@ -60,6 +78,12 @@ export declare class ChildrenService {
         gender: string | null;
         bloodType: string | null;
         allergies: string | null;
+        birthWeight: number | null;
+        deliveryDoctor: string | null;
+        criticalAllergies: string | null;
+        medicalDocument: string | null;
+        documentIssueDate: Date | null;
+        medicalNotes: string | null;
         userId: string;
     }>;
     update(id: string, userId: string, data: any): Promise<{
@@ -71,6 +95,12 @@ export declare class ChildrenService {
         gender: string | null;
         bloodType: string | null;
         allergies: string | null;
+        birthWeight: number | null;
+        deliveryDoctor: string | null;
+        criticalAllergies: string | null;
+        medicalDocument: string | null;
+        documentIssueDate: Date | null;
+        medicalNotes: string | null;
         userId: string;
     }>;
     remove(id: string, userId: string): Promise<{
@@ -82,6 +112,12 @@ export declare class ChildrenService {
         gender: string | null;
         bloodType: string | null;
         allergies: string | null;
+        birthWeight: number | null;
+        deliveryDoctor: string | null;
+        criticalAllergies: string | null;
+        medicalDocument: string | null;
+        documentIssueDate: Date | null;
+        medicalNotes: string | null;
         userId: string;
     }>;
 }

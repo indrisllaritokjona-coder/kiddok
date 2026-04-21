@@ -8,6 +8,7 @@ export declare class HealthRecordsService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        childId: string;
         date: Date;
         type: string;
         symptoms: string | null;
@@ -16,12 +17,18 @@ export declare class HealthRecordsService {
         notes: string | null;
         attachments: string[];
         doctorName: string | null;
-        childId: string;
+        temperature: number | null;
+        temperatureTime: string | null;
+        medicationName: string | null;
+        medicationDose: string | null;
+        medicationTime: string | null;
+        medicationEffectiveness: string | null;
     }>;
     findAllByChild(userId: string, childId: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        childId: string;
         date: Date;
         type: string;
         symptoms: string | null;
@@ -30,12 +37,18 @@ export declare class HealthRecordsService {
         notes: string | null;
         attachments: string[];
         doctorName: string | null;
-        childId: string;
+        temperature: number | null;
+        temperatureTime: string | null;
+        medicationName: string | null;
+        medicationDose: string | null;
+        medicationTime: string | null;
+        medicationEffectiveness: string | null;
     }[]>;
     findOne(userId: string, id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        childId: string;
         date: Date;
         type: string;
         symptoms: string | null;
@@ -44,12 +57,18 @@ export declare class HealthRecordsService {
         notes: string | null;
         attachments: string[];
         doctorName: string | null;
-        childId: string;
+        temperature: number | null;
+        temperatureTime: string | null;
+        medicationName: string | null;
+        medicationDose: string | null;
+        medicationTime: string | null;
+        medicationEffectiveness: string | null;
     }>;
     update(userId: string, id: string, data: any): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        childId: string;
         date: Date;
         type: string;
         symptoms: string | null;
@@ -58,12 +77,18 @@ export declare class HealthRecordsService {
         notes: string | null;
         attachments: string[];
         doctorName: string | null;
-        childId: string;
+        temperature: number | null;
+        temperatureTime: string | null;
+        medicationName: string | null;
+        medicationDose: string | null;
+        medicationTime: string | null;
+        medicationEffectiveness: string | null;
     }>;
     remove(userId: string, id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        childId: string;
         date: Date;
         type: string;
         symptoms: string | null;
@@ -72,6 +97,11 @@ export declare class HealthRecordsService {
         notes: string | null;
         attachments: string[];
         doctorName: string | null;
-        childId: string;
+        temperature: number | null;
+        temperatureTime: string | null;
+        medicationName: string | null;
+        medicationDose: string | null;
+        medicationTime: string | null;
+        medicationEffectiveness: string | null;
     }>;
 }

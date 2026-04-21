@@ -1,21 +1,9 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { DataService } from './services/data.service';
-import { PinLockComponent } from './components/pin-lock.component';
-import { ShellComponent } from './components/shell.component';
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [CommonModule, PinLockComponent, ShellComponent],
-  template: `
-    @if (dataService.isAuthenticated()) {
-      <app-shell />
-    } @else {
-      <app-pin-lock />
-    }
-  `
+    selector: 'app-root',
+    imports: [RouterOutlet],
+    template: `<router-outlet></router-outlet>`
 })
-export class AppComponent {
-  dataService = inject(DataService);
-}
+export class AppComponent {}

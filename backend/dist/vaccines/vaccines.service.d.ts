@@ -9,8 +9,8 @@ export declare class VaccinesService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
-        notes: string | null;
         childId: string;
+        notes: string | null;
         dateAdministered: Date | null;
         dueDate: Date | null;
         provider: string | null;
@@ -21,8 +21,8 @@ export declare class VaccinesService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
-        notes: string | null;
         childId: string;
+        notes: string | null;
         dateAdministered: Date | null;
         dueDate: Date | null;
         provider: string | null;
@@ -33,8 +33,8 @@ export declare class VaccinesService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
-        notes: string | null;
         childId: string;
+        notes: string | null;
         dateAdministered: Date | null;
         dueDate: Date | null;
         provider: string | null;
@@ -45,8 +45,8 @@ export declare class VaccinesService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
-        notes: string | null;
         childId: string;
+        notes: string | null;
         dateAdministered: Date | null;
         dueDate: Date | null;
         provider: string | null;
@@ -57,8 +57,8 @@ export declare class VaccinesService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
-        notes: string | null;
         childId: string;
+        notes: string | null;
         dateAdministered: Date | null;
         dueDate: Date | null;
         provider: string | null;

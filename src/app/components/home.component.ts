@@ -3,10 +3,9 @@ import { CommonModule } from '@angular/common';
 import { DataService } from '../services/data.service';
 
 @Component({
-  selector: 'app-home',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
+    selector: 'app-home',
+    imports: [CommonModule],
+    template: `
     <div class="px-2">
       <!-- Welcome Hero -->
       <div class="relative w-full rounded-3xl overflow-hidden shadow-soft mb-8 bg-gradient-to-r from-primary-600 to-teal-500 text-white p-8 lg:p-12 border border-primary-500">

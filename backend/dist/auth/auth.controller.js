@@ -32,6 +32,13 @@ let AuthController = class AuthController {
         }
         return this.authService.login(user);
     }
+    async devLogin(body) {
+        if (body.pin !== '1234') {
+            throw new common_1.UnauthorizedException('Invalid PIN');
+        }
+        const result = await this.authService.devLogin(body.userId, { name: body.name || 'Dev Parent' });
+        return result;
+    }
     getProfile(req) {
         return req.user;
     }
@@ -51,6 +58,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.Post)('dev-login'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "devLogin", null);
 __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Get)('profile'),

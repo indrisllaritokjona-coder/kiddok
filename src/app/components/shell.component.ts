@@ -1,35 +1,42 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService, ChildProfile } from '../services/data.service';
+import { I18nService } from '../core/i18n/i18n.service';
+import { Router } from '@angular/router';
 import { HomeComponent } from './home.component';
 import { DiaryComponent } from './diary.component';
 import { RecordsComponent } from './records.component';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-shell',
-  standalone: true,
-  imports: [CommonModule, FormsModule, HomeComponent, DiaryComponent, RecordsComponent],
-  template: `
+    selector: 'app-shell',
+    imports: [CommonModule, FormsModule, HomeComponent, DiaryComponent, RecordsComponent],
+    template: `
+
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
-      
+
       <!-- Desktop Sidebar (Glassmorphism) -->
       <aside class="w-72 glass-dark hidden lg:flex flex-col m-5 mr-0 z-20 text-white relative overflow-hidden shadow-2xl">
         <div class="absolute inset-0 bg-gradient-to-bl from-primary-600/90 via-primary-800/90 to-primary-900/95 mix-blend-multiply"></div>
         <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=500&q=60')] bg-cover opacity-10 mix-blend-overlay"></div>
-        
         <div class="relative z-10 flex flex-col h-full p-6">
-          <div class="flex items-center gap-4 mb-14 mt-4 ml-2">
-            <div class="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md border border-white/20 shadow-glass">
+          <div class="flex items-center gap-3 mb-14 mt-4 ml-2">
+            <button (click)="goToSelector()"
+                    class="bg-white/20 hover:bg-white/30 p-2.5 rounded-2xl backdrop-blur-md border border-white/20 shadow-glass transition-all cursor-pointer">
               <span class="material-icons text-3xl text-white">child_care</span>
-            </div>
-            <span class="text-3xl font-extrabold tracking-tight">KidDok<span class="text-teal-400">.</span></span>
+            </button>
+            <button (click)="goToSelector()" class="flex-1 text-left cursor-pointer">
+              <span class="text-3xl font-extrabold tracking-tight text-white">KidDok<span class="text-teal-400">.</span></span>
+            </button>
+            <button (click)="i18n.toggleLocale()"
+                    class="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-all border border-white/20 flex-shrink-0">
+              {{ i18n.locale() === 'sq' ? 'SQ' : 'EN' }}
+            </button>
           </div>
-
           <nav class="flex-1 space-y-3">
             @for (nav of navItems; track nav.id) {
-              <button 
-                (click)="currentTab.set(nav.id)"
+              <button
+                (click)="navigateTo(nav.id)"
                 class="w-full flex items-center gap-5 px-5 py-4 rounded-2xl transition-all duration-300 group"
                 [ngClass]="currentTab() === nav.id ? 'bg-white/10 border border-white/20 shadow-glass translate-x-2' : 'hover:bg-white/5 hover:translate-x-1 border border-transparent'"
               >
@@ -43,146 +50,353 @@ import { FormsModule } from '@angular/forms';
               </button>
             }
           </nav>
-
           <div class="mt-auto">
-            <button (click)="dataService.logout()" class="w-full flex items-center justify-center gap-3 px-5 py-4 rounded-2xl border border-red-400/30 text-red-300 hover:bg-red-500/20 hover:text-red-100 transition-all font-semibold hover:border-red-400/50">
+            <button (click)="logout()" class="w-full flex items-center justify-center gap-3 px-5 py-4 rounded-2xl border border-red-400/30 text-red-300 hover:bg-red-500/20 hover:text-red-100 transition-all font-semibold hover:border-red-400/50">
               <span class="material-icons">logout</span>
-              Dil nga Sistemi
+              {{ i18n.t()['sidebar.logout'] }}
             </button>
           </div>
         </div>
       </aside>
 
       <!-- Main Content Area -->
-      <main class="flex-1 flex flex-col h-screen overflow-hidden relative relative z-10 w-full">
-        
-        <!-- Top Header for Desktop & Mobile -->
-        <header class="px-6 py-5 lg:px-10 lg:py-7 flex items-center justify-between lg:justify-end border-b border-gray-200/50 bg-white/60 backdrop-blur-xl z-30 shadow-sm">
-          
-          <!-- Mobile Menu Button -->
-          <button class="lg:hidden p-2 rounded-xl bg-white shadow-soft border border-gray-100">
-            <span class="material-icons text-gray-700">menu</span>
-          </button>
+      <main class="flex-1 flex flex-col h-screen overflow-hidden relative z-10 w-full">
 
-          <!-- Child Profile Switcher -->
+        <!-- Top Header -->
+        <header class="px-6 py-5 lg:px-10 lg:py-7 flex items-center justify-between lg:justify-end border-b border-gray-200/50 bg-white/60 backdrop-blur-xl z-30 shadow-sm">
+          <div class="flex items-center gap-3">
+            @if (viewState() === 'app') {
+              <button (click)="goToSelector()"
+                      class="flex items-center gap-2 px-3 py-2 rounded-xl bg-white shadow-soft border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all text-gray-600 hover:text-primary-600">
+                <span class="material-icons text-lg">arrow_back</span>
+                <span class="text-sm font-bold hidden sm:block">{{ i18n.t()['nav.back'] }}</span>
+              </button>
+            }
+            <button class="lg:hidden p-2 rounded-xl bg-white shadow-soft border border-gray-100">
+              <span class="material-icons text-gray-700">menu</span>
+            </button>
+          </div>
+
           <div class="flex items-center gap-4 lg:gap-8">
-            
+            <button (click)="i18n.toggleLocale()" class="lg:hidden flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-full text-xs font-bold text-gray-600 transition-all">
+              <span class="material-icons text-sm">language</span>
+              {{ i18n.locale() === 'sq' ? 'SQ' : 'EN' }}
+            </button>
+
+            <!-- Child Profile Switcher -->
             <div class="relative">
-              <button (click)="showChildList.set(!showChildList())" 
+              <button (click)="showChildList.set(!showChildList())"
                       class="flex items-center gap-3 bg-white px-4 py-2 lg:py-2.5 rounded-2xl shadow-soft border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all">
                 @if (activeChild()) {
                   <img [src]="activeChild()?.avatarUrl" class="w-8 h-8 lg:w-10 lg:h-10 rounded-full border-2 border-primary-100 object-cover" />
                   <span class="font-bold text-gray-800 hidden sm:block text-sm lg:text-base">{{ activeChild()?.name }}</span>
                 } @else {
                   <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-slate-100 flex items-center justify-center border-2 border-dashed border-slate-300"><span class="material-icons text-gray-400 text-sm">person</span></div>
-                  <span class="font-bold text-gray-500 hidden sm:block">Shto Fëmijën</span>
+                  <span class="font-bold text-gray-500 hidden sm:block">{{ i18n.t()['child.addNewBtn'] }}</span>
                 }
                 <span class="material-icons text-gray-400 text-sm transition-transform" [class.rotate-180]="showChildList()">expand_more</span>
               </button>
-              
-              <!-- Dropdown -->
+
               @if (showChildList()) {
                 <div class="absolute right-0 top-16 lg:top-20 w-80 bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-gray-100 py-3 animate-slide-up z-50 overflow-hidden">
                   <div class="px-5 pb-3 pt-1 mb-2 border-b border-gray-50 flex items-center gap-2">
                      <span class="material-icons text-primary-500 text-sm">family_restroom</span>
-                     <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Profili i Fëmijës</span>
+                     <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">{{ i18n.t()['child.switchProfile'] }}</span>
                   </div>
                   @for (child of dataService.children(); track child.id) {
-                    <div (click)="switchChild(child.id)"
+                    <div (click)="selectChild(child.id)"
                          class="flex items-center gap-4 px-5 py-3 hover:bg-primary-50 cursor-pointer transition-colors m-2 mt-0 rounded-2xl border border-transparent hover:border-primary-100 group">
                       <img [src]="child.avatarUrl" class="w-12 h-12 rounded-full border border-gray-200 shadow-sm" />
                       <div class="flex flex-col">
                         <span class="font-extrabold text-gray-800 group-hover:text-primary-700 transition-colors">{{ child.name }}</span>
-                        <span class="text-xs text-gray-500 font-medium">Lindur: {{ child.dateOfBirth | date:'shortDate' }}</span>
+                        <span class="text-xs text-gray-500 font-medium">{{ i18n.t()['child.born'] }}: {{ toDisplay(child.dateOfBirth, i18n.locale()) }}</span>
                       </div>
                       @if (child.id === dataService.activeChildId()) {
                         <span class="material-icons text-teal-500 ml-auto bg-teal-50 rounded-full p-1">check</span>
                       }
                     </div>
                   }
-                  
-                  <div class="px-4 pt-3 mt-1 border-t border-gray-50">
+                  <div class="px-4 pt-2 pb-1">
+                    <button (click)="goToSelector(); showChildList.set(false)"
+                            class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-primary-50 hover:bg-primary-100 text-primary-700 font-bold transition-colors border border-primary-200">
+                      <span class="material-icons text-lg">swap_horiz</span>
+                      {{ i18n.t()['child.switchChild'] }}
+                    </button>
+                  </div>
+                  <div class="px-4 pt-2 mt-1 border-t border-gray-50">
                     <button (click)="isAddingChild.set(true); showChildList.set(false)" class="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-colors border border-slate-200 hover:border-slate-300">
-                      <span class="material-icons text-base">add_circle_outline</span> Shto Pjestar të Ri
+                      <span class="material-icons text-base">add_circle_outline</span> {{ i18n.t()['child.addNewBtn'] }}
                     </button>
                   </div>
                 </div>
               }
             </div>
 
-            <!-- Parent Admin -->
+            @if (viewState() === 'app' && dataService.getParentName()) {
+              <div class="hidden lg:flex items-center gap-2 text-sm text-gray-500 font-medium">
+                <span class="material-icons text-teal-500 text-lg">waving_hand</span>
+                <span>{{ i18n.t()['welcome.loggedIn'] }}, </span>
+                <span class="font-bold text-gray-700">{{ dataService.getParentName() }}</span>
+              </div>
+            }
+
             <div class="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-gradient-to-tr from-primary-500 to-teal-400 p-[2px] shadow-soft cursor-pointer hover:shadow-lg transition-shadow">
               <div class="w-full h-full bg-white rounded-full flex items-center justify-center border-2 border-white">
                 <span class="material-icons text-gray-700 lg:text-xl text-lg">manage_accounts</span>
               </div>
             </div>
-
           </div>
         </header>
 
         <!-- Main Workspace -->
         <div class="flex-1 overflow-y-auto w-full px-4 pt-6 pb-24 lg:px-12 lg:py-10 bg-slate-50/50 relative">
-          
-          @if(dataService.children().length === 0 && !isAddingChild()) {
-            <div class="h-full flex flex-col items-center justify-center text-center animate-slide-up max-w-lg mx-auto">
-              <div class="w-40 h-40 bg-gradient-to-tr from-primary-100 to-teal-50 text-primary-500 rounded-full flex items-center justify-center mb-10 shadow-glass border border-white">
-                <span class="material-icons text-[80px] opacity-80">celebration</span>
+
+          <!-- ===== CHILD SELECTOR SCREEN ===== -->
+          @if (viewState() === 'selector') {
+            @if (dataService.children().length === 0 && !isAddingChild()) {
+              <div class="h-full flex flex-col items-center justify-center text-center animate-slide-up max-w-lg mx-auto">
+                <div class="w-40 h-40 bg-gradient-to-tr from-primary-100 to-teal-50 text-primary-500 rounded-full flex items-center justify-center mb-10 shadow-glass border border-white">
+                  <span class="material-icons text-[80px] opacity-80">celebration</span>
+                </div>
+                <h2 class="text-3xl lg:text-4xl font-extrabold text-gray-800 mb-4 tracking-tight">{{ i18n.t()['child.welcome'] }}</h2>
+                <p class="text-gray-500 text-lg mb-10 leading-relaxed">{{ i18n.t()['child.welcomeSub'] }}</p>
+                <button (click)="isAddingChild.set(true)" class="bg-slate-900 hover:bg-primary-600 text-white px-10 py-5 rounded-2xl font-bold shadow-[0_10px_20px_rgba(0,0,0,0.1)] transition-all transform hover:-translate-y-1 flex items-center gap-3 text-lg w-full sm:w-auto justify-center">
+                  <span class="material-icons bg-white/20 rounded-full p-1">add</span> {{ i18n.t()['child.addNew'] }}
+                </button>
               </div>
-              <h2 class="text-3xl lg:text-4xl font-extrabold text-gray-800 mb-4 tracking-tight">Mirësevini në KidDok</h2>
-              <p class="text-gray-500 text-lg mb-10 leading-relaxed">Ky është laboratori juaj dixhital. Gjithçka është gati dhe e lidhur me bazën e të dhënave. Shtoni profilin e parë për të nisur!</p>
-              <button (click)="isAddingChild.set(true)" class="bg-slate-900 hover:bg-primary-600 text-white px-10 py-5 rounded-2xl font-bold shadow-[0_10px_20px_rgba(0,0,0,0.1)] transition-all transform hover:-translate-y-1 flex items-center gap-3 text-lg w-full sm:w-auto justify-center">
-                <span class="material-icons bg-white/20 rounded-full p-1">add</span> Regjistro Profilin e Fëmijës
-              </button>
-            </div>
-          } @else if (isAddingChild()) {
-            <div class="glass max-w-3xl mx-auto rounded-[2rem] p-8 lg:p-12 animate-slide-up shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white">
-              <h2 class="text-3xl font-extrabold text-gray-800 mb-8 flex items-center gap-4">
-                <span class="material-icons text-primary-500 bg-primary-50 p-3 rounded-2xl">person_add_alt_1</span> 
-                Shtoni Profil të Ri
+            } @else {
+              <div class="animate-slide-up">
+                <h2 class="text-3xl font-extrabold text-gray-800 mb-2 tracking-tight">{{ i18n.t()['child.selectChild'] }}</h2>
+                <p class="text-gray-400 text-sm mb-10 font-medium">
+                  {{ i18n.locale() === 'sq' ? 'Zgjidhni profilin e fëmijës për të vazhduar.' : 'Select a child profile to continue.' }}
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  @for (child of dataService.children(); track child.id) {
+                    <div class="bg-white rounded-[2rem] p-8 shadow-md border border-slate-100 hover:shadow-xl hover:border-primary-200 transition-all group relative">
+                      <button (click)="openEditModal(child)"
+                              class="absolute top-5 right-5 w-9 h-9 rounded-xl bg-slate-50 hover:bg-primary-50 border border-slate-200 hover:border-primary-300 flex items-center justify-center text-slate-400 hover:text-primary-600 transition-all shadow-sm">
+                        <span class="material-icons text-base">edit</span>
+                      </button>
+                      <div (click)="selectChild(child.id)" class="cursor-pointer">
+                        <div class="flex items-center gap-5 mb-5">
+                          <img [src]="child.avatarUrl" class="w-16 h-16 rounded-full border-4 border-slate-100 group-hover:border-primary-200 transition-all shadow-sm" />
+                          <div>
+                            <h3 class="font-extrabold text-xl text-gray-800 group-hover:text-primary-700 transition-colors">{{ child.name }}</h3>
+                            <p class="text-sm text-gray-400 font-medium">{{ toDisplay(child.dateOfBirth, i18n.locale()) }}</p>
+                          </div>
+                        </div>
+                        @if (child.bloodType) {
+                          <div class="flex items-center gap-2 text-sm text-gray-500 font-medium">
+                            <span class="material-icons text-teal-500 text-base">water_drop</span>
+                            {{ child.bloodType }}
+                          </div>
+                        }
+                      </div>
+                      <div (click)="selectChild(child.id)" class="mt-5 bg-gradient-to-r from-primary-50 to-teal-50 rounded-2xl p-4 flex items-center justify-center gap-2 text-primary-600 font-bold group-hover:from-primary-100 group-hover:to-teal-100 transition-all cursor-pointer">
+                        <span class="material-icons text-lg">login</span>
+                        {{ i18n.locale() === 'sq' ? 'Hapni Profilin' : 'Open Profile' }}
+                      </div>
+                    </div>
+                  }
+                  <div (click)="isAddingChild.set(true)"
+                       class="bg-slate-50 rounded-[2rem] p-8 shadow-md border-2 border-dashed border-slate-200 hover:border-primary-300 hover:bg-primary-50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 text-center group">
+                    <div class="w-16 h-16 rounded-full bg-slate-100 group-hover:bg-primary-100 flex items-center justify-center transition-all">
+                      <span class="material-icons text-3xl text-slate-400 group-hover:text-primary-500 transition-colors">add</span>
+                    </div>
+                    <p class="font-bold text-slate-500 group-hover:text-primary-600 transition-colors text-base">
+                      {{ i18n.t()['child.addNewBtn'] }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            }
+          }
+
+          <!-- ===== ADD CHILD FORM ===== -->
+          @else if (isAddingChild()) {
+            <div class="glass max-w-3xl mx-auto rounded-[2rem] p-10 lg:p-14 animate-slide-up shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white">
+              <h2 class="text-3xl font-extrabold text-gray-800 mb-10 flex items-center gap-4">
+                <span class="material-icons text-primary-500 bg-primary-50 p-3 rounded-2xl">person_add_alt_1</span>
+                {{ i18n.t()['child.addNew'] }}
               </h2>
-              <div class="space-y-6">
+              <div class="space-y-8">
                 <div>
-                  <label class="block text-sm font-bold text-gray-700 mb-2 ml-1">Emri i Fëmijës</label>
-                  <input type="text" [(ngModel)]="newChildName" class="w-full px-5 py-4.5 rounded-2xl bg-white border border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all shadow-sm font-semibold text-lg" placeholder="Përfshini emrin dhe mbiemrin">
+                  <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.fullName'] }}</label>
+                  <input type="text" [(ngModel)]="newChildName"
+                         class="w-full px-5 py-4.5 rounded-2xl bg-white border-2 transition-all text-lg text-gray-800 placeholder-gray-300"
+                         [ngClass]="addNameInvalid() ? 'border-red-400 focus:ring-4 focus:ring-red-500/10 focus:border-red-500' : 'border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500'"
+                         [placeholder]="i18n.t()['placeholder.fullName']"
+                         (input)="onAddNameInput($event)"
+                         (blur)="onAddNameBlur()">
+                  @if (addNameInvalid()) {
+                    <p class="mt-2 text-sm text-red-500 font-medium flex items-center gap-1">
+                      <span class="material-icons text-xs">error_outline</span>
+                      {{ i18n.isSq() ? 'Emri mund të përmbajë vetëm shkronja.' : 'Name can only contain letters.' }}
+                    </p>
+                  }
                 </div>
                 <div>
-                  <label class="block text-sm font-bold text-gray-700 mb-2 ml-1">Datëlindja</label>
-                  <input type="date" [(ngModel)]="newChildDob" class="w-full px-5 py-4.5 rounded-2xl bg-white border border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-600 shadow-sm font-semibold text-lg">
+                  <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.dateOfBirth'] }}</label>
+                  <div class="relative">
+                    <input type="text" [(ngModel)]="newChildDob" (input)="onDateInput($event, v => newChildDob = v, i18n.locale())"
+                           [placeholder]="i18n.locale() === 'sq' ? 'DD/MM/YYYY' : 'MM/DD/YYYY'" maxlength="10"
+                           class="w-full px-5 py-4.5 pr-12 rounded-2xl bg-white border-2 border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-600 placeholder-gray-300">
+                    <button type="button" onclick="this.previousElementSibling.showPicker?.()"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-primary-500 hover:bg-primary-50 transition-all cursor-pointer">
+                      <span class="material-icons text-lg">calendar_month</span>
+                    </button>
+                  </div>
                 </div>
-                <div class="flex flex-col sm:flex-row gap-4 pt-8 border-t border-gray-100 mt-4">
-                  <button (click)="submitNewChild()" class="flex-1 bg-gradient-to-r from-primary-600 to-primary-500 text-white py-4.5 rounded-2xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-lg">
-                    <span class="material-icons">save</span> Ruaj në Databazë
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.birthWeight'] }}</label>
+                    <input type="number" step="0.01" [(ngModel)]="newChildBirthWeight"
+                           class="w-full px-5 py-4.5 rounded-2xl bg-white border-2 border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-600 shadow-sm placeholder-gray-300"
+                           [placeholder]="i18n.t()['placeholder.birthWeight']">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.bloodType'] }}</label>
+                    <div class="relative">
+                      <select [(ngModel)]="newChildBloodType"
+                              class="w-full px-5 py-4.5 rounded-2xl bg-white border-2 transition-all text-lg shadow-sm appearance-none"
+                              [ngClass]="newChildBloodType ? 'border-teal-300 text-gray-800 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500' : 'border-slate-200 text-gray-600 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500'">
+                        <option value="">--</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                      </select>
+                      <!-- Blood type verified badge -->
+                      @if (newChildBloodType) {
+                        <span class="absolute right-12 top-1/2 -translate-y-1/2 material-icons text-teal-500 bg-teal-50 rounded-full text-sm animate-fade-in">verified</span>
+                      }
+                      <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-gray-400 text-lg pointer-events-none">expand_more</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Critical Allergies -->
+                <div>
+                  <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.criticalAllergies'] }}</label>
+                  <textarea [(ngModel)]="newChildAllergies" rows="2"
+                    class="w-full px-5 py-4 rounded-2xl bg-white border-2 border-slate-200 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-800 shadow-sm placeholder-gray-300 resize-none"
+                    [placeholder]="i18n.t()['placeholder.allergies']"></textarea>
+                </div>
+
+                <!-- Medical Notes -->
+                <div>
+                  <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.medicalNotes'] }}</label>
+                  <textarea [(ngModel)]="newChildMedicalNotes" rows="3"
+                    class="w-full px-5 py-4 rounded-2xl bg-white border-2 border-slate-200 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-800 shadow-sm placeholder-gray-300 resize-none"
+                    [placeholder]="i18n.t()['placeholder.medicalNotes']"></textarea>
+                </div>
+
+                <!-- Medical Document Upload -->
+                <div>
+                  <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.medicalDocument'] }}</label>
+                  <input type="file" accept=".pdf,image/*" (change)="onNewChildDocumentSelected($event)"
+                    class="w-full file:mr-4 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-primary-50 file:text-primary-700 file:font-bold file:cursor-pointer text-sm text-gray-500 cursor-pointer">
+                  @if (newChildDocumentError()) {
+                    <p class="text-red-500 text-xs mt-1">{{ newChildDocumentError() }}</p>
+                  }
+                  @if (newChildDocument()) {
+                    <p class="text-teal-600 text-xs mt-1 flex items-center gap-1"><span class="material-icons text-sm">check_circle</span> {{ i18n.t()['child.documentAttached'] }}</p>
+                  }
+                </div>
+
+                <!-- Document Issue Date -->
+                @if (newChildDocument()) {
+                  <div>
+                    <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.documentIssueDate'] }}</label>
+                    <input type="date" [(ngModel)]="newChildDocumentDate"
+                      class="w-full px-5 py-4 rounded-2xl bg-white border-2 border-slate-200 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-600 shadow-sm">
+                  </div>
+                }
+                <div>
+                  <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.deliveryDoctor'] }}</label>
+                  <input type="text" [(ngModel)]="newChildDeliveryDoctor"
+                         class="w-full px-5 py-4.5 rounded-2xl bg-white border-2 border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-800 shadow-sm placeholder-gray-300"
+                         [placeholder]="i18n.t()['placeholder.deliveryDoctor']">
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-100 mt-4">
+                  <button (click)="submitNewChild()"
+                          class="flex-1 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white py-4.5 rounded-2xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-lg shadow-md"
+                          [disabled]="addNameInvalid() && newChildName.length > 0">
+                    <span class="material-icons">save</span> {{ i18n.t()['child.saveProfile'] }}
                   </button>
-                  <button (click)="isAddingChild.set(false)" class="px-10 py-4.5 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-colors text-lg">Anulo</button>
+                  <button (click)="cancelAddChild()"
+                          class="px-8 py-4.5 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-colors text-lg hover:-translate-y-0.5">{{ i18n.t()['child.cancel'] }}</button>
                 </div>
               </div>
             </div>
-          } @else {
+          }
+
+          <!-- ===== MAIN APP VIEW ===== -->
+          @else {
             <div class="animate-fade-in h-full">
               @switch (currentTab()) {
                 @case ('home') { <app-home /> }
                 @case ('diary') { <app-diary /> }
                 @case ('records') { <app-records /> }
                 @case ('settings') {
-                  <div class="px-8 py-20 text-center glass rounded-3xl mt-10 max-w-2xl mx-auto border border-dashed border-gray-300">
-                    <span class="material-icons text-[80px] text-gray-300 mb-6 drop-shadow-sm">construction</span>
-                    <h2 class="text-3xl font-extrabold text-gray-700 mb-3 tracking-tight">Konfigurime Sistemi</h2>
-                    <p class="text-gray-500 text-lg">Ky modul do të bëhet i disponueshëm gjatë përditësimeve Premium.</p>
+                  <div class="glass max-w-2xl mx-auto rounded-[2rem] p-10 animate-slide-up shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white">
+                    <h2 class="text-3xl font-extrabold text-gray-800 mb-2 flex items-center gap-4">
+                      <span class="material-icons text-primary-500 bg-primary-50 p-3 rounded-2xl">settings</span>
+                      {{ i18n.t()['nav.settings'] }}
+                    </h2>
+                    <div class="mt-8">
+                      <h3 class="text-lg font-bold text-gray-700 mb-6 flex items-center gap-2">
+                        <span class="material-icons text-teal-500">person</span>
+                        {{ i18n.t()['settings.parentProfile'] }}
+                      </h3>
+                      @if (settingsSaved()) {
+                        <div class="mb-6 p-4 bg-teal-50 border border-teal-100 rounded-2xl flex items-center gap-3 animate-fade-in">
+                          <span class="material-icons text-teal-500">check_circle</span>
+                          <p class="text-teal-700 text-sm font-medium">{{ i18n.t()['settings.saved'] }}</p>
+                        </div>
+                      }
+                      <div class="space-y-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                          <div>
+                            <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">{{ i18n.t()['settings.name'] }}</label>
+                            <input type="text" [(ngModel)]="parentName"
+                                   class="w-full px-5 py-4 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-base">
+                          </div>
+                          <div>
+                            <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">{{ i18n.t()['settings.surname'] }}</label>
+                            <input type="text" [(ngModel)]="parentSurname"
+                                   class="w-full px-5 py-4 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-base">
+                          </div>
+                        </div>
+                        <div>
+                          <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">{{ i18n.t()['settings.phone'] }}</label>
+                          <input type="tel" [(ngModel)]="parentPhone"
+                                 class="w-full px-5 py-4 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-base">
+                        </div>
+                        <button (click)="saveParentProfile()"
+                                class="flex items-center gap-2 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white py-4 px-8 rounded-2xl font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
+                          <span class="material-icons">save</span>
+                          {{ i18n.t()['settings.saveChanges'] }}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 }
               }
             </div>
           }
-
         </div>
-
       </main>
 
       <!-- Bottom Nav (Mobile) -->
       <nav class="lg:hidden absolute bottom-0 w-full bg-white/95 backdrop-blur-xl border-t border-gray-200 pb-safe pt-2 px-6 flex justify-around items-center z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.08)]">
         @for (nav of navItems; track nav.id) {
-          <button 
-            (click)="currentTab.set(nav.id)"
+          <button
+            (click)="navigateTo(nav.id)"
             class="flex flex-col items-center gap-1.5 p-2 transition-all relative"
             [ngClass]="currentTab() === nav.id ? 'text-primary-600' : 'text-slate-400 hover:text-slate-600'"
           >
@@ -197,26 +411,269 @@ import { FormsModule } from '@angular/forms';
         }
       </nav>
 
+      <!-- ══════════════════════════════════════════
+           EDIT CHILD MODAL (Overlay)
+           ══════════════════════════════════════════ -->
+      @if (editingChild()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <!-- Backdrop -->
+          <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" (click)="closeEditModal()"></div>
+
+          <!-- Modal Card -->
+          <div class="relative z-10 w-full max-w-md bg-white rounded-[2rem] shadow-[0_32px_80px_-12px_rgba(0,0,0,0.25)] border border-slate-100 overflow-hidden animate-slide-up">
+
+            <!-- Top accent -->
+            <div class="h-1.5 bg-gradient-to-r from-primary-600 via-primary-500 to-teal-400"></div>
+
+            <div class="p-10">
+
+              <!-- Header -->
+              <div class="flex items-center justify-between mb-8">
+                <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3">
+                  <span class="material-icons text-primary-500 bg-primary-50 p-2 rounded-xl">edit</span>
+                  {{ i18n.locale() === 'sq' ? 'Modifiko Profilin e Fëmijës' : 'Edit Child Profile' }}
+                </h2>
+                <button (click)="closeEditModal()"
+                        class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all shadow-sm border border-slate-200">
+                  <span class="material-icons text-base">close</span>
+                </button>
+              </div>
+
+              <div class="space-y-6">
+
+                <!-- Name -->
+                <div>
+                  <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">
+                    {{ i18n.t()['child.fullName'] }}
+                  </label>
+                  <div class="relative">
+                    <input type="text" [(ngModel)]="editName"
+                           (input)="onEditNameInput($event)"
+                           (blur)="onEditNameBlur()"
+                           class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 transition-all text-lg text-gray-800 pr-10"
+                           [ngClass]="editNameInvalid() ? 'border-red-400 focus:ring-4 focus:ring-red-500/10 focus:border-red-500' : 'border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500'">
+                    <!-- Invalid indicator icon -->
+                    @if (editNameInvalid()) {
+                      <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-red-400 text-xl animate-fade-in">error_outline</span>
+                    }
+                  </div>
+                  @if (editNameInvalid()) {
+                    <p class="mt-2 text-sm text-red-500 font-medium flex items-center gap-1">
+                      <span class="material-icons text-xs">error_outline</span>
+                      {{ i18n.isSq() ? 'Emri mund të përmbajë vetëm shkronja.' : 'Name can only contain letters.' }}
+                    </p>
+                  }
+                </div>
+
+                <!-- Date of Birth -->
+                <div>
+                  <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">
+                    {{ i18n.t()['child.dateOfBirth'] }}
+                  </label>
+                  <div class="relative">
+                    <input type="text" [(ngModel)]="editDob" (input)="onDateInput($event, v => editDob = v, i18n.locale())"
+                           [placeholder]="i18n.locale() === 'sq' ? 'DD/MM/YYYY' : 'MM/DD/YYYY'" maxlength="10"
+                           class="w-full px-5 py-4 pr-12 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-600 placeholder-gray-300">
+                    <button type="button" onclick="this.previousElementSibling.showPicker?.()"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-primary-500 hover:bg-primary-50 transition-all cursor-pointer">
+                      <span class="material-icons text-lg">calendar_month</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Blood Type with Verification Badge -->
+                <div>
+                  <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">
+                    {{ i18n.t()['child.bloodType'] }}
+                  </label>
+                  <div class="relative">
+                    <select [ngModel]="editBloodType()" (ngModelChange)="editBloodType.set($event)"
+                            class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 transition-all text-lg shadow-sm appearance-none"
+                            [ngClass]="editBloodType() ? 'border-teal-300 text-gray-800 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500' : 'border-slate-200 text-gray-600 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500'">
+                      <option value="">--</option>
+                      <option value="A+">A+</option>
+                      <option value="A-">A-</option>
+                      <option value="B+">B+</option>
+                      <option value="B-">B-</option>
+                      <option value="AB+">AB+</option>
+                      <option value="AB-">AB-</option>
+                      <option value="O+">O+</option>
+                      <option value="O-">O-</option>
+                    </select>
+                    <!-- Blood type verified badge (green checkmark) -->
+                    @if (editBloodType()) {
+                      <span class="absolute right-12 top-1/2 -translate-y-1/2 flex items-center gap-1 animate-fade-in">
+                        <span class="material-icons text-teal-500 bg-teal-50 rounded-full text-sm shadow-sm">verified</span>
+                      </span>
+                    }
+                    <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-gray-400 text-lg pointer-events-none">expand_more</span>
+                  </div>
+                  @if (editBloodType()) {
+                    <p class="mt-2 text-xs text-teal-600 font-medium flex items-center gap-1 animate-fade-in">
+                      <span class="material-icons text-xs text-teal-500">verified</span>
+                      {{ i18n.isSq() ? 'Grupi i gjakut u verifikua.' : 'Blood type verified.' }}
+                    </p>
+                  }
+                </div>
+
+                <!-- Critical Allergies -->
+                <div>
+                  <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.criticalAllergies'] }}</label>
+                  <textarea [(ngModel)]="editChildAllergies" rows="2"
+                    class="w-full px-5 py-4 rounded-2xl bg-white border-2 border-slate-200 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-800 shadow-sm placeholder-gray-300 resize-none"
+                    [placeholder]="i18n.t()['placeholder.allergies']"></textarea>
+                </div>
+
+                <!-- Medical Notes -->
+                <div>
+                  <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.medicalNotes'] }}</label>
+                  <textarea [(ngModel)]="editChildMedicalNotes" rows="3"
+                    class="w-full px-5 py-4 rounded-2xl bg-white border-2 border-slate-200 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-800 shadow-sm placeholder-gray-300 resize-none"
+                    [placeholder]="i18n.t()['placeholder.medicalNotes']"></textarea>
+                </div>
+
+                <!-- Medical Document Upload -->
+                <div>
+                  <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.medicalDocument'] }}</label>
+                  <input type="file" accept=".pdf,image/*" (change)="onDocumentSelected($event)"
+                    class="w-full file:mr-4 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-primary-50 file:text-primary-700 file:font-bold file:cursor-pointer text-sm text-gray-500 cursor-pointer">
+                  @if (documentError()) {
+                    <p class="text-red-500 text-xs mt-1">{{ documentError() }}</p>
+                  }
+                  @if (editChildDocument()) {
+                    <p class="text-teal-600 text-xs mt-1 flex items-center gap-1"><span class="material-icons text-sm">check_circle</span> {{ i18n.t()['child.documentAttached'] }}</p>
+                  }
+                </div>
+
+                <!-- Document Issue Date -->
+                @if (editChildDocument()) {
+                  <div>
+                    <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.documentIssueDate'] }}</label>
+                    <input type="date" [(ngModel)]="editChildDocumentDate"
+                      class="w-full px-5 py-4 rounded-2xl bg-white border-2 border-slate-200 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-600 shadow-sm">
+                  </div>
+                }
+
+                <!-- Actions -->
+                <div class="flex flex-col gap-3 pt-4 border-t border-gray-100">
+                  <button (click)="saveEditChild()"
+                          class="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white py-4 rounded-2xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-base shadow-md"
+                          [disabled]="editNameInvalid()">
+                    <span class="material-icons">save</span>
+                    {{ i18n.locale() === 'sq' ? 'Ruaj Ndryshimet' : 'Save Changes' }}
+                  </button>
+                  <button (click)="confirmDeleteChild()"
+                          class="w-full border-2 border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 py-3.5 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 text-sm">
+                    <span class="material-icons text-base">delete_outline</span>
+                    {{ i18n.locale() === 'sq' ? 'Fshi Profilin' : 'Delete Profile' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
     </div>
   `,
-  styles: [`
+    styles: [`
     .pb-safe { padding-bottom: env(safe-area-inset-bottom, 1rem); }
   `]
 })
 export class ShellComponent {
   dataService = inject(DataService);
+  i18n = inject(I18nService);
+  router = inject(Router);
+
   showChildList = signal(false);
   isAddingChild = signal(false);
-  
+  settingsSaved = signal(false);
+  viewState = signal<'selector' | 'app'>('selector');
+
+  // ── Edit Child Modal signals ──────────────────────────────────
+  editingChild = signal<ChildProfile | null>(null);
+  editName = '';
+  editDob = '';
+  editBloodType = signal('');   // reactive signal for blood type
+  editNameInvalid = signal(false);
+  editNameTouched = signal(false);
+  editChildAllergies = '';
+  editChildMedicalNotes = '';
+  editChildDocument = signal<string | null>(null);
+  editChildDocumentDate = '';
+  documentError = signal<string | null>(null);
+
+  // ── Add Child Form signals ─────────────────────────────────────
+  addNameInvalid = signal(false);
+
+  // ── Parent Profile fields ──────────────────────────────────────
+  parentName = '';
+  parentSurname = '';
+  parentPhone = '';
   newChildName = '';
   newChildDob = '';
+  newChildBirthWeight: number | null = null;
+  newChildDeliveryDoctor = '';
+  newChildBloodType = '';
+  newChildAllergies = '';
+  newChildMedicalNotes = '';
+  newChildDocument = signal<string | null>(null);
+  newChildDocumentDate = '';
+  newChildDocumentError = signal<string | null>(null);
 
-  navItems = [
-    { id: 'home', icon: 'dashboard', label: 'Ekrani Kryesor' },
-    { id: 'diary', icon: 'edit_document', label: 'Ditari Mjekësor' },
-    { id: 'records', icon: 'vaccines', label: 'Dosja & Vaksinat' },
-    { id: 'settings', icon: 'settings', label: 'Konfigurime' }
-  ];
+  // ── Validation ────────────────────────────────────────────────
+
+  /** Returns true if name contains only letters and spaces */
+  isValidName(name: string): boolean {
+    return /^[a-zA-Z\s]+$/.test(name.trim()) && name.trim().length > 0;
+  }
+
+  /** Returns true if name has any non-alphabetic characters */
+  hasNameError(name: string): boolean {
+    return name.length > 0 && !this.isValidName(name);
+  }
+
+  // Edit modal name handlers
+  onEditNameInput(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.editName = value;
+    this.editNameTouched.set(true);
+    this.editNameInvalid.set(this.hasNameError(value));
+  }
+
+  onEditNameBlur() {
+    this.editNameTouched.set(true);
+    this.editNameInvalid.set(this.hasNameError(this.editName));
+  }
+
+  onBloodTypeChange() {
+    // Trigger reactivity update for editBloodType signal
+    this.editBloodType.set(this.editBloodType());
+  }
+
+  // Add child name handlers
+  onAddNameInput(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.newChildName = value;
+    this.addNameInvalid.set(this.hasNameError(value));
+  }
+
+  onAddNameBlur() {
+    this.addNameInvalid.set(this.hasNameError(this.newChildName));
+  }
+
+  // ── Computed nav items ─────────────────────────────────────────
+
+  get navItems() {
+    const t = this.i18n.t();
+    return [
+      { id: 'home', icon: 'dashboard', label: t['nav.home'] },
+      { id: 'diary', icon: 'edit_document', label: t['nav.diary'] },
+      { id: 'records', icon: 'vaccines', label: t['nav.records'] },
+      { id: 'settings', icon: 'settings', label: t['nav.settings'] },
+    ];
+  }
+
   currentTab = signal('home');
 
   activeChild() {
@@ -224,17 +681,260 @@ export class ShellComponent {
     return this.dataService.children().find(c => c.id === activeId);
   }
 
-  switchChild(id: string) {
+  // ── Edit Modal ─────────────────────────────────────────────────
+
+  openEditModal(child: ChildProfile) {
+    this.editingChild.set(child);
+    this.editName = child.name;
+    this.editDob = this.toDisplay(child.dateOfBirth, this.i18n.locale());
+    this.editBloodType.set(child.bloodType || '');
+    // Reset validation state
+    this.editNameInvalid.set(false);
+    this.editNameTouched.set(false);
+    // Reset medical fields
+    this.editChildAllergies = child.criticalAllergies || '';
+    this.editChildMedicalNotes = child.medicalNotes || '';
+    this.editChildDocument.set(child.medicalDocument || null);
+    this.editChildDocumentDate = child.documentIssueDate || '';
+    this.documentError.set(null);
+  }
+
+  closeEditModal() {
+    this.editingChild.set(null);
+    this.editNameInvalid.set(false);
+    this.editNameTouched.set(false);
+    this.editChildAllergies = '';
+    this.editChildMedicalNotes = '';
+    this.editChildDocument.set(null);
+    this.editChildDocumentDate = '';
+    this.documentError.set(null);
+  }
+
+  saveEditChild() {
+    const child = this.editingChild();
+    if (!child) return;
+
+    // Block save if name is invalid
+    if (this.hasNameError(this.editName)) {
+      this.editNameInvalid.set(true);
+      this.editNameTouched.set(true);
+      return;
+    }
+
+    if (!this.editName || !this.editDob) return;
+
+    const isoDate = this.toIso(this.editDob, this.i18n.locale());
+
+    this.dataService.updateChildApi(child.id, {
+      name: this.editName.trim(),
+      dateOfBirth: isoDate,
+      bloodType: this.editBloodType() || undefined,
+      birthWeight: child.birthWeight,
+      deliveryDoctor: child.deliveryDoctor,
+      criticalAllergies: this.editChildAllergies || undefined,
+      medicalNotes: this.editChildMedicalNotes || undefined,
+      medicalDocument: this.editChildDocument() || undefined,
+      documentIssueDate: this.editChildDocumentDate || undefined,
+    }).then(() => {
+      this.closeEditModal();
+    }).catch(() => {
+      // Show error toast-like message
+      console.error('Save failed');
+    });
+  }
+
+  onDocumentSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    const file = input.files[0];
+    // Validate size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      this.documentError.set(this.i18n.t()['error.documentTooLarge']);
+      return;
+    }
+    // Validate type
+    if (!file.type.match(/pdf|image\//)) {
+      this.documentError.set(this.i18n.t()['error.invalidDocType']);
+      return;
+    }
+    this.documentError.set(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.editChildDocument.set(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  confirmDeleteChild() {
+    const child = this.editingChild();
+    if (!child) return;
+
+    const confirmMsg = this.i18n.isSq()
+      ? 'A jeni i sigurt që doni të fshini profilin e ' + child.name + '? Ky veprim nuk mund të kthehet.'
+      : 'Are you sure you want to delete the profile for ' + child.name + '? This cannot be undone.';
+
+    if (confirm(confirmMsg)) {
+      this.dataService.deleteChildApi(child.id).catch(() => {
+        // Fallback to local delete if API fails
+        this.dataService.deleteChild(child.id);
+      });
+      this.closeEditModal();
+    }
+  }
+
+  // ── Parent Profile ─────────────────────────────────────────────
+
+  loadParentIntoForm() {
+    const p = this.dataService.parentProfile();
+    this.parentName = p.name;
+    this.parentSurname = p.surname;
+    this.parentPhone = p.phone;
+  }
+
+  saveParentProfile() {
+    this.dataService.saveParentProfile({
+      name: this.parentName,
+      surname: this.parentSurname,
+      phone: this.parentPhone,
+    });
+    this.settingsSaved.set(true);
+    setTimeout(() => this.settingsSaved.set(false), 3000);
+  }
+
+  // ── Navigation ─────────────────────────────────────────────────
+
+  goToSelector() {
+    this.viewState.set('selector');
+    this.isAddingChild.set(false);
+    this.showChildList.set(false);
+    this.currentTab.set('home');
+  }
+
+  selectChild(id: string) {
     this.dataService.switchChild(id);
+    this.viewState.set('app');
     this.showChildList.set(false);
   }
 
-  submitNewChild() {
-    if(this.newChildName && this.newChildDob) {
-       this.dataService.addChild(this.newChildName, this.newChildDob);
-       this.isAddingChild.set(false);
-       this.newChildName = '';
-       this.newChildDob = '';
+  navigateTo(tabId: string) {
+    if (tabId === 'settings') {
+      this.loadParentIntoForm();
+      this.settingsSaved.set(false);
     }
+    if (tabId === 'home') {
+      this.currentTab.set('home');
+    } else {
+      if (this.viewState() === 'selector') {
+        this.dataService.switchChild(this.dataService.activeChildId() ?? '');
+        this.viewState.set('app');
+      }
+      this.currentTab.set(tabId);
+    }
+  }
+
+  // ── Add Child Form ─────────────────────────────────────────────
+
+  submitNewChild() {
+    // Block if name has error
+    if (this.hasNameError(this.newChildName)) {
+      this.addNameInvalid.set(true);
+      return;
+    }
+
+    if (!this.newChildName || !this.newChildDob) return;
+
+    const isoDate = this.toIso(this.newChildDob, this.i18n.locale());
+    this.dataService.createChild({
+      name: this.newChildName.trim(),
+      dateOfBirth: isoDate,
+      birthWeight: this.newChildBirthWeight ?? undefined,
+      deliveryDoctor: this.newChildDeliveryDoctor || undefined,
+      bloodType: this.newChildBloodType || undefined,
+      criticalAllergies: this.newChildAllergies || undefined,
+      medicalNotes: this.newChildMedicalNotes || undefined,
+      medicalDocument: this.newChildDocument() || undefined,
+      documentIssueDate: this.newChildDocumentDate || undefined,
+    }).then(() => {
+      this.cancelAddChild();
+    }).catch(() => {
+      console.error('Create child failed');
+    });
+  }
+
+  onNewChildDocumentSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    const file = input.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+      this.newChildDocumentError.set(this.i18n.t()['error.documentTooLarge']);
+      return;
+    }
+    if (!file.type.match(/pdf|image\//)) {
+      this.newChildDocumentError.set(this.i18n.t()['error.invalidDocType']);
+      return;
+    }
+    this.newChildDocumentError.set(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.newChildDocument.set(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  cancelAddChild() {
+    this.isAddingChild.set(false);
+    this.newChildName = '';
+    this.newChildDob = '';
+    this.newChildBirthWeight = null;
+    this.newChildDeliveryDoctor = '';
+    this.newChildBloodType = '';
+    this.newChildAllergies = '';
+    this.newChildMedicalNotes = '';
+    this.newChildDocument.set(null);
+    this.newChildDocumentDate = '';
+    this.newChildDocumentError.set(null);
+    this.addNameInvalid.set(false);
+  }
+
+  logout() {
+    this.dataService.logout();
+    this.router.navigate(['/login']);
+  }
+
+  // ── Date Helpers ───────────────────────────────────────────────
+
+  get datePattern(): string {
+    return this.i18n.locale() === 'sq' ? 'dd/MM/yyyy' : 'MM/dd/yyyy';
+  }
+
+  onDateInput(event: Event, setter: (v: string) => void, locale: string) {
+    const input = event.target as HTMLInputElement;
+    let val = input.value.replace(/[^\d]/g, '');
+    if (locale === 'sq') {
+      if (val.length > 2) val = val.slice(0, 2) + '/' + val.slice(2);
+      if (val.length > 5) val = val.slice(0, 5) + '/' + val.slice(5);
+    } else {
+      if (val.length > 2) val = val.slice(0, 2) + '/' + val.slice(2);
+      if (val.length > 5) val = val.slice(0, 5) + '/' + val.slice(5);
+    }
+    if (val.length > 10) val = val.slice(0, 10);
+    setter(val);
+  }
+
+  toIso(displayDate: string, locale: string): string {
+    if (!displayDate || !displayDate.includes('/')) return displayDate;
+    const parts = displayDate.split('/');
+    if (locale === 'sq') {
+      return parts[2] + '-' + parts[1] + '-' + parts[0];
+    } else {
+      return parts[2] + '-' + parts[0] + '-' + parts[1];
+    }
+  }
+
+  toDisplay(yyyymmdd: string, locale: string): string {
+    if (!yyyymmdd || yyyymmdd.includes('/')) return yyyymmdd;
+    const [y, m, d] = yyyymmdd.split('-');
+    if (locale === 'sq') return d + '/' + m + '/' + y;
+    return m + '/' + d + '/' + y;
   }
 }

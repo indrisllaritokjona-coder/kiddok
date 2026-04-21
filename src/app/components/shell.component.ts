@@ -9,11 +9,12 @@ import { TemperatureDiaryComponent } from './temperature-diary.component';
 import { GrowthTrackingComponent } from './growth-tracking.component';
 import { RecordsComponent } from './records.component';
 import { SidebarComponent } from './sidebar.component';
+import { HeaderComponent } from './header.component';
 import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'app-shell',
-    imports: [CommonModule, FormsModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, SidebarComponent],
+    imports: [CommonModule, FormsModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, SidebarComponent, HeaderComponent],
     template: `
 
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
@@ -24,91 +25,16 @@ import { FormsModule } from '@angular/forms';
       <!-- Main Content Area -->
       <main class="flex-1 flex flex-col h-screen overflow-hidden relative z-10 w-full">
 
-        <!-- Top Header -->
-        <header class="px-6 py-5 lg:px-10 lg:py-7 flex items-center justify-between lg:justify-end border-b border-gray-200/50 bg-white/60 backdrop-blur-xl z-30 shadow-sm">
-          <div class="flex items-center gap-3">
-            @if (viewState() === 'app') {
-              <button (click)="goToSelector()"
-                      class="flex items-center gap-2 px-3 py-2 rounded-xl bg-white shadow-soft border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all text-gray-600 hover:text-primary-600">
-                <span class="material-icons text-lg">arrow_back</span>
-                <span class="text-sm font-bold hidden sm:block">{{ i18n.t()['nav.back'] }}</span>
-              </button>
-            }
-            <button class="lg:hidden p-2 rounded-xl bg-white shadow-soft border border-gray-100">
-              <span class="material-icons text-gray-700">menu</span>
-            </button>
-          </div>
-
-          <div class="flex items-center gap-4 lg:gap-8">
-            <button (click)="i18n.toggleLocale()" class="lg:hidden flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-full text-xs font-bold text-gray-600 transition-all">
-              <span class="material-icons text-sm">language</span>
-              {{ i18n.locale() === 'sq' ? 'SQ' : 'EN' }}
-            </button>
-
-            <!-- Child Profile Switcher -->
-            <div class="relative">
-              <button (click)="showChildList.set(!showChildList())"
-                      class="flex items-center gap-3 bg-white px-4 py-2 lg:py-2.5 rounded-2xl shadow-soft border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all">
-                @if (activeChild()) {
-                  <img [src]="activeChild()?.avatarUrl" class="w-8 h-8 lg:w-10 lg:h-10 rounded-full border-2 border-primary-100 object-cover" />
-                  <span class="font-bold text-gray-800 hidden sm:block text-sm lg:text-base">{{ activeChild()?.name }}</span>
-                } @else {
-                  <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-slate-100 flex items-center justify-center border-2 border-dashed border-slate-300"><span class="material-icons text-gray-400 text-sm">person</span></div>
-                  <span class="font-bold text-gray-500 hidden sm:block">{{ i18n.t()['child.addNewBtn'] }}</span>
-                }
-                <span class="material-icons text-gray-400 text-sm transition-transform" [class.rotate-180]="showChildList()">expand_more</span>
-              </button>
-
-              @if (showChildList()) {
-                <div class="absolute right-0 top-16 lg:top-20 w-80 bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-gray-100 py-3 animate-slide-up z-50 overflow-hidden">
-                  <div class="px-5 pb-3 pt-1 mb-2 border-b border-gray-50 flex items-center gap-2">
-                     <span class="material-icons text-primary-500 text-sm">family_restroom</span>
-                     <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">{{ i18n.t()['child.switchProfile'] }}</span>
-                  </div>
-                  @for (child of dataService.children(); track child.id) {
-                    <div (click)="selectChild(child.id)"
-                         class="flex items-center gap-4 px-5 py-3 hover:bg-primary-50 cursor-pointer transition-colors m-2 mt-0 rounded-2xl border border-transparent hover:border-primary-100 group">
-                      <img [src]="child.avatarUrl" class="w-12 h-12 rounded-full border border-gray-200 shadow-sm" />
-                      <div class="flex flex-col">
-                        <span class="font-extrabold text-gray-800 group-hover:text-primary-700 transition-colors">{{ child.name }}</span>
-                        <span class="text-xs text-gray-500 font-medium">{{ i18n.t()['child.born'] }}: {{ toDisplay(child.dateOfBirth, i18n.locale()) }}</span>
-                      </div>
-                      @if (child.id === dataService.activeChildId()) {
-                        <span class="material-icons text-teal-500 ml-auto bg-teal-50 rounded-full p-1">check</span>
-                      }
-                    </div>
-                  }
-                  <div class="px-4 pt-2 pb-1">
-                    <button (click)="goToSelector(); showChildList.set(false)"
-                            class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-primary-50 hover:bg-primary-100 text-primary-700 font-bold transition-colors border border-primary-200">
-                      <span class="material-icons text-lg">swap_horiz</span>
-                      {{ i18n.t()['child.switchChild'] }}
-                    </button>
-                  </div>
-                  <div class="px-4 pt-2 mt-1 border-t border-gray-50">
-                    <button (click)="isAddingChild.set(true); showChildList.set(false)" class="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-colors border border-slate-200 hover:border-slate-300">
-                      <span class="material-icons text-base">add_circle_outline</span> {{ i18n.t()['child.addNewBtn'] }}
-                    </button>
-                  </div>
-                </div>
-              }
-            </div>
-
-            @if (viewState() === 'app' && dataService.getParentName()) {
-              <div class="hidden lg:flex items-center gap-2 text-sm text-gray-500 font-medium">
-                <span class="material-icons text-teal-500 text-lg">waving_hand</span>
-                <span>{{ i18n.t()['welcome.loggedIn'] }}, </span>
-                <span class="font-bold text-gray-700">{{ dataService.getParentName() }}</span>
-              </div>
-            }
-
-            <div class="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-gradient-to-tr from-primary-500 to-teal-400 p-[2px] shadow-soft cursor-pointer hover:shadow-lg transition-shadow">
-              <div class="w-full h-full bg-white rounded-full flex items-center justify-center border-2 border-white">
-                <span class="material-icons text-gray-700 lg:text-xl text-lg">manage_accounts</span>
-              </div>
-            </div>
-          </div>
-        </header>
+        <!-- Top Header (extracted to HeaderComponent) -->
+        <app-header
+          [currentTab]="currentTab()"
+          [viewState]="viewState()"
+          (childSwitchRequested)="selectChild($event)"
+          (addChildRequested)="isAddingChild.set(true)"
+          (switchProfileRequested)="goToSelector()"
+          (backRequested)="goToSelector()"
+          (localeToggleRequested)="i18n.toggleLocale()"
+        />
 
         <!-- Main Workspace -->
         <div class="flex-1 overflow-y-auto w-full px-4 pt-6 pb-24 lg:px-12 lg:py-10 bg-slate-50/50 relative">
@@ -694,7 +620,6 @@ export class ShellComponent {
     window.removeEventListener('kiddok:navigate', this.navigateHandler);
   }
 
-  showChildList = signal(false);
   isAddingChild = signal(false);
   settingsSaved = signal(false);
   viewState = signal<'selector' | 'app'>('selector');
@@ -800,11 +725,6 @@ export class ShellComponent {
   }
 
   currentTab = signal('home');
-
-  activeChild() {
-    const activeId = this.dataService.activeChildId();
-    return this.dataService.children().find(c => c.id === activeId);
-  }
 
   // ── Edit Modal ─────────────────────────────────────────────────
 
@@ -946,14 +866,12 @@ export class ShellComponent {
   goToSelector() {
     this.viewState.set('selector');
     this.isAddingChild.set(false);
-    this.showChildList.set(false);
     this.currentTab.set('home');
   }
 
   selectChild(id: string) {
     this.dataService.switchChild(id);
     this.viewState.set('app');
-    this.showChildList.set(false);
   }
 
   navigateTo(tabId: string) {

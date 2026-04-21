@@ -49,6 +49,11 @@ const translations = {
   },
   'child.selectChild': { sq: 'Zgjidhni ose shtoni një fëmijë', en: 'Select or add a child' },
   'child.switchChild': { sq: 'Ndërro Fëmijën', en: 'Switch Child' },
+  // Header
+  'header.switchChild': { sq: 'Ndërro Fëmijën', en: 'Switch Child' },
+  'header.addNewMember': { sq: 'Shto Pjestar të Ri', en: 'Add New Member' },
+  'header.noChildrenPlaceholder': { sq: 'Akzni s\'ka fëmijë', en: 'No children added yet' },
+  'header.profileLabel': { sq: 'Profili i Fëmijës', en: 'Child Profile' },
   'nav.back': { sq: 'Kthehu', en: 'Back' },
   'child.goToSelector': { sq: 'Shko te Zgjidhni Fëmijën', en: 'Go to Child Selector' },
   'welcome.loggedIn': { sq: 'Mirëserdhje', en: 'Welcome back' },

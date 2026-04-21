@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -6,6 +6,24 @@ export class ChildrenService {
   constructor(private prisma: PrismaService) {}
 
   async create(userId: string, data: any) {
+    // Validate medicalDocument size (base64 max ~6.7MB for 5MB file)
+    const MAX_DOCUMENT_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+    if (data.medicalDocument) {
+      const base64Size = data.medicalDocument.length * 0.75;
+      if (base64Size > MAX_DOCUMENT_SIZE) {
+        throw new BadRequestException('Dokumenti tejkalon limitin prej 5MB. / Document exceeds 5MB limit.');
+      }
+    }
+
+    // Validate documentIssueDate
+    if (data.documentIssueDate) {
+      const parsed = new Date(data.documentIssueDate);
+      if (isNaN(parsed.getTime())) {
+        throw new BadRequestException('Data e lëshimit të dokumentit nuk është e vlefshme. / Document issue date is invalid.');
+      }
+      data.documentIssueDate = parsed;
+    }
+
     return this.prisma.child.create({
       data: {
         ...data,
@@ -39,10 +57,19 @@ export class ChildrenService {
 
   async update(id: string, userId: string, data: any) {
     // ensure belongs to user
-    await this.findOne(id, userId); 
+    await this.findOne(id, userId);
 
     if (data.dateOfBirth) {
         data.dateOfBirth = new Date(data.dateOfBirth);
+    }
+
+    // Validate document size on update as well
+    const MAX_DOCUMENT_SIZE = 5 * 1024 * 1024;
+    if (data.medicalDocument) {
+      const base64Size = data.medicalDocument.length * 0.75;
+      if (base64Size > MAX_DOCUMENT_SIZE) {
+        throw new BadRequestException('Dokumenti tejkalon limitin prej 5MB. / Document exceeds 5MB limit.');
+      }
     }
 
     return this.prisma.child.update({

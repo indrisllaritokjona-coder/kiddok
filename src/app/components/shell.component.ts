@@ -516,6 +516,42 @@ import { FormsModule } from '@angular/forms';
                   }
                 </div>
 
+                <!-- Issue #7: Gender -->
+                <div>
+                  <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">
+                    {{ i18n.locale() === 'sq' ? 'Gjinia' : 'Gender' }}
+                  </label>
+                  <div class="relative">
+                    <select [(ngModel)]="editGender"
+                            class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-200 transition-all text-lg shadow-sm appearance-none focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500">
+                      <option value="">--</option>
+                      <option value="M">{{ i18n.isSq() ? 'Mashkull' : 'Male' }}</option>
+                      <option value="F">{{ i18n.isSq() ? 'Femer' : 'Female' }}</option>
+                    </select>
+                    <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-gray-400 text-lg pointer-events-none">expand_more</span>
+                  </div>
+                </div>
+
+                <!-- Issue #1: Birth Weight -->
+                <div>
+                  <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">
+                    {{ i18n.t()['child.birthWeight'] }}
+                  </label>
+                  <input type="number" step="0.01" [(ngModel)]="editBirthWeight"
+                         class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-800 shadow-sm placeholder-gray-300"
+                         [placeholder]="i18n.t()['placeholder.birthWeight']">
+                </div>
+
+                <!-- Issue #1: Delivery Doctor -->
+                <div>
+                  <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">
+                    {{ i18n.t()['child.deliveryDoctor'] }}
+                  </label>
+                  <input type="text" [(ngModel)]="editDeliveryDoctor"
+                         class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-800 shadow-sm placeholder-gray-300"
+                         [placeholder]="i18n.t()['placeholder.deliveryDoctor']">
+                </div>
+
                 <!-- Critical Allergies -->
                 <div>
                   <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.criticalAllergies'] }}</label>
@@ -556,13 +592,25 @@ import { FormsModule } from '@angular/forms';
 
                 <!-- Actions -->
                 <div class="flex flex-col gap-3 pt-4 border-t border-gray-100">
+                  <!-- Issue #9: Success Toast -->
+                  @if (saveSuccess()) {
+                    <div class="flex items-center gap-2 p-3 bg-teal-50 border border-teal-200 rounded-xl text-teal-700 text-sm font-medium animate-fade-in">
+                      <span class="material-icons text-teal-500">check_circle</span>
+                      {{ i18n.isSq() ? 'Ndryshimet u ruajtën!' : 'Changes saved!' }}
+                    </div>
+                  }
                   <button (click)="saveEditChild()"
-                          class="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white py-4 rounded-2xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-base shadow-md"
-                          [disabled]="editNameInvalid()">
-                    <span class="material-icons">save</span>
-                    {{ i18n.locale() === 'sq' ? 'Ruaj Ndryshimet' : 'Save Changes' }}
+                          class="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white py-4 rounded-2xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-base shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                          [disabled]="editNameInvalid() || saving()">
+                    @if (saving()) {
+                      <span class="material-icons animate-spin">progress_activity</span>
+                      {{ i18n.isSq() ? 'Duke ruajtur...' : 'Saving...' }}
+                    } @else {
+                      <span class="material-icons">save</span>
+                      {{ i18n.locale() === 'sq' ? 'Ruaj Ndryshimet' : 'Save Changes' }}
+                    }
                   </button>
-                  <button (click)="confirmDeleteChild()"
+                  <button (click)="showDeleteConfirm.set(true)"
                           class="w-full border-2 border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 py-3.5 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 text-sm">
                     <span class="material-icons text-base">delete_outline</span>
                     {{ i18n.locale() === 'sq' ? 'Fshi Profilin' : 'Delete Profile' }}
@@ -602,6 +650,20 @@ export class ShellComponent {
   editChildDocument = signal<string | null>(null);
   editChildDocumentDate = '';
   documentError = signal<string | null>(null);
+  // Issue #1: birthWeight and deliveryDoctor missing from edit modal
+  editBirthWeight: number | null = null;
+  editDeliveryDoctor = '';
+  // Issue #7: gender field for edit modal
+  editGender = '';
+  // Issue #4: saving signal to prevent double-submit
+  saving = signal(false);
+  // Issue #5: custom delete confirmation modal
+  showDeleteConfirm = signal(false);
+  // Issue #9: save success toast
+  saveSuccess = signal(false);
+  // Issue #8: dirty-flag for medical document optimization (base64 only sent when changed)
+  // TODO: implement dirty-flag optimization — track originalDocument and only send if changed
+  originalDocument = signal<string | null>(null);
 
   // ── Add Child Form signals ─────────────────────────────────────
   addNameInvalid = signal(false);
@@ -697,6 +759,15 @@ export class ShellComponent {
     this.editChildDocument.set(child.medicalDocument || null);
     this.editChildDocumentDate = child.documentIssueDate || '';
     this.documentError.set(null);
+    // Issue #1: populate birthWeight and deliveryDoctor
+    this.editBirthWeight = child.birthWeight ?? null;
+    this.editDeliveryDoctor = child.deliveryDoctor || '';
+    // Issue #7: populate gender
+    this.editGender = child.gender || '';
+    // Issue #8: track original document for dirty-flag optimization
+    this.originalDocument.set(child.medicalDocument || null);
+    // Reset delete confirm state
+    this.showDeleteConfirm.set(false);
   }
 
   closeEditModal() {
@@ -708,6 +779,7 @@ export class ShellComponent {
     this.editChildDocument.set(null);
     this.editChildDocumentDate = '';
     this.documentError.set(null);
+    this.showDeleteConfirm.set(false);
   }
 
   saveEditChild() {
@@ -723,23 +795,34 @@ export class ShellComponent {
 
     if (!this.editName || !this.editDob) return;
 
+    // Issue #4: prevent double-submit
+    this.saving.set(true);
+
     const isoDate = this.toIso(this.editDob, this.i18n.locale());
 
     this.dataService.updateChildApi(child.id, {
       name: this.editName.trim(),
       dateOfBirth: isoDate,
       bloodType: this.editBloodType() || undefined,
-      birthWeight: child.birthWeight,
-      deliveryDoctor: child.deliveryDoctor,
+      // Issue #1: use editBirthWeight and editDeliveryDoctor from form, not original object
+      birthWeight: this.editBirthWeight ?? undefined,
+      deliveryDoctor: this.editDeliveryDoctor || undefined,
+      // Issue #7: include gender
+      gender: this.editGender || undefined,
       criticalAllergies: this.editChildAllergies || undefined,
       medicalNotes: this.editChildMedicalNotes || undefined,
       medicalDocument: this.editChildDocument() || undefined,
       documentIssueDate: this.editChildDocumentDate || undefined,
     }).then(() => {
+      // Issue #9: show success toast
+      this.saveSuccess.set(true);
+      setTimeout(() => this.saveSuccess.set(false), 3000);
       this.closeEditModal();
     }).catch(() => {
       // Show error toast-like message
       console.error('Save failed');
+    }).finally(() => {
+      this.saving.set(false);
     });
   }
 

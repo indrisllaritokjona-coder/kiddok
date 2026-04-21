@@ -8,7 +8,6 @@ export declare class HealthRecordsService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        childId: string;
         date: Date;
         type: string;
         symptoms: string | null;
@@ -23,12 +22,12 @@ export declare class HealthRecordsService {
         medicationDose: string | null;
         medicationTime: string | null;
         medicationEffectiveness: string | null;
+        childId: string;
     }>;
     findAllByChild(userId: string, childId: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        childId: string;
         date: Date;
         type: string;
         symptoms: string | null;
@@ -43,12 +42,12 @@ export declare class HealthRecordsService {
         medicationDose: string | null;
         medicationTime: string | null;
         medicationEffectiveness: string | null;
+        childId: string;
     }[]>;
     findOne(userId: string, id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        childId: string;
         date: Date;
         type: string;
         symptoms: string | null;
@@ -63,12 +62,12 @@ export declare class HealthRecordsService {
         medicationDose: string | null;
         medicationTime: string | null;
         medicationEffectiveness: string | null;
+        childId: string;
     }>;
     update(userId: string, id: string, data: any): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        childId: string;
         date: Date;
         type: string;
         symptoms: string | null;
@@ -83,12 +82,12 @@ export declare class HealthRecordsService {
         medicationDose: string | null;
         medicationTime: string | null;
         medicationEffectiveness: string | null;
+        childId: string;
     }>;
     remove(userId: string, id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        childId: string;
         date: Date;
         type: string;
         symptoms: string | null;
@@ -103,5 +102,6 @@ export declare class HealthRecordsService {
         medicationDose: string | null;
         medicationTime: string | null;
         medicationEffectiveness: string | null;
+        childId: string;
     }>;
 }

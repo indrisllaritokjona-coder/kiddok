@@ -41,7 +41,6 @@ export declare class ChildrenController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            childId: string;
             date: Date;
             type: string;
             symptoms: string | null;
@@ -56,14 +55,15 @@ export declare class ChildrenController {
             medicationDose: string | null;
             medicationTime: string | null;
             medicationEffectiveness: string | null;
+            childId: string;
         }[];
         vaccines: {
             id: string;
             name: string;
             createdAt: Date;
             updatedAt: Date;
-            childId: string;
             notes: string | null;
+            childId: string;
             dateAdministered: Date | null;
             dueDate: Date | null;
             provider: string | null;

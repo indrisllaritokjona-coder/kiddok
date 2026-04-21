@@ -476,8 +476,8 @@ export class PinLockComponent {
 
     this.loading.set(true);
     this.errorMsg.set('');
-    setTimeout(() => {
-      const success = this.dataService.login(this.userId, this.password);
+    setTimeout(async () => {
+      const success = await this.dataService.login(this.userId, this.password);
       if (success) {
         this.router.navigate(['/child-selector']);
       } else {

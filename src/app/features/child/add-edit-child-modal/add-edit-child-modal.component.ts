@@ -52,7 +52,7 @@ export interface ChildFormData {
             <h2 class="text-xl font-bold text-gray-800">
               {{ mode === 'edit' ? i18n.t()['childForm.titleEdit'] : i18n.t()['childForm.titleAdd'] }}
             </h2>
-            <button (click)="cancel.emit()"
+            <button (click)="cancelled.emit()"
                     class="w-9 h-9 rounded-xl bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-500 hover:text-stone-700 transition-all shadow-sm border border-stone-200">
               <span class="material-icons text-base">close</span>
             </button>
@@ -284,7 +284,7 @@ export interface ChildFormData {
                 {{ i18n.t()['childForm.back'] }}
               </button>
             } @else {
-              <button type="button" (click)="cancel.emit()"
+              <button type="button" (click)="cancelled.emit()"
                       class="px-5 py-3 text-stone-500 hover:text-stone-700 font-medium transition-colors text-sm">
                 {{ i18n.t()['childForm.cancel'] }}
               </button>

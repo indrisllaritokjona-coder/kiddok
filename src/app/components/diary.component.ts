@@ -1,22 +1,20 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DataService } from '../services/data.service';
+import { DataService, DiaryEntry } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
+
+type EntryType = DiaryEntry['type'];
 
 interface CalendarEntry {
   id?: string;
-  date: string;        // yyyy-mm-dd
-  type: 'SYMPTOM' | 'TEMP' | 'MEDICATION';
-  symptoms?: string[];
-  temperature?: number;
-  temperatureTime?: string;
-  medicationName?: string;
-  medicationDose?: string;
-  medicationTime?: string;
-  medicationEffectiveness?: string;
+  date: string;
+  type: EntryType;
+  description: string;
+  severity?: 'mild' | 'moderate' | 'severe';
+  duration?: string;
   notes?: string;
-  createdAt?: string;
+  loggedAt?: string;
 }
 
 interface DayCell {
@@ -27,6 +25,16 @@ interface DayCell {
   isSelected: boolean;
   hasEntries: boolean;
   entryCount: number;
+}
+
+interface QuickAdd {
+  type: EntryType;
+  emoji: string;
+  labelKey: string;
+  description: string;
+  bgClass: string;
+  borderClass: string;
+  description_placeholder?: string;
 }
 
 @Component({
@@ -46,6 +54,28 @@ interface DayCell {
           <span class="material-icons text-lg">add</span>
           {{ i18n.t()['diary.addEntry'] }}
         </button>
+      </div>
+
+      <!-- Quick-Add Bar -->
+      <div class="flex items-center justify-center gap-3 mb-6 flex-wrap">
+        @for (qa of quickAddButtons(); track qa.type) {
+          <button (click)="quickAdd(qa)"
+                  class="flex flex-col items-center gap-1.5 w-16 h-20 rounded-2xl border-2 transition-all hover:shadow-md hover:-translate-y-0.5 {{ qa.bgClass }} {{ qa.borderClass }}">
+            <span class="text-2xl">{{ qa.emoji }}</span>
+            <span class="text-xs font-semibold text-slate-600 leading-tight text-center px-1">{{ i18n.t()[qa.labelKey] }}</span>
+          </button>
+        }
+      </div>
+
+      <!-- Filter Pills -->
+      <div class="flex items-center gap-2 mb-6 flex-wrap">
+        @for (f of filterPills(); track f.value) {
+          <button (click)="activeFilter.set(f.value)"
+                  class="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider border-2 transition-all
+                         {{ activeFilter() === f.value ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-slate-500 border-slate-200 hover:border-primary-300' }}">
+            {{ f.label() }}
+          </button>
+        }
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -93,7 +123,7 @@ interface DayCell {
               <span class="w-2 h-2 rounded-full bg-teal-400 inline-block"></span> {{ i18n.t()['diary.today'] }}
             </div>
             <div class="flex items-center gap-2 text-xs text-slate-400 font-medium">
-              <span class="w-2 h-2 rounded-full bg-primary-500 inline-block"></span> {{ i18n.t()['diary.today'] === 'Sot' ? 'Ka regjistrime' : 'Has entries' }}
+              <span class="w-2 h-2 rounded-full bg-primary-500 inline-block"></span> {{ i18n.locale() === 'sq' ? 'Ka regjistrime' : 'Has entries' }}
             </div>
           </div>
         </div>
@@ -101,71 +131,50 @@ interface DayCell {
         <!-- ===== ENTRIES FOR SELECTED DATE ===== -->
         <div class="bg-white rounded-[2rem] shadow-soft border border-slate-100 overflow-hidden">
           <div class="p-5 border-b border-slate-100">
-            <h3 class="font-extrabold text-gray-800 text-lg">
-              {{ selectedDateLabel() }}
-            </h3>
+            <h3 class="font-extrabold text-gray-800 text-lg">{{ selectedDateLabel() }}</h3>
             <p class="text-slate-400 text-xs mt-1 font-medium">
-              {{ entriesForSelectedDate().length }} {{ entriesForSelectedDate().length === 1 ? 'regjistrim' : 'regjistrime' }}
+              {{ filteredEntriesForDate().length }} {{ i18n.locale() === 'sq' ? (filteredEntriesForDate().length === 1 ? 'regjistrim' : 'regjistrime') : 'entries' }}
             </p>
           </div>
 
           <div class="p-4 space-y-3 max-h-[500px] overflow-y-auto">
-            @if (entriesForSelectedDate().length === 0) {
+            @if (filteredEntriesForDate().length === 0) {
               <div class="text-center py-10">
                 <span class="material-icons text-5xl text-slate-200 mb-3">event_note</span>
-                <p class="text-slate-400 text-sm font-medium">{{ i18n.t()['diary.noEntries'] }}</p>
+                <p class="text-slate-400 text-sm font-medium">{{ i18n.t()['diary.emptyState'] }}</p>
                 <button (click)="openAddEntry()" class="mt-3 text-primary-600 text-sm font-bold hover:underline">
                   + {{ i18n.t()['diary.addEntry'] }}
                 </button>
               </div>
             }
-            @for (entry of entriesForSelectedDate(); track entry.id) {
+            @for (entry of filteredEntriesForDate(); track entry.id) {
               <div class="rounded-2xl border border-slate-100 p-4 bg-slate-50/60 hover:bg-slate-100/80 transition-colors group">
                 <div class="flex items-start justify-between mb-2">
                   <div class="flex items-center gap-2">
-                    <span class="material-icons text-base {{ entry.type === 'SYMPTOM' ? 'text-orange-500' : entry.type === 'TEMP' ? 'text-red-500' : 'text-blue-500' }}">
-                      {{ entry.type === 'SYMPTOM' ? 'thermostat' : entry.type === 'TEMP' ? 'water_drop' : 'medication' }}
+                    <span class="material-icons text-base {{ typeIconClass(entry.type) }}">
+                      {{ typeIcon(entry.type) }}
                     </span>
-                    <span class="text-xs font-bold uppercase tracking-wider {{ entry.type === 'SYMPTOM' ? 'text-orange-500' : entry.type === 'TEMP' ? 'text-red-500' : 'text-blue-500' }}">
-                      {{ entry.type === 'SYMPTOM' ? i18n.t()['diary.symptoms'] : entry.type === 'TEMP' ? i18n.t()['diary.temperature'] : i18n.t()['diary.medication'] }}
+                    <span class="text-xs font-bold uppercase tracking-wider {{ typeColorClass(entry.type) }}">
+                      {{ typeLabel(entry.type) }}
                     </span>
+                    @if (entry.severity) {
+                      <span class="w-3 h-3 rounded-full {{ severityColor(entry.severity) }}"></span>
+                    }
                   </div>
                   <button (click)="deleteEntry(entry)" class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all">
                     <span class="material-icons text-sm">delete_outline</span>
                   </button>
                 </div>
 
-                @if (entry.type === 'SYMPTOM' && entry.symptoms?.length) {
-                  <div class="flex flex-wrap gap-1.5 mb-2">
-                    @for (s of entry.symptoms; track s) {
-                      <span class="px-2.5 py-1 bg-orange-50 text-orange-600 text-xs font-bold rounded-full border border-orange-100">{{ s }}</span>
-                    }
-                  </div>
+                <p class="text-sm font-semibold text-gray-800 mb-1">{{ entry.description }}</p>
+
+                @if (entry.type === 'symptom' && entry.duration) {
+                  <p class="text-xs text-slate-500 font-medium mb-1">
+                    <span class="material-icons text-xs align-text-bottom">schedule</span>
+                    {{ entry.duration }}
+                  </p>
                 }
-                @if (entry.type === 'TEMP' && entry.temperature) {
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="text-2xl font-black text-red-500">{{ entry.temperature }}°C</span>
-                    @if (entry.temperatureTime) {
-                      <span class="text-xs text-slate-400 font-medium">{{ entry.temperatureTime }}</span>
-                    }
-                  </div>
-                }
-                @if (entry.type === 'MEDICATION') {
-                  <div class="space-y-1 mb-1">
-                    <p class="font-bold text-gray-800 text-sm">{{ entry.medicationName }}</p>
-                    @if (entry.medicationDose) {
-                      <p class="text-xs text-slate-500 font-medium">Doza: {{ entry.medicationDose }}</p>
-                    }
-                    @if (entry.medicationTime) {
-                      <p class="text-xs text-slate-500 font-medium">Ora: {{ entry.medicationTime }}</p>
-                    }
-                    @if (entry.medicationEffectiveness) {
-                      <p class="text-xs font-bold text-teal-600 mt-1">
-                        {{ effectivenessLabel(entry.medicationEffectiveness) }}
-                      </p>
-                    }
-                  </div>
-                }
+
                 @if (entry.notes) {
                   <p class="text-xs text-slate-500 italic mt-2 border-t border-slate-200 pt-2">{{ entry.notes }}</p>
                 }
@@ -175,6 +184,48 @@ interface DayCell {
         </div>
 
       </div>
+
+      <!-- Recent Activity Timeline -->
+      <div class="mt-8 bg-white rounded-[2rem] shadow-soft border border-slate-100 overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h3 class="font-extrabold text-gray-800 text-lg">{{ i18n.t()['diary.recentActivity'] }}</h3>
+            <p class="text-slate-400 text-xs mt-0.5 font-medium">{{ recentEntries().length }} {{ i18n.locale() === 'sq' ? 'regjistrime të funta' : 'recent entries' }}</p>
+          </div>
+          <span class="material-icons text-slate-300">history</span>
+        </div>
+        <div class="p-5">
+          @if (recentEntries().length === 0) {
+            <div class="text-center py-8">
+              <span class="material-icons text-4xl text-slate-200 mb-2">inbox</span>
+              <p class="text-slate-400 text-sm font-medium">{{ i18n.t()['diary.emptyState'] }}</p>
+            </div>
+          }
+          <div class="space-y-3">
+            @for (entry of recentEntries(); track entry.id) {
+              <div class="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                <div class="flex flex-col items-center gap-1 min-w-[40px]">
+                  <span class="text-xl">{{ typeEmoji(entry.type) }}</span>
+                  @if (entry.severity) {
+                    <span class="w-2.5 h-2.5 rounded-full {{ severityColor(entry.severity) }}"></span>
+                  }
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-bold uppercase tracking-wider {{ typeColorClass(entry.type) }}">{{ typeLabel(entry.type) }}</span>
+                    <span class="text-xs text-slate-400 font-medium">{{ formatEntryTime(entry.loggedAt) }}</span>
+                  </div>
+                  <p class="text-sm text-gray-800 font-medium truncate">{{ entry.description }}</p>
+                  @if (entry.duration) {
+                    <p class="text-xs text-slate-400 font-medium">{{ entry.duration }}</p>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ===== ADD ENTRY MODAL ===== -->
@@ -197,9 +248,9 @@ interface DayCell {
           <div class="flex p-4 gap-2 border-b border-slate-100">
             @for (type of entryTypes(); track type.value) {
               <button (click)="newEntryType.set(type.value)"
-                      class="flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border-2
+                      class="flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border-2 flex flex-col items-center gap-1
                              {{ newEntryType() === type.value ? 'bg-primary-600 text-white border-primary-600' : 'bg-slate-50 text-slate-500 border-transparent hover:bg-slate-100' }}">
-                <span class="material-icons text-sm mb-0.5">{{ type.icon }}</span>
+                <span class="material-icons text-sm">{{ type.icon }}</span>
                 <div>{{ type.label() }}</div>
               </button>
             }
@@ -207,8 +258,16 @@ interface DayCell {
 
           <div class="p-6 space-y-5">
 
-            <!-- SYMPTOM entry -->
-            @if (newEntryType() === 'SYMPTOM') {
+            <!-- Description (all types) -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">{{ i18n.t()['diary.description'] }}</label>
+              <textarea [(ngModel)]="newDescription" rows="2"
+                        class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm resize-none"
+                        [placeholder]="i18n.t()['diary.descriptionPlaceholder']"></textarea>
+            </div>
+
+            <!-- SYMPTOM entry extra fields -->
+            @if (newEntryType() === 'symptom') {
               <div>
                 <label class="block text-xs font-bold text-primary-700 mb-3 uppercase tracking-wider">{{ i18n.t()['diary.symptoms'] }}</label>
                 <div class="flex flex-wrap gap-2">
@@ -221,58 +280,27 @@ interface DayCell {
                   }
                 </div>
               </div>
-            }
 
-            <!-- TEMPERATURE entry -->
-            @if (newEntryType() === 'TEMP') {
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs font-bold text-primary-700 mb-3 uppercase tracking-wider">{{ i18n.t()['diary.temperatureReading'] }}</label>
-                  <input type="number" step="0.1" [(ngModel)]="newTemperature"
-                         class="w-full px-4 py-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-800 font-bold placeholder-slate-300"
-                         placeholder="38.5">
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-primary-700 mb-3 uppercase tracking-wider">{{ i18n.t()['diary.temperatureTime'] }}</label>
-                  <input type="time" [(ngModel)]="newTempTime"
-                         class="w-full px-4 py-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800">
+              <!-- Severity selector -->
+              <div>
+                <label class="block text-xs font-bold text-primary-700 mb-3 uppercase tracking-wider">{{ i18n.locale() === 'sq' ? 'Seviiteti' : 'Severity' }}</label>
+                <div class="flex gap-3">
+                  @for (sev of severities(); track sev.value) {
+                    <button (click)="newSeverity.set(sev.value)"
+                            class="flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl border-2 transition-all {{ newSeverity() === sev.value ? sev.activeClass : 'bg-slate-50 border-slate-200 hover:' + sev.hoverClass }}">
+                      <span class="w-5 h-5 rounded-full {{ sev.dotClass }}"></span>
+                      <span class="text-xs font-bold {{ newSeverity() === sev.value ? sev.textClass : 'text-slate-500' }}">{{ sev.label() }}</span>
+                    </button>
+                  }
                 </div>
               </div>
-            }
 
-            <!-- MEDICATION entry -->
-            @if (newEntryType() === 'MEDICATION') {
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">{{ i18n.t()['diary.medicationName'] }}</label>
-                  <input type="text" [(ngModel)]="newMedName"
-                         class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm"
-                         placeholder="P.sh. Paracetamol">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">{{ i18n.t()['diary.medicationDose'] }}</label>
-                    <input type="text" [(ngModel)]="newMedDose"
-                           class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm"
-                           placeholder="P.sh. 5ml">
-                  </div>
-                  <div>
-                    <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">{{ i18n.t()['diary.medicationTime'] }}</label>
-                    <input type="time" [(ngModel)]="newMedTime"
-                           class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm">
-                  </div>
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">{{ i18n.t()['diary.effectiveness'] }}</label>
-                  <select [(ngModel)]="newMedEffect"
-                          class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm">
-                    <option value="">--</option>
-                    <option value="none">{{ i18n.t()['diary.effectivenessOptions.none'] }}</option>
-                    <option value="mild">{{ i18n.t()['diary.effectivenessOptions.mild'] }}</option>
-                    <option value="good">{{ i18n.t()['diary.effectivenessOptions.good'] }}</option>
-                    <option value="great">{{ i18n.t()['diary.effectivenessOptions.great'] }}</option>
-                  </select>
-                </div>
+              <!-- Duration -->
+              <div>
+                <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">{{ i18n.t()['diary.duration'] }}</label>
+                <input type="text" [(ngModel)]="newDuration"
+                       class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm"
+                       [placeholder]="i18n.t()['diary.durationPlaceholder']">
               </div>
             }
 
@@ -312,40 +340,75 @@ export class DiaryComponent {
   selectedDate = signal<string>(this.todayStr());
 
   showModal = signal(false);
-  newEntryType = signal<'SYMPTOM' | 'TEMP' | 'MEDICATION'>('SYMPTOM');
+  newEntryType = signal<EntryType>('symptom');
+  activeFilter = signal<'all' | EntryType>('all');
 
   // Form fields
+  newDescription = '';
   newSymptoms = signal<string[]>([]);
-  newTemperature: number | null = null;
-  newTempTime = '';
-  newMedName = '';
-  newMedDose = '';
-  newMedTime = '';
-  newMedEffect = '';
+  newSeverity = signal<'mild' | 'moderate' | 'severe'>('mild');
+  newDuration = '';
   newNotes = '';
+
+  // ── Quick-add ─────────────────────────────────────────────────────
+  quickAddButtons = computed<QuickAdd[]>(() => [
+    { type: 'symptom', emoji: '😰', labelKey: 'diary.quickAdd.notWell', description: 'Nuk ndihem mirë', bgClass: 'bg-orange-50', borderClass: 'border-orange-200' },
+    { type: 'meal', emoji: '🍽️', labelKey: 'diary.quickAdd.ate', description: 'Hëngri', bgClass: 'bg-teal-50', borderClass: 'border-teal-200' },
+    { type: 'sleep', emoji: '😴', labelKey: 'diary.quickAdd.slept', description: 'Fjeti', bgClass: 'bg-indigo-50', borderClass: 'border-indigo-200' },
+    { type: 'mood', emoji: '😊', labelKey: 'diary.quickAdd.happy', description: 'I gëzuar', bgClass: 'bg-yellow-50', borderClass: 'border-yellow-200' },
+  ]);
+
+  filterPills = computed(() => {
+    const t = this.i18n.t();
+    return [
+      { value: 'all' as const, label: () => t['diary.filter.all'] },
+      { value: 'symptom' as const, label: () => t['diary.filter.symptom'] },
+      { value: 'meal' as const, label: () => t['diary.filter.meal'] },
+      { value: 'sleep' as const, label: () => t['diary.filter.sleep'] },
+      { value: 'mood' as const, label: () => t['diary.filter.mood'] },
+    ];
+  });
+
+  entryTypes = computed(() => {
+    const t = this.i18n.t();
+    return [
+      { value: 'symptom' as const, icon: 'sick', label: () => t['diary.type.symptom'] },
+      { value: 'meal' as const, icon: 'restaurant', label: () => t['diary.type.meal'] },
+      { value: 'sleep' as const, icon: 'bedtime', label: () => t['diary.type.sleep'] },
+      { value: 'mood' as const, icon: 'mood', label: () => t['diary.type.mood'] },
+    ];
+  });
+
+  severities = computed(() => {
+    const t = this.i18n.t();
+    return [
+      { value: 'mild' as const, label: () => t['diary.severity.mild'], dotClass: 'bg-green-400', activeClass: 'border-green-300 bg-green-50', hoverClass: 'border-green-200', textClass: 'text-green-700' },
+      { value: 'moderate' as const, label: () => t['diary.severity.moderate'], dotClass: 'bg-yellow-400', activeClass: 'border-yellow-300 bg-yellow-50', hoverClass: 'border-yellow-200', textClass: 'text-yellow-700' },
+      { value: 'severe' as const, label: () => t['diary.severity.severe'], dotClass: 'bg-red-500', activeClass: 'border-red-300 bg-red-50', hoverClass: 'border-red-200', textClass: 'text-red-700' },
+    ];
+  });
+
+  symptomOptions = computed(() => {
+    const t = this.i18n.t();
+    return [
+      { key: 'fever', label: () => t['diary.symptomTypes.fever'] },
+      { key: 'cough', label: () => t['diary.symptomTypes.cough'] },
+      { key: 'vomit', label: () => t['diary.symptomTypes.vomit'] },
+      { key: 'diarrhea', label: () => t['diary.symptomTypes.diarrhea'] },
+      { key: 'headache', label: () => t['diary.symptomTypes.headache'] },
+      { key: 'rash', label: () => t['diary.symptomTypes.rash'] },
+      { key: 'soreThroat', label: () => t['diary.symptomTypes.soreThroat'] },
+      { key: 'tired', label: () => t['diary.symptomTypes.tired'] },
+      { key: 'stomachache', label: () => t['diary.symptomTypes.stomachache'] },
+    ];
+  });
 
   // ── Helpers ───────────────────────────────────────────────────────
   weekDays = computed(() => {
-    const dow = this.i18n.locale() === 'sq'
+    return this.i18n.locale() === 'sq'
       ? ['Di', 'Hën', 'Mar', 'Mër', 'Enj', 'Pre', 'Sht']
       : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    return dow;
   });
-
-  symptomOptions = computed(() => [
-    { key: 'fever', label: () => this.i18n.t()['diary.symptomTypes.fever'] },
-    { key: 'cough', label: () => this.i18n.t()['diary.symptomTypes.cough'] },
-    { key: 'vomit', label: () => this.i18n.t()['diary.symptomTypes.vomit'] },
-    { key: 'diarrhea', label: () => this.i18n.t()['diary.symptomTypes.diarrhea'] },
-    { key: 'headache', label: () => this.i18n.t()['diary.symptomTypes.headache'] },
-    { key: 'rash', label: () => this.i18n.t()['diary.symptomTypes.rash'] },
-  ]);
-
-  entryTypes = computed(() => [
-    { value: 'SYMPTOM' as const, icon: 'thermostat', label: () => this.i18n.t()['diary.symptoms'] },
-    { value: 'TEMP' as const, icon: 'water_drop', label: () => this.i18n.t()['diary.temperature'] },
-    { value: 'MEDICATION' as const, icon: 'medication', label: () => this.i18n.t()['diary.medication'] },
-  ]);
 
   monthLabel = computed(() => {
     const d = this.viewDate();
@@ -358,21 +421,18 @@ export class DiaryComponent {
     const month = view.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const startDow = firstDay.getDay(); // 0 = Sunday
-    const today = new Date();
+    const startDow = firstDay.getDay();
     const todayStr = this.todayStr();
     const selected = this.selectedDate();
     const entries = this.allEntries();
 
     const days: DayCell[] = [];
 
-    // Leading empty cells
     for (let i = 0; i < startDow; i++) {
       const d = new Date(year, month, -startDow + i + 1);
       days.push({ date: d, day: d.getDate(), isCurrentMonth: false, isToday: false, isSelected: false, hasEntries: false, entryCount: 0 });
     }
 
-    // Current month days
     for (let d = 1; d <= lastDay.getDate(); d++) {
       const date = new Date(year, month, d);
       const dateStr = this.formatDate(date);
@@ -388,7 +448,6 @@ export class DiaryComponent {
       });
     }
 
-    // Trailing cells to fill grid
     const remaining = 42 - days.length;
     for (let i = 1; i <= remaining; i++) {
       const d = new Date(year, month + 1, i);
@@ -399,19 +458,43 @@ export class DiaryComponent {
   });
 
   allEntries = computed<CalendarEntry[]>(() => {
-    // Combine from dataService - for now use local signals (backend stores in healthRecords)
-    return this.dataService.illnesses().map((r: any) => ({
-      id: r.id,
-      date: r.date ? this.formatDate(new Date(r.date)) : this.todayStr(),
-      type: 'SYMPTOM' as const,
-      symptoms: r.symptoms ? r.symptoms.split(',').map((s: string) => s.trim()) : [],
-      notes: r.notes,
-      createdAt: r.createdAt,
+    const childId = this.dataService.activeChildId();
+    if (!childId) return [];
+    const diaryEntries = this.dataService.getDiaryEntriesByChild(childId);
+    return diaryEntries.map(e => ({
+      id: e.id,
+      date: e.loggedAt ? this.formatDate(new Date(e.loggedAt)) : this.todayStr(),
+      type: e.type,
+      description: e.description,
+      severity: e.severity,
+      duration: e.duration,
+      notes: e.notes,
+      loggedAt: e.loggedAt,
     }));
   });
 
   entriesForSelectedDate = computed(() => {
     return this.allEntries().filter(e => e.date === this.selectedDate());
+  });
+
+  filteredEntriesForDate = computed(() => {
+    const filter = this.activeFilter();
+    const entries = this.entriesForSelectedDate();
+    if (filter === 'all') return entries;
+    return entries.filter(e => e.type === filter);
+  });
+
+  recentEntries = computed(() => {
+    const childId = this.dataService.activeChildId();
+    if (!childId) return [];
+    const filter = this.activeFilter();
+    let entries = this.dataService.getDiaryEntriesByChild(childId)
+      .sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime())
+      .slice(0, 7);
+    if (filter !== 'all') {
+      entries = entries.filter(e => e.type === filter);
+    }
+    return entries;
   });
 
   selectedDateLabel = computed(() => {
@@ -436,14 +519,21 @@ export class DiaryComponent {
 
   openAddEntry() {
     this.showModal.set(true);
-    this.newEntryType.set('SYMPTOM');
+    this.newEntryType.set('symptom');
+    this.newDescription = '';
     this.newSymptoms.set([]);
-    this.newTemperature = null;
-    this.newTempTime = '';
-    this.newMedName = '';
-    this.newMedDose = '';
-    this.newMedTime = '';
-    this.newMedEffect = '';
+    this.newSeverity.set('mild');
+    this.newDuration = '';
+    this.newNotes = '';
+  }
+
+  quickAdd(qa: QuickAdd) {
+    this.showModal.set(true);
+    this.newEntryType.set(qa.type);
+    this.newDescription = qa.description;
+    this.newSymptoms.set([]);
+    this.newSeverity.set('mild');
+    this.newDuration = '';
     this.newNotes = '';
   }
 
@@ -461,56 +551,108 @@ export class DiaryComponent {
   }
 
   canSave(): boolean {
-    if (this.newEntryType() === 'SYMPTOM') return this.newSymptoms().length > 0;
-    if (this.newEntryType() === 'TEMP') return !!this.newTemperature;
-    if (this.newEntryType() === 'MEDICATION') return !!this.newMedName;
-    return false;
+    if (this.newEntryType() === 'symptom') return this.newSymptoms().length > 0;
+    return !!this.newDescription.trim();
   }
 
   saveEntry() {
     const childId = this.dataService.activeChildId();
     if (!childId) return;
 
-    const payload: any = {
-      date: new Date(this.selectedDate() + 'T12:00:00'),
+    const description = this.newEntryType() === 'symptom'
+      ? this.newSymptoms().map(s => this.i18n.t()['diary.symptomTypes.' + s] || s).join(', ')
+      : this.newDescription;
+
+    const entry: Omit<DiaryEntry, 'id'> = {
+      childId,
       type: this.newEntryType(),
-      notes: this.newNotes || undefined,
+      description: description.trim(),
+      severity: this.newEntryType() === 'symptom' ? this.newSeverity() : undefined,
+      duration: this.newDuration.trim() || undefined,
+      loggedAt: new Date(this.selectedDate() + 'T12:00:00').toISOString(),
+      notes: this.newNotes.trim() || undefined,
     };
 
-    if (this.newEntryType() === 'SYMPTOM') {
-      payload.symptoms = this.newSymptoms().join(', ');
-      payload.type = 'SYMPTOM';
-    } else if (this.newEntryType() === 'TEMP') {
-      payload.temperature = this.newTemperature;
-      payload.temperatureTime = this.newTempTime || undefined;
-      payload.type = 'TEMP';
-    } else if (this.newEntryType() === 'MEDICATION') {
-      payload.medicationName = this.newMedName;
-      payload.medicationDose = this.newMedDose || undefined;
-      payload.medicationTime = this.newMedTime || undefined;
-      payload.medicationEffectiveness = this.newMedEffect || undefined;
-      payload.type = 'MEDICATION';
-    }
-
-    this.dataService.addIllness(payload);
+    this.dataService.addDiaryEntry(entry);
     this.closeModal();
   }
 
   deleteEntry(entry: CalendarEntry) {
-    // TODO: call delete API
+    if (!entry.id) return;
+    const current = this.dataService.diaryEntries();
+    const updated = current.filter(e => e.id !== entry.id);
+    this.dataService.diaryEntries.set(updated);
+    const childId = this.dataService.activeChildId();
+    if (childId) {
+      try { localStorage.setItem(`kiddok_diary_${childId}`, JSON.stringify(updated)); } catch {}
+    }
   }
 
-  effectivenessLabel(val: string): string {
+  // ── Utilities ───────────────────────────────────────────────────
+  typeIcon(type: EntryType): string {
     const map: Record<string, string> = {
-      none: this.i18n.t()['diary.effectivenessOptions.none'],
-      mild: this.i18n.t()['diary.effectivenessOptions.mild'],
-      good: this.i18n.t()['diary.effectivenessOptions.good'],
-      great: this.i18n.t()['diary.effectivenessOptions.great'],
+      symptom: 'sick',
+      meal: 'restaurant',
+      sleep: 'bedtime',
+      mood: 'mood',
+      activity: 'directions_run',
     };
-    return map[val] ?? val;
+    return map[type] ?? 'circle';
   }
 
-  // ── Utilities ────────────────────────────────────────────────────
+  typeIconClass(type: EntryType): string {
+    const map: Record<string, string> = {
+      symptom: 'text-orange-500',
+      meal: 'text-teal-500',
+      sleep: 'text-indigo-500',
+      mood: 'text-yellow-500',
+      activity: 'text-blue-500',
+    };
+    return map[type] ?? 'text-slate-400';
+  }
+
+  typeColorClass(type: EntryType): string {
+    const map: Record<string, string> = {
+      symptom: 'text-orange-500',
+      meal: 'text-teal-500',
+      sleep: 'text-indigo-500',
+      mood: 'text-yellow-600',
+      activity: 'text-blue-500',
+    };
+    return map[type] ?? 'text-slate-400';
+  }
+
+  typeLabel(type: EntryType): string {
+    const t = this.i18n.t();
+    return t['diary.type.' + type] ?? type;
+  }
+
+  typeEmoji(type: EntryType): string {
+    const map: Record<string, string> = {
+      symptom: '😰',
+      meal: '🍽️',
+      sleep: '😴',
+      mood: '😊',
+      activity: '🏃',
+    };
+    return map[type] ?? '📝';
+  }
+
+  severityColor(severity: string): string {
+    switch (severity) {
+      case 'mild': return 'bg-green-400 ring-2 ring-green-200';
+      case 'moderate': return 'bg-yellow-400 ring-2 ring-yellow-200';
+      case 'severe': return 'bg-red-500 ring-2 ring-red-200';
+      default: return 'bg-slate-300';
+    }
+  }
+
+  formatEntryTime(iso?: string): string {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleTimeString(this.i18n.locale() === 'sq' ? 'sq-AL' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+  }
+
   private todayStr() { return this.formatDate(new Date()); }
 
   private formatDate(d: Date): string {

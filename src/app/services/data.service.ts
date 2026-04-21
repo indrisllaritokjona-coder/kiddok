@@ -63,6 +63,17 @@ export interface IllnessEpisode {
   loggedAt: string;
 }
 
+export interface DiaryEntry {
+  id: string;
+  childId: string;
+  type: 'symptom' | 'meal' | 'sleep' | 'mood' | 'activity';
+  description: string;
+  severity?: 'mild' | 'moderate' | 'severe';
+  duration?: string;
+  loggedAt: string;
+  notes?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -117,6 +128,32 @@ export class DataService {
       const first = this.children()[0];
       this.switchChild(first.id);
     }
+  }
+
+  // ─── Diary Entries ─────────────────────────────────────────────
+  diaryEntries = signal<DiaryEntry[]>([]);
+
+  addDiaryEntry(entry: Omit<DiaryEntry, 'id'>): DiaryEntry {
+    const newEntry: DiaryEntry = { ...entry, id: 'de_' + Date.now() };
+    const updated = [newEntry, ...this.diaryEntries()];
+    this.diaryEntries.set(updated);
+    // Persist per child
+    const cid = entry.childId;
+    if (cid) {
+      try {
+        localStorage.setItem(`kiddok_diary_${cid}`, JSON.stringify(updated));
+      } catch {}
+    }
+    return newEntry;
+  }
+
+  getDiaryEntriesByChild(childId: string): DiaryEntry[] {
+    return this.diaryEntries().filter(e => e.childId === childId);
+  }
+
+  loadDiaryEntries(childId: string): void {
+    const stored = localStorage.getItem(`kiddok_diary_${childId}`);
+    this.diaryEntries.set(stored ? JSON.parse(stored) : []);
   }
 
   // ─── API calls ───────────────────────────────────────────────

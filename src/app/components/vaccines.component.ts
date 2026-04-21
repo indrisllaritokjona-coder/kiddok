@@ -1,7 +1,6 @@
-import { Component, inject, signal, computed, effect, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { DataService, ChildProfile } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
 
@@ -407,7 +406,6 @@ const STANDARD_VACCINES = [
 export class VaccinesComponent implements OnInit {
   private dataService = inject(DataService);
   private i18n = inject(I18nService);
-  private router = inject(Router);
 
   standardVaccines = STANDARD_VACCINES;
 
@@ -592,9 +590,7 @@ export class VaccinesComponent implements OnInit {
     }
   }
 
-  getStatusBadgeClass(status: string): string {
-    return this.getBadgeClass(status);
-  }
+  getStatusBadgeClass = this.getBadgeClass.bind(this);
 
   getStatusLabel(status: string): string {
     const labels: Record<string, string> = {

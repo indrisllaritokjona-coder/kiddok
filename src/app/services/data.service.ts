@@ -455,17 +455,6 @@ export class DataService {
     this.saveToStorage(this.CHILDREN_KEY, updated);
   }
 
-  deleteChild(id: string) {
-    const updated = this.children().filter(c => c.id !== id);
-    this.children.set(updated);
-    this.saveToStorage(this.CHILDREN_KEY, updated);
-    if (this.activeChildId() === id) {
-      const next = updated[0];
-      if (next) this.switchChild(next.id);
-      else this.activeChildId.set(null);
-    }
-  }
-
   switchChild(id: string) {
     this.activeChildId.set(id);
     localStorage.setItem(this.ACTIVE_CHILD_KEY, id);

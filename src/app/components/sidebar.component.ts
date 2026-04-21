@@ -1,7 +1,7 @@
 import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DataService, ChildProfile } from '../../services/data.service';
-import { I18nService } from '../../core/i18n/i18n.service';
+import { DataService, ChildProfile } from '../services/data.service';
+import { I18nService } from '../core/i18n/i18n.service';
 
 interface NavItem {
   id: string;

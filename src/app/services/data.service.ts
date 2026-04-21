@@ -485,6 +485,10 @@ export class DataService {
     this.saveToStorage(this.PARENT_KEY, profile);
   }
 
+  getParentName(): string {
+    return this.parentProfile().name;
+  }
+
   getChildAge(child: ChildProfile): { years: number; months: number } {
     const today = new Date();
     const dob = new Date(child.dateOfBirth);
@@ -494,8 +498,6 @@ export class DataService {
     const dayDiff = today.getDate() - dob.getDate();
     if (dayDiff < 0) { months--; if (months < 0) { years--; months += 12; } }
     return { years, months };
-  }
-    return this.parentProfile().name;
   }
 
   // ─── Helpers ────────────────────────────────────────────────

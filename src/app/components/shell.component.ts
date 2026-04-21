@@ -8,6 +8,7 @@ import { DiaryComponent } from './diary.component';
 import { TemperatureDiaryComponent } from './temperature-diary.component';
 import { GrowthTrackingComponent } from './growth-tracking.component';
 import { RecordsComponent } from './records.component';
+import { VaccinesComponent } from './vaccines.component';
 import { SidebarComponent } from './sidebar.component';
 import { HeaderComponent } from './header.component';
 import { BottomNavComponent } from './bottom-nav.component';
@@ -16,7 +17,7 @@ import { AddEditChildModalComponent } from '../features/child/add-edit-child-mod
 
 @Component({
     selector: 'app-shell',
-    imports: [CommonModule, FormsModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent],
+    imports: [CommonModule, FormsModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent],
     template: `
 
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
@@ -250,6 +251,7 @@ import { AddEditChildModalComponent } from '../features/child/add-edit-child-mod
                 @case ('temperature') { <app-temperature-diary /> }
                 @case ('growth') { <app-growth-tracking /> }
                 @case ('records') { <app-records /> }
+                @case ('vaccines') { <app-vaccines /> }
                 @case ('settings') {
                   <div class="glass max-w-2xl mx-auto rounded-[2rem] p-10 animate-slide-up shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white">
                     <h2 class="text-3xl font-extrabold text-gray-800 mb-2 flex items-center gap-4">

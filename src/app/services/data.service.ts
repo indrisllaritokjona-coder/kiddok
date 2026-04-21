@@ -517,6 +517,96 @@ export class DataService {
 
   // ─── Parent Profile ──────────────────────────────────────────
 
+  async fetchParentProfile(): Promise<ParentProfile> {
+    const stored = this.loadFromStorage<ParentProfile>(this.PARENT_KEY);
+    if (stored) {
+      this.parentProfile.set(stored);
+      return stored;
+    }
+    // Try API
+    try {
+      const token = localStorage.getItem(this.AUTH_KEY);
+      if (!token) return { name: '', surname: '', phone: '' };
+      const profile = await firstValueFrom(
+        this.http.get<ParentProfile>(`${this.API_URL}/parent`, this.getHeaders())
+      );
+      this.parentProfile.set(profile);
+      this.saveToStorage(this.PARENT_KEY, profile);
+      return profile;
+    } catch {
+      return { name: '', surname: '', phone: '' };
+    }
+  }
+
+  async updateParentProfile(data: Partial<ParentProfile>): Promise<ParentProfile> {
+    const updated = { ...this.parentProfile(), ...data };
+    try {
+      const result = await firstValueFrom(
+        this.http.patch<ParentProfile>(`${this.API_URL}/parent`, data, this.getHeaders())
+      );
+      this.parentProfile.set(result);
+      this.saveToStorage(this.PARENT_KEY, result);
+      return result;
+    } catch {
+      // Offline fallback — still persist locally
+      this.parentProfile.set(updated);
+      this.saveToStorage(this.PARENT_KEY, updated);
+      return updated;
+    }
+  }
+
+  async deleteChild(childId: string): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.http.delete<void>(`${this.API_URL}/children/${childId}`, this.getHeaders())
+      );
+    } catch { /* fall through to local */ }
+    const updated = this.children().filter(c => c.id !== childId);
+    this.children.set(updated);
+    this.saveToStorage(this.CHILDREN_KEY, updated);
+    // Also clear child-specific localStorage
+    try {
+      localStorage.removeItem(`kiddok_diary_${childId}`);
+      localStorage.removeItem(`kiddok_illnesses_${childId}`);
+      localStorage.removeItem(`kiddok_records_${childId}`);
+    } catch {}
+    if (this.activeChildId() === childId) {
+      const next = updated[0];
+      if (next) this.switchChild(next.id);
+      else this.activeChildId.set(null);
+    }
+  }
+
+  async clearAllData(): Promise<void> {
+    try {
+      localStorage.clear();
+    } catch {}
+    this.children.set([]);
+    this.parentProfile.set({ name: '', surname: '', phone: '' });
+    this.activeChildId.set(null);
+    this.illnesses.set([]);
+    this.records.set([]);
+    this.temperatureEntries.set([]);
+    this.growthEntries.set([]);
+    this.diaryEntries.set([]);
+  }
+
+  exportAllData(): object {
+    const children = this.children();
+    const exportData: Record<string, any> = {
+      exportedAt: new Date().toISOString(),
+      version: '1.0.0',
+      parentProfile: this.parentProfile(),
+      children: children.map(child => ({
+        ...child,
+        diary: this.getDiaryEntriesByChild(child.id),
+        illnesses: this.illnesses().filter(i => i.childId === child.id),
+        records: this.records().filter(r => r.childId === child.id),
+      })),
+    };
+    return exportData;
+  }
+
   saveParentProfile(profile: ParentProfile) {
     this.parentProfile.set(profile);
     this.saveToStorage(this.PARENT_KEY, profile);

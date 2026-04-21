@@ -14,10 +14,11 @@ import { HeaderComponent } from './header.component';
 import { BottomNavComponent } from './bottom-nav.component';
 import { FormsModule } from '@angular/forms';
 import { AddEditChildModalComponent } from '../features/child/add-edit-child-modal/add-edit-child-modal.component';
+import { SettingsPageComponent } from './settings/settings-page.component';
 
 @Component({
     selector: 'app-shell',
-    imports: [CommonModule, FormsModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent],
+    imports: [CommonModule, FormsModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent],
     template: `
 
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
@@ -253,48 +254,10 @@ import { AddEditChildModalComponent } from '../features/child/add-edit-child-mod
                 @case ('records') { <app-records /> }
                 @case ('vaccines') { <app-vaccines /> }
                 @case ('settings') {
-                  <div class="glass max-w-2xl mx-auto rounded-[2rem] p-10 animate-slide-up shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white">
-                    <h2 class="text-3xl font-extrabold text-gray-800 mb-2 flex items-center gap-4">
-                      <span class="material-icons text-primary-500 bg-primary-50 p-3 rounded-2xl">settings</span>
-                      {{ i18n.t()['nav.settings'] }}
-                    </h2>
-                    <div class="mt-8">
-                      <h3 class="text-lg font-bold text-gray-700 mb-6 flex items-center gap-2">
-                        <span class="material-icons text-teal-500">person</span>
-                        {{ i18n.t()['settings.parentProfile'] }}
-                      </h3>
-                      @if (settingsSaved()) {
-                        <div class="mb-6 p-4 bg-teal-50 border border-teal-100 rounded-2xl flex items-center gap-3 animate-fade-in">
-                          <span class="material-icons text-teal-500">check_circle</span>
-                          <p class="text-teal-700 text-sm font-medium">{{ i18n.t()['settings.saved'] }}</p>
-                        </div>
-                      }
-                      <div class="space-y-5">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                          <div>
-                            <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">{{ i18n.t()['settings.name'] }}</label>
-                            <input type="text" [(ngModel)]="parentName"
-                                   class="w-full px-5 py-4 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-base">
-                          </div>
-                          <div>
-                            <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">{{ i18n.t()['settings.surname'] }}</label>
-                            <input type="text" [(ngModel)]="parentSurname"
-                                   class="w-full px-5 py-4 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-base">
-                          </div>
-                        </div>
-                        <div>
-                          <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">{{ i18n.t()['settings.phone'] }}</label>
-                          <input type="tel" [(ngModel)]="parentPhone"
-                                 class="w-full px-5 py-4 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-base">
-                        </div>
-                        <button (click)="saveParentProfile()"
-                                class="flex items-center gap-2 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white py-4 px-8 rounded-2xl font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
-                          <span class="material-icons">save</span>
-                          {{ i18n.t()['settings.saveChanges'] }}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  <app-settings-page
+                    (openEditChild)="openEditModal($event)"
+                    (openAddChild)="isAddingChild.set(true)"
+                  />
                 }
               }
             </div>

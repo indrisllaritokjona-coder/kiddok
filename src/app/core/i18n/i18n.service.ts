@@ -18,6 +18,12 @@ const translations = {
   'sidebar.nav.settings': { sq: 'Konfigurime', en: 'Settings' },
   'sidebar.footer.settings': { sq: 'Konfigurime', en: 'Settings' },
   'sidebar.footer.logout': { sq: 'Dil nga Sistemi', en: 'Sign Out' },
+  // Bottom Nav
+  'bottomNav.home': { sq: 'Ballina', en: 'Home' },
+  'bottomNav.temperature': { sq: 'Temperatura', en: 'Temperature' },
+  'bottomNav.growth': { sq: 'Rritja', en: 'Growth' },
+  'bottomNav.diary': { sq: 'Ditari', en: 'Diary' },
+  'bottomNav.vaccines': { sq: 'Vaksinat', en: 'Vaccines' },
   // Navigation
   'nav.home': { sq: 'Ekrani Kryesor', en: 'Dashboard' },
   'nav.diary': { sq: 'Ditari Mjekësor', en: 'Medical Diary' },

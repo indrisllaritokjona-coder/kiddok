@@ -10,11 +10,12 @@ import { GrowthTrackingComponent } from './growth-tracking.component';
 import { RecordsComponent } from './records.component';
 import { SidebarComponent } from './sidebar.component';
 import { HeaderComponent } from './header.component';
+import { BottomNavComponent } from './bottom-nav.component';
 import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'app-shell',
-    imports: [CommonModule, FormsModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, SidebarComponent, HeaderComponent],
+    imports: [CommonModule, FormsModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, SidebarComponent, HeaderComponent, BottomNavComponent],
     template: `
 
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
@@ -299,23 +300,7 @@ import { FormsModule } from '@angular/forms';
       </main>
 
       <!-- Bottom Nav (Mobile) -->
-      <nav class="lg:hidden absolute bottom-0 w-full bg-white/95 backdrop-blur-xl border-t border-gray-200 pb-safe pt-2 px-6 flex justify-around items-center z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.08)]">
-        @for (nav of navItems; track nav.id) {
-          <button
-            (click)="navigateTo(nav.id)"
-            class="flex flex-col items-center gap-1.5 p-2 transition-all relative"
-            [ngClass]="currentTab() === nav.id ? 'text-primary-600' : 'text-slate-400 hover:text-slate-600'"
-          >
-            @if (currentTab() === nav.id) {
-              <div class="absolute -top-2.5 w-10 h-1 bg-gradient-to-r from-primary-500 to-teal-400 rounded-b-full"></div>
-            }
-            <span class="material-icons text-[26px] transition-transform" [ngClass]="currentTab() === nav.id ? 'scale-110 mb-0.5' : ''">
-              {{ nav.icon }}
-            </span>
-            <span class="text-[11px] font-bold tracking-wide">{{ nav.label }}</span>
-          </button>
-        }
-      </nav>
+      <app-bottom-nav />
 
       <!-- ══════════════════════════════════════════
            EDIT CHILD MODAL (Overlay)

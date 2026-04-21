@@ -172,7 +172,7 @@ import { FormsModule } from '@angular/forms';
                 </p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   @for (child of dataService.children(); track child.id) {
-                    <div class="bg-white rounded-[2rem] p-8 shadow-md border border-slate-100 hover:shadow-xl hover:border-primary-200 transition-all group relative">
+                    <div class="bg-white rounded-[2rem] p-8 shadow-md border border-slate-100 hover:shadow-xl hover:border-primary-200 transition-all group relative card-hover">
                       <button (click)="openEditModal(child)"
                               class="absolute top-5 right-5 w-9 h-9 rounded-xl bg-slate-50 hover:bg-primary-50 border border-slate-200 hover:border-primary-300 flex items-center justify-center text-slate-400 hover:text-primary-600 transition-all shadow-sm">
                         <span class="material-icons text-base">edit</span>
@@ -276,6 +276,22 @@ import { FormsModule } from '@angular/forms';
                       }
                       <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-gray-400 text-lg pointer-events-none">expand_more</span>
                     </div>
+                  </div>
+                </div>
+
+                <!-- Issue #7: Gender in Add form -->
+                <div>
+                  <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">
+                    {{ i18n.locale() === 'sq' ? 'Gjinia' : 'Gender' }}
+                  </label>
+                  <div class="relative">
+                    <select [(ngModel)]="newChildGender"
+                            class="w-full px-5 py-4.5 rounded-2xl bg-white border-2 border-slate-200 transition-all text-lg shadow-sm appearance-none focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500">
+                      <option value="">--</option>
+                      <option value="M">{{ i18n.isSq() ? 'Mashkull' : 'Male' }}</option>
+                      <option value="F">{{ i18n.isSq() ? 'Femer' : 'Female' }}</option>
+                    </select>
+                    <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-gray-400 text-lg pointer-events-none">expand_more</span>
                   </div>
                 </div>
 
@@ -616,6 +632,32 @@ import { FormsModule } from '@angular/forms';
                     {{ i18n.locale() === 'sq' ? 'Fshi Profilin' : 'Delete Profile' }}
                   </button>
                 </div>
+                <!-- Delete Confirmation Modal (Issue #5) -->
+                @if (showDeleteConfirm()) {
+                  <div class="mt-4 p-5 bg-red-50 border-2 border-red-200 rounded-2xl animate-fade-in">
+                    <div class="flex items-center gap-3 mb-3">
+                      <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                        <span class="material-icons text-red-500 text-lg">warning</span>
+                      </div>
+                      <div>
+                        <p class="font-bold text-gray-800 text-base">{{ i18n.isSq() ? 'Fshi profilin e fëmijës?' : 'Delete child profile?' }}</p>
+                        <p class="text-sm text-gray-500">{{ editingChild()?.name }}</p>
+                      </div>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-5">{{ i18n.isSq() ? 'Ky veprim nuk mund të kthehet. Të gjitha të dhënat do të fshihen përgjithmonë.' : 'This action cannot be undone. All data will be permanently deleted.' }}</p>
+                    <div class="flex gap-3">
+                      <button (click)="showDeleteConfirm.set(false)"
+                              class="flex-1 py-3 rounded-xl border-2 border-slate-200 text-gray-600 font-bold hover:bg-slate-100 transition-all text-sm">
+                        {{ i18n.isSq() ? 'Anulo' : 'Cancel' }}
+                      </button>
+                      <button (click)="confirmDeleteChild()"
+                              class="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-500 to-red-400 text-white font-bold hover:from-red-400 hover:to-red-300 transition-all text-sm shadow-sm flex items-center justify-center gap-2">
+                        <span class="material-icons text-base">delete_forever</span>
+                        {{ i18n.isSq() ? 'Fshi' : 'Delete' }}
+                      </button>
+                    </div>
+                  </div>
+                }
               </div>
             </div>
           </div>
@@ -626,6 +668,47 @@ import { FormsModule } from '@angular/forms';
   `,
     styles: [`
     .pb-safe { padding-bottom: env(safe-area-inset-bottom, 1rem); }
+
+    /* Issue E: Micro-animations */
+    .card-hover {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -8px rgba(0,0,0,0.15);
+    }
+
+    /* Button press effect */
+    button:not(:disabled):active {
+      transform: scale(0.98);
+    }
+
+    /* Success flash */
+    .success-flash {
+      animation: success-flash 0.6s ease-out;
+    }
+    @keyframes success-flash {
+      0% { background-color: #d1fae5; }
+      100% { background-color: transparent; }
+    }
+
+    /* Slide up animation */
+    .animate-slide-up {
+      animation: slideUp 0.35s ease-out;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Fade in animation */
+    .animate-fade-in {
+      animation: fadeIn 0.3s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
   `]
 })
 export class ShellComponent {
@@ -676,6 +759,7 @@ export class ShellComponent {
   newChildDob = '';
   newChildBirthWeight: number | null = null;
   newChildDeliveryDoctor = '';
+  newChildGender = '';
   newChildBloodType = '';
   newChildAllergies = '';
   newChildMedicalNotes = '';
@@ -709,8 +793,7 @@ export class ShellComponent {
   }
 
   onBloodTypeChange() {
-    // Trigger reactivity update for editBloodType signal
-    this.editBloodType.set(this.editBloodType());
+    // Dead code — reactivity already handled by editBloodType.set($event) in template (Issue #6 removed)
   }
 
   // Add child name handlers
@@ -851,18 +934,12 @@ export class ShellComponent {
   confirmDeleteChild() {
     const child = this.editingChild();
     if (!child) return;
-
-    const confirmMsg = this.i18n.isSq()
-      ? 'A jeni i sigurt që doni të fshini profilin e ' + child.name + '? Ky veprim nuk mund të kthehet.'
-      : 'Are you sure you want to delete the profile for ' + child.name + '? This cannot be undone.';
-
-    if (confirm(confirmMsg)) {
-      this.dataService.deleteChildApi(child.id).catch(() => {
-        // Fallback to local delete if API fails
-        this.dataService.deleteChild(child.id);
-      });
-      this.closeEditModal();
-    }
+    // Issue #5: use custom modal — just perform the delete (modal is shown via showDeleteConfirm signal)
+    this.dataService.deleteChildApi(child.id).catch(() => {
+      // Fallback to local delete if API fails
+      this.dataService.deleteChild(child.id);
+    });
+    this.closeEditModal();
   }
 
   // ── Parent Profile ─────────────────────────────────────────────
@@ -932,6 +1009,7 @@ export class ShellComponent {
       dateOfBirth: isoDate,
       birthWeight: this.newChildBirthWeight ?? undefined,
       deliveryDoctor: this.newChildDeliveryDoctor || undefined,
+      gender: this.newChildGender || undefined,
       bloodType: this.newChildBloodType || undefined,
       criticalAllergies: this.newChildAllergies || undefined,
       medicalNotes: this.newChildMedicalNotes || undefined,
@@ -970,6 +1048,7 @@ export class ShellComponent {
     this.newChildDob = '';
     this.newChildBirthWeight = null;
     this.newChildDeliveryDoctor = '';
+    this.newChildGender = '';
     this.newChildBloodType = '';
     this.newChildAllergies = '';
     this.newChildMedicalNotes = '';

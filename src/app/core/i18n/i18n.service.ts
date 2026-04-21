@@ -4,6 +4,20 @@ export type Locale = 'sq' | 'en';
 
 type RawTranslations = typeof translations;
 const translations = {
+  // Sidebar
+  'sidebar.brand': { sq: 'KidDok', en: 'KidDok' },
+  'sidebar.activeChild': { sq: 'Fëmija Aktiv', en: 'Active Child' },
+  'sidebar.noChildSelected': { sq: 'Zgjidhni Profilin', en: 'Select Profile' },
+  'sidebar.ageFormat': { sq: '{n} vjeç', en: '{n} years' },
+  'sidebar.ageFormatMonths': { sq: '{n} muaj', en: '{n} months' },
+  'sidebar.nav.home': { sq: 'Ekrani Kryesor', en: 'Dashboard' },
+  'sidebar.nav.temperature': { sq: 'Temperatura', en: 'Temperature' },
+  'sidebar.nav.growth': { sq: 'Rritja', en: 'Growth' },
+  'sidebar.nav.diary': { sq: 'Ditari', en: 'Diary' },
+  'sidebar.nav.vaccines': { sq: 'Vaksinat', en: 'Vaccines' },
+  'sidebar.nav.settings': { sq: 'Konfigurime', en: 'Settings' },
+  'sidebar.footer.settings': { sq: 'Konfigurime', en: 'Settings' },
+  'sidebar.footer.logout': { sq: 'Dil nga Sistemi', en: 'Sign Out' },
   // Navigation
   'nav.home': { sq: 'Ekrani Kryesor', en: 'Dashboard' },
   'nav.diary': { sq: 'Ditari Mjekësor', en: 'Medical Diary' },

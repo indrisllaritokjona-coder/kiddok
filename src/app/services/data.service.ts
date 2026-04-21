@@ -79,6 +79,7 @@ export class DataService {
   // Children & active child
   children = signal<ChildProfile[]>([]);
   activeChildId = signal<string | null>(null);
+  currentTab = signal<string>('home');
 
   // Medical data (per-child) — kept local for now
   illnesses = signal<IllnessEpisode[]>([]);
@@ -484,7 +485,16 @@ export class DataService {
     this.saveToStorage(this.PARENT_KEY, profile);
   }
 
-  getParentName(): string {
+  getChildAge(child: ChildProfile): { years: number; months: number } {
+    const today = new Date();
+    const dob = new Date(child.dateOfBirth);
+    let years = today.getFullYear() - dob.getFullYear();
+    let months = today.getMonth() - dob.getMonth();
+    if (months < 0) { years--; months += 12; }
+    const dayDiff = today.getDate() - dob.getDate();
+    if (dayDiff < 0) { months--; if (months < 0) { years--; months += 12; } }
+    return { years, months };
+  }
     return this.parentProfile().name;
   }
 

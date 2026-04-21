@@ -8,58 +8,18 @@ import { DiaryComponent } from './diary.component';
 import { TemperatureDiaryComponent } from './temperature-diary.component';
 import { GrowthTrackingComponent } from './growth-tracking.component';
 import { RecordsComponent } from './records.component';
+import { SidebarComponent } from './sidebar.component';
 import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'app-shell',
-    imports: [CommonModule, FormsModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent],
+    imports: [CommonModule, FormsModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, SidebarComponent],
     template: `
 
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
 
-      <!-- Desktop Sidebar (Glassmorphism) -->
-      <aside class="w-72 glass-dark hidden lg:flex flex-col m-5 mr-0 z-20 text-white relative overflow-hidden shadow-2xl">
-        <div class="absolute inset-0 bg-gradient-to-bl from-primary-600/90 via-primary-800/90 to-primary-900/95 mix-blend-multiply"></div>
-        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=500&q=60')] bg-cover opacity-10 mix-blend-overlay"></div>
-        <div class="relative z-10 flex flex-col h-full p-6">
-          <div class="flex items-center gap-3 mb-14 mt-4 ml-2">
-            <button (click)="goToSelector()"
-                    class="bg-white/20 hover:bg-white/30 p-2.5 rounded-2xl backdrop-blur-md border border-white/20 shadow-glass transition-all cursor-pointer">
-              <span class="material-icons text-3xl text-white">child_care</span>
-            </button>
-            <button (click)="goToSelector()" class="flex-1 text-left cursor-pointer">
-              <span class="text-3xl font-extrabold tracking-tight text-white">KidDok<span class="text-teal-400">.</span></span>
-            </button>
-            <button (click)="i18n.toggleLocale()"
-                    class="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-all border border-white/20 flex-shrink-0">
-              {{ i18n.locale() === 'sq' ? 'SQ' : 'EN' }}
-            </button>
-          </div>
-          <nav class="flex-1 space-y-3">
-            @for (nav of navItems; track nav.id) {
-              <button
-                (click)="navigateTo(nav.id)"
-                class="w-full flex items-center gap-5 px-5 py-4 rounded-2xl transition-all duration-300 group"
-                [ngClass]="currentTab() === nav.id ? 'bg-white/10 border border-white/20 shadow-glass translate-x-2' : 'hover:bg-white/5 hover:translate-x-1 border border-transparent'"
-              >
-                <span class="material-icons transition-transform duration-300" [ngClass]="currentTab() === nav.id ? 'text-teal-300 scale-110' : 'text-primary-200 group-hover:text-white'">
-                  {{ nav.icon }}
-                </span>
-                <span class="font-semibold text-[17px] tracking-wide" [ngClass]="currentTab() === nav.id ? 'text-white' : 'text-primary-100 group-hover:text-white'">{{ nav.label }}</span>
-                @if (currentTab() === nav.id) {
-                  <span class="material-icons ml-auto text-teal-300 text-sm">chevron_right</span>
-                }
-              </button>
-            }
-          </nav>
-          <div class="mt-auto">
-            <button (click)="logout()" class="w-full flex items-center justify-center gap-3 px-5 py-4 rounded-2xl border border-red-400/30 text-red-300 hover:bg-red-500/20 hover:text-red-100 transition-all font-semibold hover:border-red-400/50">
-              <span class="material-icons">logout</span>
-              {{ i18n.t()['sidebar.logout'] }}
-            </button>
-          </div>
-        </div>
-      </aside>
+      <!-- Desktop Sidebar -->
+      <app-sidebar class="hidden lg:block" />
 
       <!-- Main Content Area -->
       <main class="flex-1 flex flex-col h-screen overflow-hidden relative z-10 w-full">
@@ -1003,12 +963,14 @@ export class ShellComponent {
     }
     if (tabId === 'home') {
       this.currentTab.set('home');
+      this.dataService.currentTab.set('home');
     } else {
       if (this.viewState() === 'selector') {
         this.dataService.switchChild(this.dataService.activeChildId() ?? '');
         this.viewState.set('app');
       }
       this.currentTab.set(tabId);
+      this.dataService.currentTab.set(tabId);
     }
   }
 

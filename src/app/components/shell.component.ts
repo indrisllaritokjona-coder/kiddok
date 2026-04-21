@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService, ChildProfile } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
@@ -719,6 +719,20 @@ export class ShellComponent {
   dataService = inject(DataService);
   i18n = inject(I18nService);
   router = inject(Router);
+
+  private navigateHandler = (e: Event) => {
+    const route = (e as CustomEvent<string>).detail;
+    this.navigateTo(route);
+  };
+
+  constructor() {
+    // Listen for cross-component navigation events from home sub-components
+    window.addEventListener('kiddok:navigate', this.navigateHandler);
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('kiddok:navigate', this.navigateHandler);
+  }
 
   showChildList = signal(false);
   isAddingChild = signal(false);

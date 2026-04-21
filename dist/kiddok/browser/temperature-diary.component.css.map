@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["angular:styles/component:css;aa293527f2186e669cdd645fb889a2014bf4dbf7d80bd8edf3f1a4d97580ecdb;C:/Users/g_gus/Desktop/jona/kiddok/src/app/components/temperature-diary.component.ts"],
-  "sourcesContent": ["\n    .animate-slide-up {\n      animation: slideUp 0.35s ease-out;\n    }\n    @keyframes slideUp {\n      from { opacity: 0; transform: translateY(16px); }\n      to { opacity: 1; transform: translateY(0); }\n    }\n  "],
-  "mappings": ";AACI,CAAC;AACC,aAAW,QAAQ,MAAM;AAC3B;AACA,WAFa;AAGX;AAAO,aAAS;AAAG,eAAW,WAAW;AAAO;AAChD;AAAK,aAAS;AAAG,eAAW,WAAW;AAAI;AAC7C;",
-  "names": []
-}

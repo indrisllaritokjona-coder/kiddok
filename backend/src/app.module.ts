@@ -9,9 +9,12 @@ import { HealthRecordsModule } from './health-records/health-records.module';
 import { VaccinesModule } from './vaccines/vaccines.module';
 import { TemperatureEntriesModule } from './temperature-entries/temperature-entries.module';
 import { GrowthEntriesModule } from './growth-entries/growth-entries.module';
+import { ParentModule } from './parent/parent.module';
+import { DiaryModule } from './diary/diary.module';
+import { IllnessesModule } from './illnesses/illnesses.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, ChildrenModule, HealthRecordsModule, VaccinesModule, TemperatureEntriesModule, GrowthEntriesModule],
+  imports: [PrismaModule, UsersModule, AuthModule, ChildrenModule, HealthRecordsModule, VaccinesModule, TemperatureEntriesModule, GrowthEntriesModule, ParentModule, DiaryModule, IllnessesModule],
   controllers: [AppController],
   providers: [AppService],
 })

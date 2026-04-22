@@ -1,6 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { ToastService } from './toast.service';
 
 export interface ChildProfile {
   id: string;
@@ -82,7 +84,9 @@ export class DataService {
   readonly CHILDREN_KEY = 'kiddok_children';
   readonly PARENT_KEY = 'kiddok_parent_profile';
   readonly ACTIVE_CHILD_KEY = 'kiddok_active_child';
-  readonly API_URL = 'http://localhost:3000';
+  readonly API_URL = environment.apiUrl;
+
+  private readonly toast = inject(ToastService);
 
   // Auth state
   isAuthenticated = signal<boolean>(!!localStorage.getItem(this.AUTH_KEY));
@@ -196,8 +200,9 @@ export class DataService {
 
       this.children.set(profiles);
       this.saveToStorage(this.CHILDREN_KEY, profiles);
-    } catch (err) {
+    } catch (err: any) {
       console.error('[DataService] loadChildrenFromApi failed:', err);
+      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
     }
   }
 
@@ -217,27 +222,33 @@ export class DataService {
       medicalNotes: data.medicalNotes ?? null,
     };
 
-    const created = await firstValueFrom(
-      this.http.post<any>(`${this.API_URL}/children`, payload, this.getHeaders())
-    );
+    try {
+      const created = await firstValueFrom(
+        this.http.post<any>(`${this.API_URL}/children`, payload, this.getHeaders())
+      );
 
-    const profile: ChildProfile = {
-      id: created.id,
-      userId: created.userId,
-      name: created.name,
-      dateOfBirth: created.dateOfBirth,
-      gender: created.gender ?? undefined,
-      bloodType: created.bloodType ?? undefined,
-      birthWeight: created.birthWeight ?? undefined,
-      deliveryDoctor: created.deliveryDoctor ?? undefined,
-      criticalAllergies: created.criticalAllergies ?? undefined,
-      avatarUrl: created.avatarUrl ?? `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(created.name)}`,
-    };
+      const profile: ChildProfile = {
+        id: created.id,
+        userId: created.userId,
+        name: created.name,
+        dateOfBirth: created.dateOfBirth,
+        gender: created.gender ?? undefined,
+        bloodType: created.bloodType ?? undefined,
+        birthWeight: created.birthWeight ?? undefined,
+        deliveryDoctor: created.deliveryDoctor ?? undefined,
+        criticalAllergies: created.criticalAllergies ?? undefined,
+        avatarUrl: created.avatarUrl ?? `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(created.name)}`,
+      };
 
-    const updated = [...this.children(), profile];
-    this.children.set(updated);
-    this.saveToStorage(this.CHILDREN_KEY, updated);
-    return profile;
+      const updated = [...this.children(), profile];
+      this.children.set(updated);
+      this.saveToStorage(this.CHILDREN_KEY, updated);
+      return profile;
+    } catch (err: any) {
+      console.error('[DataService] createChild failed:', err);
+      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+      throw err;
+    }
   }
 
   /** Update an existing child via PATCH /children/:id */
@@ -261,38 +272,50 @@ export class DataService {
       payload.documentIssueDate = data.documentIssueDate ? new Date(data.documentIssueDate) : null;
     }
 
-    const updated = await firstValueFrom(
-      this.http.patch<any>(`${this.API_URL}/children/${id}`, payload, this.getHeaders())
-    );
+    try {
+      const updated = await firstValueFrom(
+        this.http.patch<any>(`${this.API_URL}/children/${id}`, payload, this.getHeaders())
+      );
 
-    const profile: ChildProfile = {
-      id: updated.id,
-      userId: updated.userId,
-      name: updated.name,
-      dateOfBirth: updated.dateOfBirth,
-      gender: updated.gender ?? undefined,
-      bloodType: updated.bloodType ?? undefined,
-      birthWeight: updated.birthWeight ?? undefined,
-      deliveryDoctor: updated.deliveryDoctor ?? undefined,
-      criticalAllergies: updated.criticalAllergies ?? undefined,
-      allergies: updated.allergies ?? undefined,
-      medicalDocument: updated.medicalDocument ?? undefined,
-      documentIssueDate: updated.documentIssueDate ?? undefined,
-      medicalNotes: updated.medicalNotes ?? undefined,
-      avatarUrl: updated.avatarUrl ?? `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(updated.name)}`,
-    };
+      const profile: ChildProfile = {
+        id: updated.id,
+        userId: updated.userId,
+        name: updated.name,
+        dateOfBirth: updated.dateOfBirth,
+        gender: updated.gender ?? undefined,
+        bloodType: updated.bloodType ?? undefined,
+        birthWeight: updated.birthWeight ?? undefined,
+        deliveryDoctor: updated.deliveryDoctor ?? undefined,
+        criticalAllergies: updated.criticalAllergies ?? undefined,
+        allergies: updated.allergies ?? undefined,
+        medicalDocument: updated.medicalDocument ?? undefined,
+        documentIssueDate: updated.documentIssueDate ?? undefined,
+        medicalNotes: updated.medicalNotes ?? undefined,
+        avatarUrl: updated.avatarUrl ?? `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(updated.name)}`,
+      };
 
-    const current = this.children().map(c => c.id === id ? profile : c);
-    this.children.set(current);
-    this.saveToStorage(this.CHILDREN_KEY, current);
-    return profile;
+      const current = this.children().map(c => c.id === id ? profile : c);
+      this.children.set(current);
+      this.saveToStorage(this.CHILDREN_KEY, current);
+      return profile;
+    } catch (err: any) {
+      console.error('[DataService] updateChildApi failed:', err);
+      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+      throw err;
+    }
   }
 
   /** Delete a child via DELETE /children/:id */
   async deleteChildApi(id: string): Promise<void> {
-    await firstValueFrom(
-      this.http.delete<void>(`${this.API_URL}/children/${id}`, this.getHeaders())
-    );
+    try {
+      await firstValueFrom(
+        this.http.delete<void>(`${this.API_URL}/children/${id}`, this.getHeaders())
+      );
+    } catch (err: any) {
+      console.error('[DataService] deleteChildApi failed:', err);
+      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+      throw err;
+    }
     const updated = this.children().filter(c => c.id !== id);
     this.children.set(updated);
     this.saveToStorage(this.CHILDREN_KEY, updated);
@@ -305,8 +328,9 @@ export class DataService {
       );
       this.temperatureEntries.set(entries);
       return entries;
-    } catch (err) {
+    } catch (err: any) {
       console.error('[DataService] loadTemperatureEntries failed:', err);
+      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
       return [];
     }
   }
@@ -319,8 +343,9 @@ export class DataService {
       const updated = [created, ...this.temperatureEntries()];
       this.temperatureEntries.set(updated);
       return created;
-    } catch (err) {
+    } catch (err: any) {
       console.error('[DataService] createTemperatureEntry failed:', err);
+      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
       return null;
     }
   }
@@ -332,8 +357,9 @@ export class DataService {
       );
       const updated = this.temperatureEntries().filter(e => e.id !== id);
       this.temperatureEntries.set(updated);
-    } catch (err) {
+    } catch (err: any) {
       console.error('[DataService] deleteTemperatureEntry failed:', err);
+      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
     }
   }
 
@@ -344,8 +370,9 @@ export class DataService {
       );
       this.growthEntries.set(entries);
       return entries;
-    } catch (err) {
+    } catch (err: any) {
       console.error('[DataService] loadGrowthEntries failed:', err);
+      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
       return [];
     }
   }
@@ -358,8 +385,9 @@ export class DataService {
       const updated = [created, ...this.growthEntries()];
       this.growthEntries.set(updated);
       return created;
-    } catch (err) {
+    } catch (err: any) {
       console.error('[DataService] createGrowthEntry failed:', err);
+      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
       return null;
     }
   }
@@ -371,8 +399,9 @@ export class DataService {
       );
       const updated = this.growthEntries().filter(e => e.id !== id);
       this.growthEntries.set(updated);
-    } catch (err) {
+    } catch (err: any) {
       console.error('[DataService] deleteGrowthEntry failed:', err);
+      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
     }
   }
 
@@ -391,8 +420,9 @@ export class DataService {
         this.isAuthenticated.set(true);
         await this.loadChildrenFromApi();
         return true;
-      } catch (err) {
+      } catch (err: any) {
         console.error('[DataService] dev-login failed:', err);
+        this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
         // fallback to dev token for offline dev
         localStorage.setItem(this.AUTH_KEY, 'dev-token-' + Date.now());
         this.isAuthenticated.set(true);
@@ -536,7 +566,9 @@ export class DataService {
       this.parentProfile.set(result);
       this.saveToStorage(this.PARENT_KEY, result);
       return result;
-    } catch {
+    } catch (err: any) {
+      console.error('[DataService] updateParentProfile failed:', err);
+      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
       // Offline fallback — still persist locally
       this.parentProfile.set(updated);
       this.saveToStorage(this.PARENT_KEY, updated);

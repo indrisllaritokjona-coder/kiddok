@@ -1,4 +1,4 @@
-﻿import { Component, inject, signal, computed, OnInit, AfterViewInit, ViewChild, ElementRef, effect } from '@angular/core'
+﻿import { Component, inject, signal, computed, OnInit, AfterViewInit, ViewChild, ElementRef, effect, OnDestroy } from '@angular/core'
 import { LucideAngularModule } from 'lucide-angular';
 
 import { CommonModule } from '@angular/common';
@@ -139,6 +139,11 @@ import { I18nService } from '../core/i18n/i18n.service';
             </div>
 
             <!-- Save Button -->
+            @if (saveError()) {
+              <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-semibold">
+                {{ saveError() }}
+              </div>
+            }
             <button (click)="saveReading()"
                     [disabled]="!canSave() || saving()"
                     class="w-full py-4.5 rounded-2xl font-bold text-base shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -231,7 +236,7 @@ import { I18nService } from '../core/i18n/i18n.service';
     }
   `]
 })
-export class TemperatureDiaryComponent implements OnInit, AfterViewInit {
+export class TemperatureDiaryComponent implements OnInit, AfterViewInit, OnDestroy {
   dataService = inject(DataService);
   i18n = inject(I18nService);
 
@@ -256,7 +261,7 @@ export class TemperatureDiaryComponent implements OnInit, AfterViewInit {
   saved = signal(false);
 
   private chartInstance: any = null;
-  private chartInitialized = false;
+  private chartEffect: any = null;
 
   activeChild = computed(() => {
     const activeId = this.dataService.activeChildId();
@@ -292,13 +297,24 @@ export class TemperatureDiaryComponent implements OnInit, AfterViewInit {
     // Render chart after view init
     setTimeout(() => this.renderChart(), 100);
 
-    // React to data changes
-    effect(() => {
+    // React to data changes — store effect reference for cleanup
+    this.chartEffect = effect(() => {
       const entries = this.dataService.temperatureEntries();
       if (entries && this.chartInitialized) {
         this.renderChart();
       }
     });
+  }
+
+  ngOnDestroy() {
+    if (this.chartEffect) {
+      this.chartEffect.destroy();
+      this.chartEffect = null;
+    }
+    if (this.chartInstance) {
+      this.chartInstance.destroy();
+      this.chartInstance = null;
+    }
   }
 
   private defaultTime(): string {
@@ -316,12 +332,16 @@ export class TemperatureDiaryComponent implements OnInit, AfterViewInit {
     return !!t && t >= 35 && t <= 42;
   }
 
+  // Save error feedback
+  saveError = signal<string | null>(null);
+
   async saveReading() {
     const childId = this.dataService.activeChildId();
     if (!childId || !this.canSave()) return;
 
     this.saving.set(true);
     this.saved.set(false);
+    this.saveError.set(null);
 
     const measuredAt = this.formTime ? new Date(this.formTime).toISOString() : new Date().toISOString();
 
@@ -344,6 +364,11 @@ export class TemperatureDiaryComponent implements OnInit, AfterViewInit {
       this.formTime = this.defaultTime();
       // Re-render chart
       setTimeout(() => this.renderChart(), 100);
+    } else {
+      // Show error to user
+      const msg = this.i18n.t()['temperature.saveError'] || 'Ruajtja dështoi. Provo përsëri.';
+      this.saveError.set(msg);
+      setTimeout(() => this.saveError.set(null), 5000);
     }
   }
 

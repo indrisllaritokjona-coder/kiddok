@@ -78,7 +78,7 @@ interface AlertItem {
           <div>
             <p class="font-bold text-teal-700 text-sm">{{ i18n.t()['home.alerts.allClear'] }}</p>
             <p class="text-xs text-teal-500 font-medium mt-0.5">
-              {{ i18n.isSq() ? 'Të gjitha temperaturas normale, asnjë vaksine e vonuar.' : 'All temperatures normal, no overdue vaccines.' }}
+              {{ i18n.t()['home.alerts.allClearDesc'] }}
             </p>
           </div>
         </div>

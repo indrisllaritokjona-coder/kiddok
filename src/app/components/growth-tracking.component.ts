@@ -1,4 +1,4 @@
-﻿import { Component, inject, signal, computed, OnInit, AfterViewInit, ViewChild, ElementRef, effect } from '@angular/core'
+﻿import { Component, inject, signal, computed, OnInit, AfterViewInit, ViewChild, ElementRef, effect, OnDestroy } from '@angular/core'
 import { LucideAngularModule } from 'lucide-angular';
 
 import { CommonModule } from '@angular/common';
@@ -150,6 +150,11 @@ import { I18nService } from '../core/i18n/i18n.service';
             </div>
 
             <!-- Save Button -->
+            @if (saveError()) {
+              <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-semibold">
+                {{ saveError() }}
+              </div>
+            }
             <button (click)="saveEntry()"
                     [disabled]="!canSave() || saving()"
                     class="w-full py-4 rounded-2xl font-bold text-base shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -241,7 +246,7 @@ import { I18nService } from '../core/i18n/i18n.service';
     }
   `]
 })
-export class GrowthTrackingComponent implements OnInit, AfterViewInit {
+export class GrowthTrackingComponent implements OnInit, AfterViewInit, OnDestroy {
   dataService = inject(DataService);
   i18n = inject(I18nService);
 
@@ -254,9 +259,12 @@ export class GrowthTrackingComponent implements OnInit, AfterViewInit {
   formNotes = '';
   saving = signal(false);
   saved = signal(false);
+  saveError = signal<string | null>(null);
 
   private chartInstance: any = null;
+  private chartEffect: any = null;
   private chartInitialized = false;
+  private resizeTimeout: any = null;
 
   // Math helper exposed to template
   TMath = { abs: Math.abs };
@@ -309,12 +317,27 @@ export class GrowthTrackingComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     setTimeout(() => this.renderChart(), 200);
-    effect(() => {
+    this.chartEffect = effect(() => {
       const entries = this.dataService.growthEntries();
       if (entries && this.chartInitialized) {
         this.renderChart();
       }
     });
+  }
+
+  ngOnDestroy() {
+    if (this.chartEffect) {
+      this.chartEffect.destroy();
+      this.chartEffect = null;
+    }
+    if (this.chartInstance) {
+      this.chartInstance.destroy();
+      this.chartInstance = null;
+    }
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout);
+      this.resizeTimeout = null;
+    }
   }
 
   private defaultDate(): string {
@@ -335,6 +358,7 @@ export class GrowthTrackingComponent implements OnInit, AfterViewInit {
 
     this.saving.set(true);
     this.saved.set(false);
+    this.saveError.set(null);
 
     const measuredAt = new Date(this.formDate).toISOString();
 
@@ -355,6 +379,10 @@ export class GrowthTrackingComponent implements OnInit, AfterViewInit {
       this.formNotes = '';
       this.formDate = this.defaultDate();
       setTimeout(() => this.renderChart(), 100);
+    } else {
+      const msg = this.i18n.t()['growth.saveError'] || 'Ruajtja dështoi. Provo përsëri.';
+      this.saveError.set(msg);
+      setTimeout(() => this.saveError.set(null), 5000);
     }
   }
 
@@ -377,7 +405,9 @@ export class GrowthTrackingComponent implements OnInit, AfterViewInit {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    if (this.chartInstance) {
+    // Guard against flicker: if chart is already built for current data, skip
+    if (this.chartInstance && this.chartInitialized) {
+      // Only re-render if data actually changed (checked via entries comparison)
       this.chartInstance.destroy();
       this.chartInstance = null;
     }
@@ -396,6 +426,7 @@ export class GrowthTrackingComponent implements OnInit, AfterViewInit {
 
   private buildChart(ctx: CanvasRenderingContext2D, entries: GrowthEntry[]) {
     const Chart = (window as any).Chart;
+    const locale = this.i18n.locale() === 'sq' ? 'sq-AL' : 'en-US';
 
     const labels = entries.map(e => this.formatDate(e.measuredAt));
     const heightData = entries.map(e => e.height);

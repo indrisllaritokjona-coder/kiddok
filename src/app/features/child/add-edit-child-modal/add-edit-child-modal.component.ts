@@ -136,7 +136,7 @@ export interface ChildFormData {
               <!-- Gender -->
               <div>
                 <label class="block text-xs font-bold text-indigo-700 mb-3 ml-1 uppercase tracking-wider">
-                  {{ i18n.locale() === 'sq' ? 'Gjinia' : 'Gender' }}
+                  {{ i18n.t()['childForm.gender.label'] }}
                 </label>
                 <div class="flex rounded-2xl overflow-hidden border-2 border-stone-200 gap-px bg-stone-200">
                   @for (opt of genderOptions; track opt.value) {

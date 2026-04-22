@@ -8,14 +8,16 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  pin       String?
-  name      String
-  children  Child[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String
+  pin           String?
+  name          String
+  children      Child[]
+  familyMembers FamilyMember[]
+  shareLinks    ShareLink[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model Child {
@@ -28,7 +30,7 @@ model Child {
   birthWeight        Float?
   deliveryDoctor     String?
   criticalAllergies  String?
-  medicalDocument    String?        // base64 encoded document
+  medicalDocument    String?
   documentIssueDate  DateTime?
   medicalNotes       String?
   userId             String
@@ -40,6 +42,8 @@ model Child {
   diaryEntries        DiaryEntry[]
   illnessEpisodes     IllnessEpisode[]
   medications          Medication[]
+  familyMembers       FamilyMember[]
+  shareLinks          ShareLink[]
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 }
@@ -155,4 +159,26 @@ model Medication {
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model ShareLink {
+  id        String   @id @default(uuid())
+  token     String   @unique @default(uuid())
+  childId   String
+  child     Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  createdBy String
+  creator   User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model FamilyMember {
+  id       String @id @default(uuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  childId  String
+  child    Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+  role     String // 'parent' | 'grandparent' | 'nanny' | 'doctor'
+
+  @@unique([userId, childId])
 }

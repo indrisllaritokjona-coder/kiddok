@@ -42,7 +42,7 @@ export class ChildrenService {
 
   async findOne(id: string, userId: string) {
     const child = await this.prisma.child.findFirst({
-      where: { id, userId },
+      where: { id, OR: [{ userId }, { familyMembers: { some: { userId } } }] },
       include: {
         healthRecords: true,
         vaccines: true
@@ -58,6 +58,16 @@ export class ChildrenService {
   // Issue #6: Separate method for controller-level IDOR check (no userId filter)
   async findOneById(id: string) {
     return this.prisma.child.findUnique({ where: { id } });
+  }
+
+  // Check if user has access to child (owner or family member)
+  async hasAccess(childId: string, userId: string): Promise<boolean> {
+    const child = await this.prisma.child.findFirst({
+      where: { id: childId },
+      include: { familyMembers: { where: { userId } } },
+    });
+    if (!child) return false;
+    return child.userId === userId || child.familyMembers.length > 0;
   }
 
   async update(id: string, userId: string, data: any) {

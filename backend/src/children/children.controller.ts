@@ -27,7 +27,7 @@ export class ChildrenController {
     if (!child) {
       throw new NotFoundException('Child not found');
     }
-    if (child.userId !== req.user.userId) {
+    if (!await this.childrenService.hasAccess(id, req.user.userId)) {
       throw new ForbiddenException('You do not have access to this child profile.');
     }
     return child;
@@ -41,7 +41,7 @@ export class ChildrenController {
     if (!child) {
       throw new NotFoundException('Child not found');
     }
-    if (child.userId !== req.user.userId) {
+    if (!await this.childrenService.hasAccess(id, req.user.userId)) {
       throw new ForbiddenException('You do not have access to this child profile.');
     }
     return this.childrenService.update(id, req.user.userId, updateChildDto);
@@ -54,7 +54,7 @@ export class ChildrenController {
     if (!child) {
       throw new NotFoundException('Child not found');
     }
-    if (child.userId !== req.user.userId) {
+    if (!await this.childrenService.hasAccess(id, req.user.userId)) {
       throw new ForbiddenException('You do not have access to this child profile.');
     }
     return this.childrenService.remove(id, req.user.userId);

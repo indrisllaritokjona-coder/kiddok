@@ -14,6 +14,10 @@ import { ParentModule } from './parent/parent.module';
 import { DiaryModule } from './diary/diary.module';
 import { IllnessesModule } from './illnesses/illnesses.module';
 import { MedicationsModule } from './medications/medications.module';
+import { AppointmentsModule } from './appointments/appointments.module';
+import { LabResultsModule } from './lab-results/lab-results.module';
+import { ShareModule } from './share/share.module';
+import { FamilyMembersModule } from './family-members/family-members.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
@@ -30,6 +34,10 @@ import { ThrottlerModule } from '@nestjs/throttler';
     DiaryModule,
     IllnessesModule,
     MedicationsModule,
+    AppointmentsModule,
+    LabResultsModule,
+    ShareModule,
+    FamilyMembersModule,
     // Global rate limiting: 100 requests per minute per IP
     ThrottlerModule.forRoot([{
       name: 'short',

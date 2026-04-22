@@ -34,7 +34,7 @@ interface ActivityItem {
         </div>
       }
 
-      @if (items().length === 0 && !isRefreshing()) {
+      @if (allItems().length === 0 && !isRefreshing()) {
         <!-- Empty state -->
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center">
           <svg class="w-24 h-24 mx-auto mb-4 text-primary-200" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -123,7 +123,7 @@ export class RecentActivityFeedComponent {
   private touchStartY = 0;
   private isRefreshingInProgress = false;
 
-  private allItems = computed<ActivityItem[]>(() => {
+  allItems = computed<ActivityItem[]>(() => {
     const t = this.i18n.t();
     const activeId = this.dataService.activeChildId();
     const now = new Date();

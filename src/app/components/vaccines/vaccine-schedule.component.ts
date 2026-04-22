@@ -162,7 +162,7 @@ interface TimelineEntry {
     <ng-template #timelineRow let-entry="entry">
       <div class="flex items-start gap-3 cursor-pointer group"
         (click)="toggleExpand(entry)"
-        (longpress)="onLongPress(entry, $event)">
+        (longpress)="onLongPress(entry, $any($event))">
 
         <!-- Timeline Dot -->
         <div class="flex flex-col items-center flex-shrink-0 pt-1">
@@ -237,7 +237,7 @@ interface TimelineEntry {
                   </div>
                 }
                 @if (entry.status !== 'completed') {
-                  <button (click)="markComplete(entry, $event)"
+                  <button (click)="openMarkComplete(entry, $event)"
                     class="w-full mt-2 bg-teal-500 hover:bg-teal-600 text-white text-xs font-bold py-2 rounded-xl transition-all">
                     {{ t()['vaccines.schedule.markComplete'] || 'Shëno të përfunduar' }}
                   </button>
@@ -265,7 +265,7 @@ interface TimelineEntry {
           <div class="px-6 py-5 space-y-4">
             <p class="text-sm text-gray-600">
               {{ pendingEntry() ? (isSq() ? pendingEntry()!.scheduleEntry.nameSq : pendingEntry()!.scheduleEntry.nameEn) : '' }}
-              — {{ t()['vaccines.doseNumber'] || 'Doza' }} {{ pendingEntry()?.doseIndex }}/{{ pendingEntry()?.scheduleEntry.doses }}
+              — {{ t()['vaccines.doseNumber'] || 'Doza' }} {{ pendingEntry()?.doseIndex }}/{{ pendingEntry()?.scheduleEntry?.doses }}
             </p>
             <div>
               <label class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2 ml-1">
@@ -308,9 +308,9 @@ interface TimelineEntry {
 export class VaccineScheduleComponent implements OnInit {
   @Input({ required: true }) childId!: string;
   @Input() vaccineRecords: VaccineRecord[] = [];
-  @Output() markComplete = new EventEmitter<{ entry: TimelineEntry; date: string }>();
+  @Output() markCompleteRequested = new EventEmitter<{ entry: TimelineEntry; date: string }>();
 
-  private dataService = inject(DataService);
+  protected dataService = inject(DataService);
   private i18n = inject(I18nService);
 
   t = computed(() => this.i18n.t());
@@ -408,7 +408,7 @@ export class VaccineScheduleComponent implements OnInit {
   getDueDate(entry: TimelineEntry): string {
     if (entry.record?.dueDate) return entry.record.dueDate;
     // Compute from child birth date + schedule recommended day
-    const child = this.dataService.activeChild();
+    const child = this.dataService.children().find(c => c.id === this.childId);
     if (!child) return '';
     const birth = new Date(child.dateOfBirth);
     const due = new Date(birth.getTime() + entry.scheduleEntry.recommendedDay * 86400000);
@@ -418,12 +418,12 @@ export class VaccineScheduleComponent implements OnInit {
   confirmMarkComplete() {
     const entry = this.pendingEntry();
     if (!entry || !this.completionDate) return;
-    this.markComplete.emit({ entry, date: this.completionDate });
+    this.markCompleteRequested.emit({ entry, date: this.completionDate });
     this.showMarkCompleteModal.set(false);
     this.expandedEntry.set(null);
   }
 
-  markComplete(entry: TimelineEntry, event: MouseEvent) {
+  openMarkComplete(entry: TimelineEntry, event: MouseEvent) {
     event.stopPropagation();
     this.pendingEntry.set(entry);
     this.completionDate = new Date().toISOString().split('T')[0];

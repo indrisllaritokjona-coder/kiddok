@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService, ChildProfile } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
-import { VaccineScheduleComponent, VaccineRecord } from './vaccines/vaccine-schedule.component';
+import { VaccineScheduleComponent } from './vaccines/vaccine-schedule.component';
 import { VaccineAlertCardComponent, VaccineAlert } from './vaccines/vaccine-alert-card.component';
 
 export interface VaccineRecord {
@@ -111,9 +111,9 @@ const STANDARD_VACCINES = [
       @if (!loading()) {
         <div class="mx-4 mt-6">
           <app-vaccine-schedule
-            [childId]="dataService.activeChildId()"
+            [childId]="dataService.activeChildId() ?? ''"
             [vaccineRecords]="childVaccines()"
-            (markComplete)="onScheduleMarkComplete($event)"
+            (markCompleteRequested)="onScheduleMarkComplete($event)"
           />
         </div>
       }
@@ -323,7 +323,7 @@ const STANDARD_VACCINES = [
   `]
 })
 export class VaccinesComponent implements OnInit {
-  private dataService = inject(DataService);
+  protected dataService = inject(DataService);
   private i18n = inject(I18nService);
 
   standardVaccines = STANDARD_VACCINES;
@@ -621,7 +621,7 @@ export class VaccinesComponent implements OnInit {
 
   handleAlertAction(alert: VaccineAlert) {
     const record = this.vaccines().find(v => v.id === alert.id);
-    if (record) this.markComplete(record, new Event('click'));
+    if (record) this.markComplete(record, new MouseEvent('click'));
   }
 
   dismissAlert(alertId: string) {
@@ -638,7 +638,7 @@ export class VaccinesComponent implements OnInit {
       v.doseNumber === event.entry.doseIndex
     );
     if (record) {
-      this.markComplete(record, new Event('click'));
+      this.markComplete(record, new MouseEvent('click'));
     }
   }
 }

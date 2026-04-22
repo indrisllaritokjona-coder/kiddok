@@ -1,5 +1,5 @@
 ﻿import {
-  Component, Input, Output, EventEmitter, signal, computed, inject, OnInit, OnChanges, SimpleChanges
+  Component, Input, Output, EventEmitter, signal, computed, inject, OnInit, OnChanges, OnDestroy, SimpleChanges
 } from '@angular/core'
 import { LucideAngularModule } from 'lucide-angular';
 
@@ -336,7 +336,7 @@ export interface ChildFormData {
     }
   `]
 })
-export class AddEditChildModalComponent implements OnChanges {
+export class AddEditChildModalComponent implements OnInit, OnChanges, OnDestroy {
   @Input() mode: 'add' | 'edit' = 'add';
   @Input() child?: ChildProfile;
 
@@ -364,6 +364,14 @@ export class AddEditChildModalComponent implements OnChanges {
   genderOptions: { value: 'male' | 'female' | 'other'; label: string }[] = [];
   bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
+  ngOnInit(): void {
+    this.buildGenderOptions();
+  }
+
+  ngOnDestroy(): void {
+    // Cleanup if needed
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['child'] && this.child) {
       this.formData = {
@@ -376,7 +384,6 @@ export class AddEditChildModalComponent implements OnChanges {
       };
       // TODO: load documents if present
     }
-    this.buildGenderOptions();
   }
 
   private buildGenderOptions() {

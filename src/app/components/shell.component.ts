@@ -658,10 +658,6 @@ export class ShellComponent {
     this.editNameInvalid.set(this.hasNameError(this.editName));
   }
 
-  onBloodTypeChange() {
-    // Dead code — reactivity already handled by editBloodType.set($event) in template (Issue #6 removed)
-  }
-
   // Add child name handlers
   onAddNameInput(event: Event) {
     const value = (event.target as HTMLInputElement).value;

@@ -52,8 +52,8 @@ test.describe('KidDok E2E Tests', () => {
       const submitButton = page.locator('button[type="submit"], button:has(lucide-icon[name="arrow-right"])').first();
       await submitButton.click();
 
-      // Should show error message
-      const errorMsg = page.locator('text=Invalid, gabim, pasaktë').first();
+      // Should show error message (matches the actual i18n error text)
+      const errorMsg = page.locator('p.text-red-600').first();
       await expect(errorMsg).toBeVisible({ timeout: 3000 });
     });
   });

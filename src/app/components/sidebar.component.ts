@@ -14,7 +14,7 @@ interface NavItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule],
   template: `
     <aside class="sidebar">
       <!-- Brand row -->
@@ -277,11 +277,11 @@ export class SidebarComponent {
   readonly currentTab = this.dataService.currentTab;
 
   readonly navItems: NavItem[] = [
-    { id: 'home', icon: 'home', labelKey: 'sidebar.nav.home' },
-    { id: 'temperature', icon: 'thermostat', labelKey: 'sidebar.nav.temperature' },
-    { id: 'growth', icon: 'trending_up', labelKey: 'sidebar.nav.growth' },
-    { id: 'diary', icon: 'edit_document', labelKey: 'sidebar.nav.diary' },
-    { id: 'vaccines', icon: 'vaccines', labelKey: 'sidebar.nav.vaccines' },
+    { id: 'home', icon: 'house', labelKey: 'sidebar.nav.home' },
+    { id: 'temperature', icon: 'thermometer', labelKey: 'sidebar.nav.temperature' },
+    { id: 'growth', icon: 'trending-up', labelKey: 'sidebar.nav.growth' },
+    { id: 'diary', icon: 'book-open', labelKey: 'sidebar.nav.diary' },
+    { id: 'vaccines', icon: 'syringe', labelKey: 'sidebar.nav.vaccines' },
   ];
 
   readonly activeChild = computed(() => {

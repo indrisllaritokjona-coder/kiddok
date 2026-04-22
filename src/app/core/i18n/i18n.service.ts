@@ -143,7 +143,7 @@ const translations = {
   'diary.hasEntries': { sq: 'Ka regjistrime', en: 'Has entries' },
   'diary.entryCount': { sq: 'regjistrime', en: 'entries' },
   'diary.recentEntries': { sq: 'regjistrime të funta', en: 'recent entries' },
-  'diary.severity.label': { sq: 'Seviriteti', en: 'Severity' },
+  'diary.severity.label': { sq: 'Seviiteti', en: 'Severity' },
   'diary.notesPlaceholder': { sq: 'Shënime shtesë...', en: 'Additional notes...' },
   'settings.parentProfile': { sq: 'Profili i Prindit', en: 'Parent Profile' },
   'settings.name': { sq: 'Emri', en: 'First Name' },

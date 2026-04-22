@@ -127,7 +127,6 @@ export class QuickActionsGridComponent {
   });
 
   navigate(route: string) {
-    this.router.navigate([], { queryParams: { tab: route } }).catch(() => {});
     window.dispatchEvent(new CustomEvent('kiddok:navigate', { detail: route }));
   }
 

@@ -1,4 +1,6 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core'
+import { LucideAngularModule } from 'lucide-angular';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService, ChildProfile } from '../services/data.service';
@@ -36,7 +38,7 @@ const STANDARD_VACCINES = [
 
 @Component({
   selector: 'app-vaccines',
-  imports: [CommonModule, FormsModule, VaccineScheduleComponent, VaccineAlertCardComponent],
+  imports: [CommonModule, FormsModule, VaccineScheduleComponent, VaccineAlertCardComponent, LucideAngularModule],
   template: `
     <div class="min-h-screen bg-gray-50 pb-24">
 
@@ -48,7 +50,7 @@ const STANDARD_VACCINES = [
           </div>
           <button (click)="showAddModal.set(true)"
             class="bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-2.5 rounded-2xl font-bold shadow-sm transition-all flex items-center gap-2 text-sm">
-            <span class="material-icons text-sm">add</span>
+            <lucide-icon name="plus" class="text-inherit"></lucide-icon>
             {{ t()['vaccines.addRecord'] || 'Shto Vaksina' }}
           </button>
         </div>
@@ -85,10 +87,10 @@ const STANDARD_VACCINES = [
             <rect x="80" y="78" width="30" height="3" rx="1.5" fill="#6366F1" opacity="0.5"/>
           </svg>
           <h2 class="text-xl font-bold text-gray-700 mb-2">{{ t()['vaccines.emptyState'] || 'Akzni s\'ka vaksina' }}</h2>
-          <p class="text-gray-500 text-center mb-6 max-w-xs">{{ t()['vaccines.emptyStateHint'] || 'Shtoni vaksinat e para për të ndjekur çdo dozë' }}</p>
+          <p class="text-gray-500 text-center mb-6 max-w-xs">{{ t()['vaccines.emptyStateHint'] || 'Shtoni vaksinat e para p�r t� ndjekur �do doz�' }}</p>
           <button (click)="showAddModal.set(true)"
             class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-sm transition-all flex items-center gap-2">
-            <span class="material-icons text-sm">add</span>
+            <lucide-icon name="plus" class="text-inherit"></lucide-icon>
             {{ t()['vaccines.addRecord'] || 'Shto Vaksina' }}
           </button>
         </div>
@@ -128,7 +130,7 @@ const STANDARD_VACCINES = [
           <!-- Icon -->
           <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
             [ngClass]="getStatusBgClass(v.status)">
-            <span class="material-icons text-xl" [ngClass]="getStatusTextClass(v.status)">{{ getStatusIcon(v.status) }}</span>
+            <lucide-icon [name]="getStatusIcon(v.status)" class="text-xl" [ngClass]="getStatusTextClass(v.status)"></lucide-icon>
           </div>
 
           <!-- Main Info -->
@@ -150,8 +152,7 @@ const STANDARD_VACCINES = [
           </div>
 
           <!-- Expand Icon -->
-          <span class="material-icons text-gray-500 text-lg flex-shrink-0 transition-transform"
-            [ngClass]="expandedId() === v.id ? 'rotate-180' : ''">expand_more</span>
+          <lucide-icon name="chevron-down" class="text-gray-500 text-lg flex-shrink-0 transition-transform {{ expandedId() === v.id ? 'rotate-180' : '' }}"></lucide-icon>
         </div>
 
         <!-- Expanded Details -->
@@ -166,7 +167,7 @@ const STANDARD_VACCINES = [
             @if (v.site) {
               <div class="flex justify-between text-xs">
                 <span class="text-gray-500 font-medium">{{ t()['vaccines.injectionSite'] || 'Vendi' }}:</span>
-                <span class="text-gray-700 font-semibold">{{ v.site === 'thigh' ? (t()['vaccines.site.thigh'] || 'Kofshë') : (t()['vaccines.site.arm'] || 'Krah') }}</span>
+                <span class="text-gray-700 font-semibold">{{ v.site === 'thigh' ? (t()['vaccines.site.thigh'] || 'Kofsh�') : (t()['vaccines.site.arm'] || 'Krah') }}</span>
               </div>
             }
             @if (v.administeredBy) {
@@ -189,7 +190,7 @@ const STANDARD_VACCINES = [
             @if (v.status !== 'completed') {
               <button (click)="markComplete(v, $event)"
                 class="w-full mt-2 bg-teal-500 hover:bg-teal-600 text-white text-xs font-bold py-2.5 rounded-xl transition-all">
-                {{ t()['vaccines.markComplete'] || 'Shëno si e bërë' }}
+                {{ t()['vaccines.markComplete'] || 'Sh�no si e b�r�' }}
               </button>
             }
           </div>
@@ -210,7 +211,7 @@ const STANDARD_VACCINES = [
           <div class="sticky top-0 bg-white px-6 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between rounded-t-3xl">
             <h2 class="text-xl font-extrabold text-gray-800">{{ t()['vaccines.addRecord'] || 'Shto Vaksina' }}</h2>
             <button (click)="showAddModal.set(false)" class="text-gray-500 hover:text-gray-600 bg-gray-100 p-2 rounded-xl transition-all">
-              <span class="material-icons">close</span>
+              <lucide-icon name="x" class="text-inherit"></lucide-icon>
             </button>
           </div>
 
@@ -278,7 +279,7 @@ const STANDARD_VACCINES = [
                 class="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold text-gray-700 bg-white">
                 <option value="">--</option>
                 <option value="arm">{{ t()['vaccines.site.arm'] || 'Krah' }}</option>
-                <option value="thigh">{{ t()['vaccines.site.thigh'] || 'Kofshë' }}</option>
+                <option value="thigh">{{ t()['vaccines.site.thigh'] || 'Kofsh�' }}</option>
               </select>
             </div>
 
@@ -295,11 +296,11 @@ const STANDARD_VACCINES = [
             <!-- Notes -->
             <div>
               <label class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2 ml-1">
-                {{ t()['vaccines.notes'] || 'Shënime' }}
+                {{ t()['vaccines.notes'] || 'Sh�nime' }}
               </label>
               <textarea [(ngModel)]="formNotes" rows="3"
                 class="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold text-gray-700 resize-none"
-                placeholder="Shënime shtesë..."></textarea>
+                placeholder="Sh�nime shtes�..."></textarea>
             </div>
           </div>
 
@@ -485,11 +486,11 @@ export class VaccinesComponent implements OnInit {
 
   getStatusIcon(status: string): string {
     switch (status) {
-      case 'overdue': return 'warning';
-      case 'due': return 'schedule';
-      case 'upcoming': return 'event';
-      case 'completed': return 'task_alt';
-      default: return 'vaccines';
+      case 'overdue': return 'alert-triangle';
+      case 'due': return 'clock';
+      case 'upcoming': return 'calendar';
+      case 'completed': return 'check-circle-2';
+      default: return 'syringe';
     }
   }
 
@@ -528,9 +529,9 @@ export class VaccinesComponent implements OnInit {
   getStatusLabel(status: string): string {
     const labels: Record<string, string> = {
       overdue: this.t()['vaccines.status.overdue'] || 'Vonuar',
-      due: this.t()['vaccines.status.due'] || 'Për shkak',
-      upcoming: this.t()['vaccines.status.upcoming'] || 'Së shpejti',
-      completed: this.t()['vaccines.status.completed'] || 'Përfunduar',
+      due: this.t()['vaccines.status.due'] || 'P�r shkak',
+      upcoming: this.t()['vaccines.status.upcoming'] || 'S� shpejti',
+      completed: this.t()['vaccines.status.completed'] || 'P�rfunduar',
     };
     return labels[status] || status;
   }
@@ -642,3 +643,4 @@ export class VaccinesComponent implements OnInit {
     }
   }
 }
+

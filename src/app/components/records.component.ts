@@ -1,11 +1,13 @@
-import { Component, inject, signal } from '@angular/core';
+﻿import { Component, inject, signal } from '@angular/core'
+import { LucideAngularModule } from 'lucide-angular';
+
 import { CommonModule } from '@angular/common';
 import { DataService } from '../services/data.service';
 import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'app-records',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, LucideAngularModule],
     template: `
     <div class="px-2">
        <div class="flex items-center justify-between mb-8 flex-col sm:flex-row gap-4">
@@ -14,7 +16,7 @@ import { FormsModule } from '@angular/forms';
            <p class="text-gray-500 font-medium">Kalendari zyrtar i mjekimeve dhe rekomandimeve të mjekut.</p>
         </div>
         <button (click)="isAdding.set(true)" class="bg-slate-900 hover:bg-primary-600 text-white px-6 py-3.5 rounded-2xl font-bold shadow-soft transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
-          <span class="material-icons text-sm">edit_calendar</span> Shto Dokument i Ri
+          <lucide-icon name="calendar-clock" class="text-inherit"></lucide-icon> Shto Dokument i Ri
         </button>
       </div>
 
@@ -25,7 +27,7 @@ import { FormsModule } from '@angular/forms';
           <div class="bg-white p-8 rounded-3xl shadow-soft xl:col-span-1 animate-slide-up border border-gray-100 sticky top-4">
             <div class="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
                <h3 class="font-bold text-xl text-gray-800">Skeda e Vaksinimit</h3>
-               <button (click)="isAdding.set(false)" class="text-gray-500 hover:text-gray-600 bg-gray-100 p-1.5 rounded-xl"><span class="material-icons">close</span></button>
+               <button (click)="isAdding.set(false)" class="text-gray-500 hover:text-gray-600 bg-gray-100 p-1.5 rounded-xl"><lucide-icon name="x" class="text-inherit"></lucide-icon></button>
             </div>
             
             <div class="space-y-5">
@@ -39,11 +41,11 @@ import { FormsModule } from '@angular/forms';
                 <div class="flex gap-4">
                   <label class="flex-1 cursor-pointer flex items-center p-3 rounded-2xl border" [ngClass]="fCompleted ? 'border-primary-500 bg-primary-50' : 'border-gray-200 bg-slate-50'">
                     <input type="radio" [value]="true" [(ngModel)]="fCompleted" class="hidden">
-                    <span class="material-icons text-primary-500 mr-2 text-sm">check_circle</span> <span class="font-bold text-sm text-gray-700">Përfunduar</span>
+                    <lucide-icon name="check-circle" class="text-inherit"></lucide-icon> <span class="font-bold text-sm text-gray-700">Përfunduar</span>
                   </label>
                   <label class="flex-1 cursor-pointer flex items-center p-3 rounded-2xl border" [ngClass]="!fCompleted ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-slate-50'">
                     <input type="radio" [value]="false" [(ngModel)]="fCompleted" class="hidden">
-                    <span class="material-icons text-orange-500 mr-2 text-sm">schedule</span> <span class="font-bold text-sm text-gray-700">Në Pritje</span>
+                    <lucide-icon name="clock" class="text-inherit"></lucide-icon> <span class="font-bold text-sm text-gray-700">Në Pritje</span>
                   </label>
                 </div>
               </div>
@@ -64,7 +66,7 @@ import { FormsModule } from '@angular/forms';
         <div class="space-y-4" [ngClass]="isAdding() ? 'xl:col-span-2' : 'xl:col-span-3'">
           @if (records().length === 0) {
              <div class="text-center py-20 bg-white border border-dashed border-gray-200 rounded-3xl">
-                <span class="material-icons text-6xl text-gray-300 font-light mb-4">snippet_folder</span>
+                <lucide-icon name="folder-open" class="text-inherit"></lucide-icon>
                 <p class="text-xl font-bold text-gray-700 mb-2">Asnjë e dhënë laboratorike.</p>
                 <p class="text-gray-500">Regjistro të paktën një vaksinë ose vizitë te mjeku.</p>
              </div>
@@ -76,7 +78,7 @@ import { FormsModule } from '@angular/forms';
                   <div class="flex gap-4">
                      <!-- Icon Box -->
                      <div class="w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center border" [ngClass]="entry.completed ? 'bg-teal-50 text-teal-500 border-teal-100' : 'bg-orange-50 text-orange-500 border-orange-100'">
-                       <span class="material-icons text-3xl">{{ entry.completed ? 'task_alt' : 'hourglass_top' }}</span>
+                       <lucide-icon [name]="entry.completed ? 'check-circle-2' : 'hourglass'" class="text-3xl"></lucide-icon>
                      </div>
                      
                      <div class="flex-1 mt-1">

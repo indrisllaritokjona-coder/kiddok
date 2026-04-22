@@ -1,4 +1,6 @@
-import { Component, inject, computed, signal, effect } from '@angular/core';
+﻿import { Component, inject, computed, signal, effect } from '@angular/core'
+import { LucideAngularModule } from 'lucide-angular';
+
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../services/data.service';
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -20,11 +22,11 @@ interface AlertItem {
 @Component({
   selector: 'app-health-alert-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideAngularModule],
   template: `
     <div class="mb-6 space-y-3">
       <h2 class="text-lg font-bold text-gray-700 mb-3 px-1 flex items-center gap-2">
-        <span class="material-icons text-red-500 text-xl">warning</span>
+        <lucide-icon name="alert-triangle" class="text-inherit"></lucide-icon>
         {{ i18n.t()['home.alerts.title'] }}
       </h2>
 
@@ -40,13 +42,13 @@ interface AlertItem {
               class="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
               [title]="i18n.t()['home.alerts.dismiss']"
             >
-              <span class="material-icons text-base">close</span>
+              <lucide-icon name="x" class="text-inherit"></lucide-icon>
             </button>
 
             <!-- Icon -->
             <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                  [class]="alert.iconBgClass">
-              <span class="material-icons text-lg" [class]="alert.iconClass">{{ alert.icon }}</span>
+              <lucide-icon [name]="alert.icon.replace('thermostat','thermometer').replace('vaccines','syringe')" class="text-lg" [class]="alert.iconClass"></lucide-icon>
             </div>
 
             <!-- Text -->

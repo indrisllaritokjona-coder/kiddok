@@ -3,6 +3,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production && \
     addgroup -S appgroup && adduser -S appuser -G appgroup
+COPY prisma/ ./prisma/
+RUN npx prisma generate
 COPY dist/ ./dist/
 RUN chown -R appuser:appgroup /app
 USER appuser

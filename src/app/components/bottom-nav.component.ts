@@ -1,5 +1,8 @@
-import { Component, inject } from '@angular/core';
+﻿import { Component, inject } from '@angular/core'
+import { LucideAngularModule } from 'lucide-angular';
+
 import { CommonModule } from '@angular/common';
+import { LucideAngularModule } from 'lucide-angular';
 import { DataService } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
 
@@ -12,7 +15,7 @@ interface NavTab {
 @Component({
   selector: 'app-bottom-nav',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideAngularModule],
   template: `
     <nav class="lg:hidden fixed bottom-0 w-full bg-white border-t border-stone-200 z-50 h-16"
          style="padding-bottom: env(safe-area-inset-bottom);">
@@ -23,9 +26,7 @@ interface NavTab {
             [class.text-indigo-600]="currentTab() === tab.id"
             [class.text-stone-500]="currentTab() !== tab.id"
             (click)="navigate(tab.id)" aria-label="{{ label(tab.labelKey) }}">
-            <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;">
-              {{ tab.icon }}
-            </span>
+            <lucide-icon [name]="tab.icon" class="text-2xl"></lucide-icon>
             <span class="text-xs font-semibold leading-none">{{ label(tab.labelKey) }}</span>
           </button>
         }

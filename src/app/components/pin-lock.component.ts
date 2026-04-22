@@ -1,5 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LucideAngularModule } from 'lucide-angular';
+import { LucideAngularModule } from 'lucide-angular';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DataService } from '../services/data.service';
@@ -21,7 +23,7 @@ import { I18nService } from '../core/i18n/i18n.service';
         <!-- Branding header -->
         <div class="text-center mb-10">
           <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-[#1a3c8f] to-[#0a1f5c] shadow-2xl mb-6">
-            <span class="material-icons text-4xl text-white">child_care</span>
+            <lucide-icon name="baby" class="text-4xl text-white"></lucide-icon>
           </div>
           <h1 class="text-4xl font-extrabold tracking-tight text-gray-900">KidDok<span class="text-[#1a3c8f]">.</span></h1>
           <p class="text-slate-400 mt-2 text-sm font-medium">{{ brandSubtitle() }}</p>
@@ -51,7 +53,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                     {{ usernameLabel() }}
                   </label>
                   <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 material-icons text-slate-400 text-xl">person</span>
+                    <lucide-icon name="user" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl"></lucide-icon>
                     <input type="text"
                            [(ngModel)]="userId"
                            (blur)="touchUserId()"
@@ -62,7 +64,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                   </div>
                   @if (userIdError()) {
                     <div class="flex items-center gap-1.5 mt-2 ml-1">
-                      <span class="material-icons text-red-500 text-base">warning</span>
+                      <lucide-icon name="alert-triangle" class="text-red-500 text-base"></lucide-icon>
                       <p class="text-red-500 text-xs font-medium">{{ userIdError() }}</p>
                     </div>
                   }
@@ -74,7 +76,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                     {{ passwordLabel() }}
                   </label>
                   <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 material-icons text-slate-400 text-xl">key</span>
+                    <lucide-icon name="key" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl"></lucide-icon>
                     <input [type]="showPassword() ? 'text' : 'password'"
                            [(ngModel)]="password"
                            (blur)="touchPassword()"
@@ -84,12 +86,12 @@ import { I18nService } from '../core/i18n/i18n.service';
                            [placeholder]="passwordPlaceholder()">
                     <button type="button" (click)="showPassword.set(!showPassword())"
                             class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
-                      <span class="material-icons text-xl">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
+                      <lucide-icon [name]="showPassword() ? 'eye-off' : 'eye'" class="text-xl"></lucide-icon>
                     </button>
                   </div>
                   @if (passwordError()) {
                     <div class="flex items-center gap-1.5 mt-2 ml-1">
-                      <span class="material-icons text-red-500 text-base">warning</span>
+                      <lucide-icon name="alert-triangle" class="text-red-500 text-base"></lucide-icon>
                       <p class="text-red-500 text-xs font-medium">{{ passwordError() }}</p>
                     </div>
                   }
@@ -106,7 +108,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                 <!-- Global error -->
                 @if (errorMsg()) {
                   <div class="p-3.5 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-2.5 animate-fade-in">
-                    <span class="material-icons text-red-500 text-lg">error_outline</span>
+                    <lucide-icon name="alert-circle" class="text-red-500 text-lg"></lucide-icon>
                     <p class="text-red-600 text-xs font-medium">{{ errorMsg() }}</p>
                   </div>
                 }
@@ -116,10 +118,10 @@ import { I18nService } from '../core/i18n/i18n.service';
                         [disabled]="loading()"
                         class="w-full border-2 border-[#c8102e] bg-gradient-to-r from-[#c8102e] to-[#e0173a] hover:from-[#a00d26] hover:to-[#c8102e] disabled:from-slate-300 disabled:to-slate-300 disabled:border-slate-300 text-white font-bold py-4 rounded-2xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:hover:shadow-none disabled:translate-y-0 flex items-center justify-center gap-3 text-base mt-1">
                   @if (loading()) {
-                    <span class="material-icons text-xl animate-spin">sync</span>
+                    <lucide-icon name="refresh-cw" class="text-xl animate-spin"></lucide-icon>
                     {{ loadingText() }}
                   } @else {
-                    <span class="material-icons text-xl">arrow_forward</span>
+                    <lucide-icon name="arrow-right" class="text-xl"></lucide-icon>
                     {{ submitText() }}
                   }
                 </button>
@@ -134,7 +136,7 @@ import { I18nService } from '../core/i18n/i18n.service';
 
               <!-- Back link -->
               <button (click)="backToLogin()" class="flex items-center gap-1.5 text-sm text-slate-400 hover:text-[#1a3c8f] transition-colors mb-6 -ml-1">
-                <span class="material-icons text-lg">arrow_back</span>
+                <lucide-icon name="arrow-left" class="text-lg"></lucide-icon>
                 <span class="font-semibold">{{ backText() }}</span>
               </button>
 
@@ -151,7 +153,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                       {{ confirmLabel() }}<span class="text-red-500 ml-0.5">*</span>
                     </label>
                     <div class="relative">
-                      <span class="absolute left-4 top-1/2 -translate-y-1/2 material-icons text-slate-400 text-xl">person</span>
+                      <lucide-icon name="user" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl"></lucide-icon>
                       <input type="text"
                              [(ngModel)]="forgotNid"
                              (blur)="touchForgotNid()"
@@ -162,7 +164,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                     </div>
                     @if (forgotNidError()) {
                       <div class="flex items-center gap-1.5 mt-2 ml-1">
-                        <span class="material-icons text-red-500 text-base">warning</span>
+                        <lucide-icon name="alert-triangle" class="text-red-500 text-base"></lucide-icon>
                         <p class="text-red-500 text-xs font-medium">{{ forgotNidError() }}</p>
                       </div>
                     }
@@ -174,7 +176,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                   <!-- Green success banner -->
                   <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl animate-fade-in">
                     <div class="flex items-start gap-3">
-                      <span class="material-icons text-emerald-500 text-lg mt-0.5">check_circle</span>
+                      <lucide-icon name="check-circle" class="text-emerald-500 text-lg mt-0.5"></lucide-icon>
                       <p class="text-emerald-700 text-xs font-medium leading-relaxed">
                         {{ otpSuccessMsg() }}
                       </p>
@@ -187,7 +189,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                       {{ otpLabel() }}<span class="text-red-500 ml-0.5">*</span>
                     </label>
                     <div class="relative">
-                      <span class="absolute left-4 top-1/2 -translate-y-1/2 material-icons text-slate-400 text-xl">lock</span>
+                      <lucide-icon name="lock" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl"></lucide-icon>
                       <input type="text"
                              [(ngModel)]="otpCode"
                              (blur)="touchOtp()"
@@ -199,7 +201,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                     </div>
                     @if (otpError()) {
                       <div class="flex items-center gap-1.5 mt-2 ml-1">
-                        <span class="material-icons text-red-500 text-base">warning</span>
+                        <lucide-icon name="alert-triangle" class="text-red-500 text-base"></lucide-icon>
                         <p class="text-red-500 text-xs font-medium">{{ otpError() }}</p>
                       </div>
                     }
@@ -209,7 +211,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                 <!-- Global error -->
                 @if (errorMsg()) {
                   <div class="p-3.5 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-2.5 animate-fade-in">
-                    <span class="material-icons text-red-500 text-lg">error_outline</span>
+                    <lucide-icon name="alert-circle" class="text-red-500 text-lg"></lucide-icon>
                     <p class="text-red-600 text-xs font-medium">{{ errorMsg() }}</p>
                   </div>
                 }
@@ -219,10 +221,10 @@ import { I18nService } from '../core/i18n/i18n.service';
                         [disabled]="loading()"
                         class="w-full border-2 border-[#c8102e] bg-gradient-to-r from-[#c8102e] to-[#e0173a] hover:from-[#a00d26] hover:to-[#c8102e] disabled:from-slate-300 disabled:to-slate-300 disabled:border-slate-300 text-white font-bold py-4 rounded-2xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:hover:shadow-none disabled:translate-y-0 flex items-center justify-center gap-3 text-base mt-1">
                   @if (loading()) {
-                    <span class="material-icons text-xl animate-spin">sync</span>
+                    <lucide-icon name="refresh-cw" class="text-xl animate-spin"></lucide-icon>
                     {{ loadingText() }}
                   } @else {
-                    <span class="material-icons text-xl">arrow_forward</span>
+                    <lucide-icon name="arrow-right" class="text-xl"></lucide-icon>
                     {{ submitText() }}
                   }
                 </button>

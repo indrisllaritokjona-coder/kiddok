@@ -1,6 +1,8 @@
-import {
+﻿import {
   Component, Input, Output, EventEmitter, signal, computed, inject, OnInit, OnChanges, SimpleChanges
-} from '@angular/core';
+} from '@angular/core'
+import { LucideAngularModule } from 'lucide-angular';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -27,7 +29,7 @@ export interface ChildFormData {
 
 @Component({
   selector: 'app-add-edit-child-modal',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule],
   template: `
     <!-- Backdrop -->
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -54,7 +56,7 @@ export interface ChildFormData {
             </h2>
             <button (click)="cancelled.emit()"
                     class="w-9 h-9 rounded-xl bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-500 hover:text-stone-700 transition-all shadow-sm border border-stone-200">
-              <span class="material-icons text-base">close</span>
+              <lucide-icon name="x" class="text-inherit"></lucide-icon>
             </button>
           </div>
 
@@ -65,7 +67,7 @@ export interface ChildFormData {
                 <div class="w-3 h-3 rounded-full flex items-center justify-center transition-all"
                      [class]="getStepDotClass(step)">
                   @if (currentStep() > step) {
-                    <span class="material-icons text-white text-xs">check</span>
+                    <lucide-icon name="check" class="text-inherit"></lucide-icon>
                   } @else {
                     <span class="text-xs font-bold">{{ step }}</span>
                   }
@@ -85,7 +87,7 @@ export interface ChildFormData {
           <!-- Error Banner -->
           @if (saveError()) {
             <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 animate-fade-in">
-              <span class="material-icons text-red-500">error_outline</span>
+              <lucide-icon name="alert-circle" class="text-inherit"></lucide-icon>
               <p class="text-red-700 text-sm font-medium">{{ saveError() }}</p>
             </div>
           }
@@ -106,7 +108,7 @@ export interface ChildFormData {
                        [class]="errors()['name'] ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : ''">
                 @if (errors()['name']) {
                   <p class="mt-2 text-xs text-red-500 font-medium flex items-center gap-1">
-                    <span class="material-icons text-xs">error_outline</span>
+                    <lucide-icon name="alert-circle" class="text-inherit"></lucide-icon>
                     {{ errors()['name'] }}
                   </p>
                 }
@@ -125,7 +127,7 @@ export interface ChildFormData {
                 </div>
                 @if (errors()['dateOfBirth']) {
                   <p class="mt-2 text-xs text-red-500 font-medium flex items-center gap-1">
-                    <span class="material-icons text-xs">error_outline</span>
+                    <lucide-icon name="alert-circle" class="text-inherit"></lucide-icon>
                     {{ errors()['dateOfBirth'] }}
                   </p>
                 }
@@ -150,7 +152,7 @@ export interface ChildFormData {
                 </div>
                 @if (errors()['gender']) {
                   <p class="mt-2 text-xs text-red-500 font-medium flex items-center gap-1">
-                    <span class="material-icons text-xs">error_outline</span>
+                    <lucide-icon name="alert-circle" class="text-inherit"></lucide-icon>
                     {{ errors()['gender'] }}
                   </p>
                 }
@@ -165,13 +167,13 @@ export interface ChildFormData {
               <button type="button" (click)="toggleMedical()"
                       class="w-full flex items-center justify-between p-4 bg-indigo-50 rounded-2xl border border-indigo-100 hover:bg-indigo-100 transition-all">
                 <div class="flex items-center gap-3">
-                  <span class="material-icons text-indigo-500">medical_information</span>
+                  <lucide-icon name="stethoscope" class="text-indigo-500"></lucide-icon>
                   <span class="font-semibold text-indigo-700">{{ i18n.t()['childForm.step2.medical'] }}</span>
                 </div>
                 <div class="flex items-center gap-2">
                   <span class="text-xs text-indigo-400 font-medium">{{ i18n.t()['childForm.optional'] }}</span>
-                  <span class="material-icons text-indigo-400 transition-transform"
-                        [class.rotate-180]="isMedicalExpanded()">expand_more</span>
+                  <lucide-icon name="chevron-down" class="text-indigo-400 transition-transform"
+                        [class.rotate-180]="isMedicalExpanded()"></lucide-icon>
                 </div>
               </button>
 
@@ -190,7 +192,7 @@ export interface ChildFormData {
                           <option [value]="bt">{{ bt }}</option>
                         }
                       </select>
-                      <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-stone-400 text-lg pointer-events-none">expand_more</span>
+                      <lucide-icon name="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 text-lg pointer-events-none"></lucide-icon>
                     </div>
                   </div>
 
@@ -236,7 +238,7 @@ export interface ChildFormData {
                    (dragover)="onDragOver($event)"
                    (drop)="onFileDrop($event)"
                    class="border-2 border-dashed border-stone-300 rounded-2xl p-8 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 transition-all">
-                <span class="material-icons text-4xl text-stone-300 mb-3">cloud_upload</span>
+                <lucide-icon name="upload-cloud" class="text-4xl text-stone-300 mb-3"></lucide-icon>
                 <p class="font-semibold text-stone-500 text-sm">{{ i18n.t()['childForm.uploadDocument'] }}</p>
                 <p class="text-xs text-stone-400 mt-1">PDF, PNG, JPG — max 5MB</p>
               </div>
@@ -248,14 +250,14 @@ export interface ChildFormData {
                 <div class="space-y-2">
                   @for (file of uploadedFiles(); track file.name; let i = $index) {
                     <div class="flex items-center gap-3 p-3 bg-stone-50 rounded-xl border border-stone-200 animate-fade-in">
-                      <span class="material-icons text-stone-400 text-lg">description</span>
+                      <lucide-icon name="file-text" class="text-stone-400 text-lg"></lucide-icon>
                       <div class="flex-1 min-w-0">
                         <p class="text-sm font-medium text-gray-700 truncate">{{ file.name }}</p>
                         <p class="text-xs text-stone-400">{{ formatFileSize(file.size) }}</p>
                       </div>
                       <button type="button" (click)="removeFile(i)"
                               class="text-red-400 hover:text-red-600 transition-colors">
-                        <span class="material-icons text-lg">close</span>
+                        <lucide-icon name="x" class="text-inherit"></lucide-icon>
                       </button>
                     </div>
                   }
@@ -265,7 +267,7 @@ export interface ChildFormData {
               <!-- File Error -->
               @if (fileError()) {
                 <div class="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl animate-fade-in">
-                  <span class="material-icons text-red-500 text-sm">error_outline</span>
+                  <lucide-icon name="alert-circle" class="text-inherit"></lucide-icon>
                   <p class="text-red-600 text-xs font-medium">{{ fileError() }}</p>
                 </div>
               }
@@ -280,7 +282,7 @@ export interface ChildFormData {
             @if (currentStep() > 1) {
               <button type="button" (click)="prevStep()"
                       class="px-5 py-3 text-stone-600 hover:text-stone-900 font-semibold transition-colors flex items-center gap-1">
-                <span class="material-icons text-lg">arrow_back</span>
+                <lucide-icon name="arrow-left" class="text-inherit"></lucide-icon>
                 {{ i18n.t()['childForm.back'] }}
               </button>
             } @else {
@@ -294,16 +296,16 @@ export interface ChildFormData {
               <button type="button" (click)="nextStep()"
                       class="px-8 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-500 text-white font-semibold rounded-2xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2">
                 {{ i18n.t()['childForm.next'] }}
-                <span class="material-icons text-lg">arrow_forward</span>
+                <lucide-icon name="arrow-right" class="text-lg"></lucide-icon>
               </button>
             } @else {
               <button type="button" (click)="save()" [disabled]="isSaving()"
                       class="px-8 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-500 text-white font-semibold rounded-2xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                 @if (isSaving()) {
-                  <span class="material-icons animate-spin">progress_activity</span>
+                  <lucide-icon name="loader" class="text-inherit"></lucide-icon>
                   {{ i18n.locale() === 'sq' ? 'Duke ruajtur...' : 'Saving...' }}
                 } @else {
-                  <span class="material-icons">save</span>
+                  <lucide-icon name="save" class="text-inherit"></lucide-icon>
                   {{ i18n.t()['childForm.save'] }}
                 }
               </button>

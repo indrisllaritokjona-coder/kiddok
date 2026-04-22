@@ -1,4 +1,6 @@
-import { Component } from '@angular/core';
+﻿import { Component } from '@angular/core'
+import { LucideAngularModule } from 'lucide-angular';
+
 import { CommonModule } from '@angular/common';
 import { WelcomeHeroComponent } from './home/welcome-hero.component';
 import { QuickActionsGridComponent } from './home/quick-actions-grid.component';
@@ -7,13 +9,7 @@ import { RecentActivityFeedComponent } from './home/recent-activity-feed.compone
 
 @Component({
     selector: 'app-home',
-    imports: [
-        CommonModule,
-        WelcomeHeroComponent,
-        QuickActionsGridComponent,
-        HealthAlertCardComponent,
-        RecentActivityFeedComponent,
-    ],
+    imports: [CommonModule, LucideAngularModule, WelcomeHeroComponent, QuickActionsGridComponent, HealthAlertCardComponent, RecentActivityFeedComponent],
     template: `
     <div class="px-2 max-w-6xl mx-auto">
       <app-welcome-hero />

@@ -1,4 +1,6 @@
-import { Component, inject, computed } from '@angular/core';
+﻿import { Component, inject, computed } from '@angular/core'
+import { LucideAngularModule } from 'lucide-angular';
+
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { DataService } from '../../services/data.service';
@@ -18,11 +20,11 @@ interface QuickAction {
 @Component({
   selector: 'app-quick-actions-grid',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideAngularModule],
   template: `
     <div class="mb-6">
       <h2 class="text-lg font-bold text-gray-700 mb-4 px-1 flex items-center gap-2">
-        <span class="material-icons text-primary-500 text-xl">bolt</span>
+        <lucide-icon name="zap" class="text-inherit"></lucide-icon>
         {{ i18n.t()['home.quickActions.title'] }}
       </h2>
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -48,7 +50,7 @@ interface QuickAction {
             <!-- Icon circle -->
             <div class="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-200 group-hover:scale-110"
                  [class]="action.colorClass">
-              <span class="material-icons text-2xl">{{ action.icon }}</span>
+              <lucide-icon [name]="action.icon.replace('thermostat','thermometer').replace('trending_up','trending-up').replace('edit_document','file-text').replace('vaccines','syringe')" class="text-2xl"></lucide-icon>
             </div>
 
             <!-- Label -->

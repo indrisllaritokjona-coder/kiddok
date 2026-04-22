@@ -1,5 +1,6 @@
-import { Component, inject, signal, computed, OnDestroy } from '@angular/core';
+﻿import { Component, inject, signal, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LucideAngularModule } from 'lucide-angular';
 import { DataService, ChildProfile } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
 import { Router } from '@angular/router';
@@ -18,7 +19,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
 
 @Component({
     selector: 'app-shell',
-    imports: [CommonModule, FormsModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent],
+    imports: [CommonModule, FormsModule, LucideAngularModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent],
     template: `
 
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
@@ -48,12 +49,12 @@ import { SettingsPageComponent } from './settings/settings-page.component';
             @if (dataService.children().length === 0 && !isAddingChild()) {
               <div class="h-full flex flex-col items-center justify-center text-center animate-slide-up max-w-lg mx-auto">
                 <div class="w-40 h-40 bg-gradient-to-tr from-primary-100 to-teal-50 text-primary-500 rounded-full flex items-center justify-center mb-10 shadow-glass border border-white">
-                  <span class="material-icons text-[80px] opacity-80">celebration</span>
+                  <lucide-icon name="party-popper" [size]="80" class="opacity-80"></lucide-icon>
                 </div>
                 <h2 class="text-3xl lg:text-4xl font-extrabold text-gray-800 mb-4 tracking-tight">{{ i18n.t()['child.welcome'] }}</h2>
                 <p class="text-gray-500 text-lg mb-10 leading-relaxed">{{ i18n.t()['child.welcomeSub'] }}</p>
                 <button (click)="isAddingChild.set(true)" class="bg-slate-900 hover:bg-primary-600 text-white px-10 py-5 rounded-2xl font-bold shadow-[0_10px_20px_rgba(0,0,0,0.1)] transition-all transform hover:-translate-y-1 flex items-center gap-3 text-lg w-full sm:w-auto justify-center">
-                  <span class="material-icons bg-white/20 rounded-full p-1">add</span> {{ i18n.t()['child.addNew'] }}
+                  <lucide-icon name="plus" class="bg-white/20 rounded-full p-1"></lucide-icon> {{ i18n.t()['child.addNew'] }}
                 </button>
               </div>
             } @else {
@@ -65,7 +66,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                     <div class="bg-white rounded-[2rem] p-8 shadow-md border border-slate-100 hover:shadow-xl hover:border-primary-200 transition-all group relative card-hover">
                       <button (click)="openEditModal(child)"
                               class="absolute top-5 right-5 w-9 h-9 rounded-xl bg-slate-50 hover:bg-primary-50 border border-slate-200 hover:border-primary-300 flex items-center justify-center text-slate-400 hover:text-primary-600 transition-all shadow-sm">
-                        <span class="material-icons text-base">edit</span>
+                        <lucide-icon name="pencil" class="text-base"></lucide-icon>
                       </button>
                       <div (click)="selectChild(child.id)" class="cursor-pointer">
                         <div class="flex items-center gap-5 mb-5">
@@ -77,13 +78,13 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                         </div>
                         @if (child.bloodType) {
                           <div class="flex items-center gap-2 text-sm text-gray-500 font-medium">
-                            <span class="material-icons text-teal-500 text-base">water_drop</span>
+                            <lucide-icon name="droplet" class="text-teal-500 text-base"></lucide-icon>
                             {{ child.bloodType }}
                           </div>
                         }
                       </div>
                       <div (click)="selectChild(child.id)" class="mt-5 bg-gradient-to-r from-primary-50 to-teal-50 rounded-2xl p-4 flex items-center justify-center gap-2 text-primary-600 font-bold group-hover:from-primary-100 group-hover:to-teal-100 transition-all cursor-pointer">
-                        <span class="material-icons text-lg">login</span>
+                        <lucide-icon name="log-in" class="text-lg"></lucide-icon>
                         {{ i18n.t()['sidebar.openProfile'] }}
                       </div>
                     </div>
@@ -91,7 +92,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                   <div (click)="isAddingChild.set(true)"
                        class="bg-slate-50 rounded-[2rem] p-8 shadow-md border-2 border-dashed border-slate-200 hover:border-primary-300 hover:bg-primary-50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 text-center group">
                     <div class="w-16 h-16 rounded-full bg-slate-100 group-hover:bg-primary-100 flex items-center justify-center transition-all">
-                      <span class="material-icons text-3xl text-slate-400 group-hover:text-primary-500 transition-colors">add</span>
+                      <lucide-icon name="plus" class="text-3xl text-slate-400 group-hover:text-primary-500 transition-colors"></lucide-icon>
                     </div>
                     <p class="font-bold text-slate-500 group-hover:text-primary-600 transition-colors text-base">
                       {{ i18n.t()['child.addNewBtn'] }}
@@ -106,7 +107,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
           @else if (isAddingChild()) {
             <div class="glass max-w-3xl mx-auto rounded-[2rem] p-10 lg:p-14 animate-slide-up shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white">
               <h2 class="text-3xl font-extrabold text-gray-800 mb-10 flex items-center gap-4">
-                <span class="material-icons text-primary-500 bg-primary-50 p-3 rounded-2xl">person_add_alt_1</span>
+                <lucide-icon name="user-plus" class="text-primary-500 bg-primary-50 p-3 rounded-2xl"></lucide-icon>
                 {{ i18n.t()['child.addNew'] }}
               </h2>
               <div class="space-y-8">
@@ -120,7 +121,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                          (blur)="onAddNameBlur()">
                   @if (addNameInvalid()) {
                     <p class="mt-2 text-sm text-red-500 font-medium flex items-center gap-1">
-                      <span class="material-icons text-xs">error_outline</span>
+                      <lucide-icon name="alert-circle" class="text-inherit"></lucide-icon>
                       {{ i18n.isSq() ? 'Emri mund të përmbajë vetëm shkronja.' : 'Name can only contain letters.' }}
                     </p>
                   }
@@ -133,7 +134,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                            class="w-full px-5 py-4.5 pr-12 rounded-2xl bg-white border-2 border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-600 placeholder-gray-300">
                     <button type="button" onclick="this.previousElementSibling.showPicker?.()"
                             class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-primary-500 hover:bg-primary-50 transition-all cursor-pointer">
-                      <span class="material-icons text-lg">calendar_month</span>
+                      <lucide-icon name="calendar" class="text-inherit"></lucide-icon>
                     </button>
                   </div>
                 </div>
@@ -162,9 +163,9 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                       </select>
                       <!-- Blood type verified badge -->
                       @if (newChildBloodType) {
-                        <span class="absolute right-12 top-1/2 -translate-y-1/2 material-icons text-teal-500 bg-teal-50 rounded-full text-sm animate-fade-in">verified</span>
+                        <lucide-icon name="badge-check" class="text-inherit"></lucide-icon>
                       }
-                      <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-gray-500 text-lg pointer-events-none">expand_more</span>
+                      <lucide-icon name="chevron-down" class="text-inherit"></lucide-icon>
                     </div>
                   </div>
                 </div>
@@ -181,7 +182,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                       <option value="M">{{ i18n.isSq() ? 'Mashkull' : 'Male' }}</option>
                       <option value="F">{{ i18n.isSq() ? 'Femer' : 'Female' }}</option>
                     </select>
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-gray-500 text-lg pointer-events-none">expand_more</span>
+                    <lucide-icon name="chevron-down" class="text-inherit"></lucide-icon>
                   </div>
                 </div>
 
@@ -210,7 +211,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                     <p class="text-red-500 text-xs mt-1">{{ newChildDocumentError() }}</p>
                   }
                   @if (newChildDocument()) {
-                    <p class="text-teal-600 text-xs mt-1 flex items-center gap-1"><span class="material-icons text-sm">check_circle</span> {{ i18n.t()['child.documentAttached'] }}</p>
+                    <p class="text-teal-600 text-xs mt-1 flex items-center gap-1"><lucide-icon name="check-circle" class="text-inherit"></lucide-icon> {{ i18n.t()['child.documentAttached'] }}</p>
                   }
                 </div>
 
@@ -232,7 +233,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                   <button (click)="submitNewChild()"
                           class="flex-1 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white py-4.5 rounded-2xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-lg shadow-md"
                           [disabled]="addNameInvalid() && newChildName.length > 0">
-                    <span class="material-icons">save</span> {{ i18n.t()['child.saveProfile'] }}
+                    <lucide-icon name="save" class="text-inherit"></lucide-icon> {{ i18n.t()['child.saveProfile'] }}
                   </button>
                   <button (click)="cancelAddChild()"
                           class="px-8 py-4.5 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-colors text-lg hover:-translate-y-0.5">{{ i18n.t()['child.cancel'] }}</button>
@@ -297,12 +298,12 @@ import { SettingsPageComponent } from './settings/settings-page.component';
               <!-- Header -->
               <div class="flex items-center justify-between mb-8">
                 <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3">
-                  <span class="material-icons text-primary-500 bg-primary-50 p-2 rounded-xl">edit</span>
+                  <lucide-icon name="pencil" class="text-inherit"></lucide-icon>
                   {{ i18n.t()['child.editProfile'] }}
                 </h2>
                 <button (click)="closeEditModal()"
                         class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all shadow-sm border border-slate-200">
-                  <span class="material-icons text-base">close</span>
+                  <lucide-icon name="x" class="text-inherit"></lucide-icon>
                 </button>
               </div>
 
@@ -321,12 +322,12 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                            [ngClass]="editNameInvalid() ? 'border-red-400 focus:ring-4 focus:ring-red-500/10 focus:border-red-500' : 'border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500'">
                     <!-- Invalid indicator icon -->
                     @if (editNameInvalid()) {
-                      <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-red-400 text-xl animate-fade-in">error_outline</span>
+                      <lucide-icon name="alert-circle" class="absolute right-3 top-1/2 -translate-y-1/2 text-red-400 text-xl animate-fade-in"></lucide-icon>
                     }
                   </div>
                   @if (editNameInvalid()) {
                     <p class="mt-2 text-sm text-red-500 font-medium flex items-center gap-1">
-                      <span class="material-icons text-xs">error_outline</span>
+                      <lucide-icon name="alert-circle" class="text-inherit"></lucide-icon>
                       {{ i18n.isSq() ? 'Emri mund të përmbajë vetëm shkronja.' : 'Name can only contain letters.' }}
                     </p>
                   }
@@ -343,7 +344,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                            class="w-full px-5 py-4 pr-12 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-600 placeholder-gray-300">
                     <button type="button" onclick="this.previousElementSibling.showPicker?.()"
                             class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-primary-500 hover:bg-primary-50 transition-all cursor-pointer">
-                      <span class="material-icons text-lg">calendar_month</span>
+                      <lucide-icon name="calendar" class="text-inherit"></lucide-icon>
                     </button>
                   </div>
                 </div>
@@ -370,14 +371,14 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                     <!-- Blood type verified badge (green checkmark) -->
                     @if (editBloodType()) {
                       <span class="absolute right-12 top-1/2 -translate-y-1/2 flex items-center gap-1 animate-fade-in">
-                        <span class="material-icons text-teal-500 bg-teal-50 rounded-full text-sm shadow-sm">verified</span>
+                        <lucide-icon name="badge-check" class="text-inherit"></lucide-icon>
                       </span>
                     }
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-gray-500 text-lg pointer-events-none">expand_more</span>
+                    <lucide-icon name="chevron-down" class="text-inherit"></lucide-icon>
                   </div>
                   @if (editBloodType()) {
                     <p class="mt-2 text-xs text-teal-600 font-medium flex items-center gap-1 animate-fade-in">
-                      <span class="material-icons text-xs text-teal-500">verified</span>
+                      <lucide-icon name="badge-check" class="text-inherit"></lucide-icon>
                       {{ i18n.isSq() ? 'Grupi i gjakut u verifikua.' : 'Blood type verified.' }}
                     </p>
                   }
@@ -395,7 +396,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                       <option value="M">{{ i18n.isSq() ? 'Mashkull' : 'Male' }}</option>
                       <option value="F">{{ i18n.isSq() ? 'Femer' : 'Female' }}</option>
                     </select>
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-gray-500 text-lg pointer-events-none">expand_more</span>
+                    <lucide-icon name="chevron-down" class="text-inherit"></lucide-icon>
                   </div>
                 </div>
 
@@ -444,7 +445,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                     <p class="text-red-500 text-xs mt-1">{{ documentError() }}</p>
                   }
                   @if (editChildDocument()) {
-                    <p class="text-teal-600 text-xs mt-1 flex items-center gap-1"><span class="material-icons text-sm">check_circle</span> {{ i18n.t()['child.documentAttached'] }}</p>
+                    <p class="text-teal-600 text-xs mt-1 flex items-center gap-1"><lucide-icon name="check-circle" class="text-inherit"></lucide-icon> {{ i18n.t()['child.documentAttached'] }}</p>
                   }
                 </div>
 
@@ -462,7 +463,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                   <!-- Issue #9: Success Toast -->
                   @if (saveSuccess()) {
                     <div class="flex items-center gap-2 p-3 bg-teal-50 border border-teal-200 rounded-xl text-teal-700 text-sm font-medium animate-fade-in">
-                      <span class="material-icons text-teal-500">check_circle</span>
+                      <lucide-icon name="check-circle" class="text-inherit"></lucide-icon>
                       {{ i18n.isSq() ? 'Ndryshimet u ruajtën!' : 'Changes saved!' }}
                     </div>
                   }
@@ -470,16 +471,16 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                           class="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white py-4 rounded-2xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-base shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                           [disabled]="editNameInvalid() || saving()">
                     @if (saving()) {
-                      <span class="material-icons animate-spin">progress_activity</span>
+                      <lucide-icon name="loader" class="text-inherit"></lucide-icon>
                       {{ i18n.isSq() ? 'Duke ruajtur...' : 'Saving...' }}
                     } @else {
-                      <span class="material-icons">save</span>
+                      <lucide-icon name="save" class="text-inherit"></lucide-icon>
                       {{ i18n.t()['sidebar.saveChanges'] }}
                     }
                   </button>
                   <button (click)="showDeleteConfirm.set(true)"
                           class="w-full border-2 border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 py-3.5 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 text-sm">
-                    <span class="material-icons text-base">delete_outline</span>
+                    <lucide-icon name="trash-2" class="text-inherit"></lucide-icon>
                     {{ i18n.t()['sidebar.deleteProfile'] }}
                   </button>
                 </div>
@@ -488,7 +489,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                   <div class="mt-4 p-5 bg-red-50 border-2 border-red-200 rounded-2xl animate-fade-in">
                     <div class="flex items-center gap-3 mb-3">
                       <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                        <span class="material-icons text-red-500 text-lg">warning</span>
+                        <lucide-icon name="alert-triangle" class="text-inherit"></lucide-icon>
                       </div>
                       <div>
                         <p class="font-bold text-gray-800 text-base">{{ i18n.isSq() ? 'Fshi profilin e fëmijës?' : 'Delete child profile?' }}</p>
@@ -503,7 +504,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                       </button>
                       <button (click)="confirmDeleteChild()"
                               class="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-500 to-red-400 text-white font-bold hover:from-red-400 hover:to-red-300 transition-all text-sm shadow-sm flex items-center justify-center gap-2">
-                        <span class="material-icons text-base">delete_forever</span>
+                        <lucide-icon name="trash" class="text-inherit"></lucide-icon>
                         {{ i18n.isSq() ? 'Fshi' : 'Delete' }}
                       </button>
                     </div>

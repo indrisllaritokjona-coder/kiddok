@@ -1,5 +1,8 @@
-import { Component, inject, computed } from '@angular/core';
+﻿import { Component, inject, computed } from '@angular/core'
+import { LucideAngularModule } from 'lucide-angular';
+
 import { CommonModule } from '@angular/common';
+import { LucideAngularModule } from 'lucide-angular';
 import { DataService, ChildProfile } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
 
@@ -12,7 +15,7 @@ interface NavItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideAngularModule, LucideAngularModule],
   template: `
     <aside class="sidebar">
       <!-- Brand row -->
@@ -33,7 +36,7 @@ interface NavItem {
           </div>
         } @else {
           <div class="sidebar__child-placeholder">
-            <span class="material-symbols-outlined sidebar__placeholder-icon">person</span>
+            <lucide-icon name="user" class="sidebar__placeholder-icon"></lucide-icon>
             <span class="sidebar__placeholder-text">{{ t()['sidebar.noChildSelected'] }}</span>
           </div>
         }
@@ -47,7 +50,7 @@ interface NavItem {
             [class.sidebar__nav-item--active]="currentTab() === item.id"
             (click)="navigateTo(item.id)"
           >
-            <span class="material-symbols-outlined sidebar__nav-icon">{{ item.icon }}</span>
+            <lucide-icon [name]="item.icon" class="sidebar__nav-icon"></lucide-icon>
             <span>{{ t()[item.labelKey] }}</span>
           </button>
         }
@@ -56,11 +59,11 @@ interface NavItem {
       <!-- Footer -->
       <div class="sidebar__footer">
         <button class="sidebar__footer-item" (click)="navigateTo('settings')">
-          <span class="material-symbols-outlined">settings</span>
+          <lucide-icon name="settings" class="sidebar__nav-icon"></lucide-icon>
           <span>{{ t()['sidebar.footer.settings'] }}</span>
         </button>
         <button class="sidebar__footer-item sidebar__footer-item--logout" (click)="logout()">
-          <span class="material-symbols-outlined">logout</span>
+          <lucide-icon name="log-out" class="sidebar__nav-icon"></lucide-icon>
           <span>{{ t()['sidebar.footer.logout'] }}</span>
         </button>
       </div>

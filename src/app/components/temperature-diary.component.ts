@@ -1,4 +1,6 @@
-import { Component, inject, signal, computed, OnInit, AfterViewInit, ViewChild, ElementRef, effect } from '@angular/core';
+﻿import { Component, inject, signal, computed, OnInit, AfterViewInit, ViewChild, ElementRef, effect } from '@angular/core'
+import { LucideAngularModule } from 'lucide-angular';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService, TemperatureEntry } from '../services/data.service';
@@ -6,7 +8,7 @@ import { I18nService } from '../core/i18n/i18n.service';
 
 @Component({
     selector: 'app-temperature-diary',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, LucideAngularModule],
     template: `
     <div class="max-w-2xl mx-auto px-2">
 
@@ -26,7 +28,7 @@ import { I18nService } from '../core/i18n/i18n.service';
       @if (latestEntry() && latestEntry()!.temperature > 38.5) {
         <div class="mb-6 p-5 bg-rose-50 border-2 border-rose-200 rounded-3xl flex items-center gap-4 animate-slide-up shadow-sm">
           <div class="w-14 h-14 bg-rose-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <span class="material-icons text-rose-500 text-2xl">warning</span>
+            <lucide-icon name="alert-triangle" class="text-inherit"></lucide-icon>
           </div>
           <div class="flex-1">
             <p class="font-black text-rose-700 text-lg">{{ i18n.t()['temperature.alertHigh'] }}</p>
@@ -85,7 +87,7 @@ import { I18nService } from '../core/i18n/i18n.service';
       <div class="bg-white rounded-[2rem] shadow-md border border-slate-100 overflow-hidden mb-6">
         <div class="p-6">
           <h3 class="text-lg font-extrabold text-gray-800 mb-5 flex items-center gap-2">
-            <span class="material-icons text-primary-500">add_circle</span>
+            <lucide-icon name="plus-circle" class="text-inherit"></lucide-icon>
             {{ i18n.t()['temperature.newReading'] }}
           </h3>
 
@@ -144,13 +146,13 @@ import { I18nService } from '../core/i18n/i18n.service';
                       ? 'bg-slate-200 text-slate-400'
                       : 'bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white hover:shadow-lg'">
               @if (saving()) {
-                <span class="material-icons animate-spin">progress_activity</span>
+                <lucide-icon name="loader" class="text-inherit"></lucide-icon>
                 {{ i18n.t()['temperature.saving'] }}
               } @else if (saved()) {
-                <span class="material-icons text-teal-300">check_circle</span>
+                <lucide-icon name="check-circle" class="text-inherit"></lucide-icon>
                 {{ i18n.t()['temperature.saved'] }}
               } @else {
-                <span class="material-icons">save</span>
+                <lucide-icon name="save" class="text-inherit"></lucide-icon>
                 {{ i18n.t()['temperature.save'] }}
               }
             </button>
@@ -162,7 +164,7 @@ import { I18nService } from '../core/i18n/i18n.service';
       <div class="bg-white rounded-[2rem] shadow-md border border-slate-100 overflow-hidden mb-6">
         <div class="p-6">
           <h3 class="text-lg font-extrabold text-gray-800 mb-1 flex items-center gap-2">
-            <span class="material-icons text-teal-500">show_chart</span>
+            <lucide-icon name="trending-up" class="text-inherit"></lucide-icon>
             {{ i18n.t()['temperature.trend'] }}
           </h3>
         </div>
@@ -175,7 +177,7 @@ import { I18nService } from '../core/i18n/i18n.service';
       <div class="bg-white rounded-[2rem] shadow-md border border-slate-100 overflow-hidden mb-8">
         <div class="p-6 pb-4">
           <h3 class="text-lg font-extrabold text-gray-800 flex items-center gap-2">
-            <span class="material-icons text-primary-500">history</span>
+            <lucide-icon name="history" class="text-inherit"></lucide-icon>
             {{ i18n.t()['temperature.recent'] }}
           </h3>
         </div>
@@ -183,7 +185,7 @@ import { I18nService } from '../core/i18n/i18n.service';
         @if (recentReadings().length === 0) {
           <div class="px-6 pb-8 text-center">
             <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span class="material-icons text-4xl text-slate-300">thermostat</span>
+              <lucide-icon name="thermometer" class="text-inherit"></lucide-icon>
             </div>
             <p class="text-slate-400 font-medium mb-3">{{ i18n.t()['temperature.noReadings'] }}</p>
             <p class="text-primary-600 font-bold text-sm">{{ i18n.t()['temperature.addFirst'] }}</p>
@@ -209,7 +211,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                 <!-- Delete button -->
                 <button (click)="deleteEntry(entry.id)"
                         class="opacity-0 group-hover:opacity-100 w-9 h-9 rounded-xl bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-400 hover:text-red-600 transition-all border border-red-100">
-                  <span class="material-icons text-sm">delete_outline</span>
+                  <lucide-icon name="trash-2" class="text-inherit"></lucide-icon>
                 </button>
               </div>
             }

@@ -1,4 +1,4 @@
-import {
+﻿import {
   Component,
   inject,
   signal,
@@ -8,7 +8,9 @@ import {
   Output,
   EventEmitter,
   OnDestroy,
-} from '@angular/core';
+} from '@angular/core'
+import { LucideAngularModule } from 'lucide-angular';
+
 import { CommonModule } from '@angular/common';
 import { DataService, ChildProfile } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
@@ -16,7 +18,7 @@ import { I18nService } from '../core/i18n/i18n.service';
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideAngularModule],
   template: `
     <header class="px-6 py-5 lg:px-10 lg:py-7 flex items-center justify-between lg:justify-end border-b border-gray-200/50 bg-white/60 backdrop-blur-xl z-30 shadow-sm">
 
@@ -25,12 +27,12 @@ import { I18nService } from '../core/i18n/i18n.service';
         @if (viewState === 'app') {
           <button (click)="backRequested.emit()"
                   class="flex items-center gap-2 px-3 py-2 rounded-xl bg-white shadow-soft border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all text-gray-600 hover:text-primary-600">
-            <span class="material-icons text-lg">arrow_back</span>
+            <lucide-icon name="arrow-left" class="text-inherit"></lucide-icon>
             <span class="text-sm font-bold hidden sm:block">{{ i18n.t()['nav.back'] }}</span>
           </button>
         }
         <button class="lg:hidden p-2 rounded-xl bg-white shadow-soft border border-gray-100">
-          <span class="material-icons text-gray-700">menu</span>
+          <lucide-icon name="menu" class="text-inherit"></lucide-icon>
         </button>
         <!-- Page title -->
         <h1 class="text-base lg:text-lg font-extrabold text-gray-800 hidden sm:block ml-2">
@@ -45,7 +47,7 @@ import { I18nService } from '../core/i18n/i18n.service';
         <button (click)="localeToggleRequested.emit()"
                 class="lg:hidden flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-full text-xs font-bold text-gray-600 transition-all"
                 aria-label="Switch to English/Albanian">
-          <span class="material-icons text-sm">language</span>
+          <lucide-icon name="globe" class="text-inherit"></lucide-icon>
           {{ i18n.locale() === 'sq' ? i18n.t()['header.sq'] : i18n.t()['header.en'] }}
         </button>
 
@@ -66,12 +68,11 @@ import { I18nService } from '../core/i18n/i18n.service';
               }
             } @else {
               <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-slate-100 flex items-center justify-center border-2 border-dashed border-slate-300">
-                <span class="material-icons text-gray-500 text-sm">person</span>
+                <lucide-icon name="user" class="text-inherit"></lucide-icon>
               </div>
               <span class="font-bold text-gray-500 hidden sm:block">{{ i18n.t()['child.addNewBtn'] }}</span>
             }
-            <span class="material-icons text-gray-500 text-sm transition-transform duration-200"
-                  [class.rotate-180]="showDropdown()">expand_more</span>
+            <lucide-icon name="chevron-down" class="text-gray-500 text-sm transition-transform duration-200" [class.rotate-180]="showDropdown()"></lucide-icon>
           </button>
 
           <!-- Dropdown Panel -->
@@ -80,7 +81,7 @@ import { I18nService } from '../core/i18n/i18n.service';
 
               <!-- Section label -->
               <div class="px-5 pb-3 pt-1 mb-2 border-b border-gray-50 flex items-center gap-2">
-                <span class="material-icons text-primary-500 text-sm">family_restroom</span>
+                <lucide-icon name="users" class="text-inherit"></lucide-icon>
                 <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">
                   {{ i18n.t()['header.profileLabel'] }}
                 </span>
@@ -109,7 +110,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                     </span>
                   </div>
                   @if (child.id === activeChildId()) {
-                    <span class="material-icons text-teal-500 bg-teal-50 rounded-full p-1 flex-shrink-0">check</span>
+                    <lucide-icon name="check" class="text-inherit"></lucide-icon>
                   }
                 </div>
               }
@@ -119,7 +120,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                 <div class="px-4 pt-2 pb-1 mt-2 border-t border-gray-100">
                   <button (click)="onSwitchChild()"
                           class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-primary-50 hover:bg-primary-100 text-primary-700 font-bold transition-colors border border-primary-200">
-                    <span class="material-icons text-lg">swap_horiz</span>
+                    <lucide-icon name="arrow-left-right" class="text-inherit"></lucide-icon>
                     {{ i18n.t()['header.switchChild'] }}
                   </button>
                 </div>
@@ -127,7 +128,7 @@ import { I18nService } from '../core/i18n/i18n.service';
               <div class="px-4 pt-2 mt-1">
                 <button (click)="onAddNewMember()"
                         class="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-colors border border-slate-200 hover:border-slate-300">
-                  <span class="material-icons text-base">add_circle_outline</span>
+                  <lucide-icon name="circle-plus" class="text-inherit"></lucide-icon>
                   {{ i18n.t()['header.addNewMember'] }}
                 </button>
               </div>
@@ -138,7 +139,7 @@ import { I18nService } from '../core/i18n/i18n.service';
         <!-- Parent welcome block (desktop only, app view) -->
         @if (viewState === 'app' && dataService.getParentName()) {
           <div class="hidden lg:flex items-center gap-2 text-sm text-gray-500 font-medium">
-            <span class="material-icons text-teal-500 text-lg">waving_hand</span>
+            <lucide-icon name="hand" class="text-inherit"></lucide-icon>
             <span>{{ i18n.t()['welcome.loggedIn'] }}, </span>
             <span class="font-bold text-gray-700">{{ dataService.getParentName() }}</span>
           </div>
@@ -147,7 +148,7 @@ import { I18nService } from '../core/i18n/i18n.service';
         <!-- Parent avatar -->
         <div class="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-gradient-to-tr from-primary-500 to-teal-400 p-[2px] shadow-soft cursor-pointer hover:shadow-lg transition-shadow">
           <div class="w-full h-full bg-white rounded-full flex items-center justify-center border-2 border-white">
-            <span class="material-icons text-gray-700 lg:text-xl text-lg">manage_accounts</span>
+            <lucide-icon name="settings" class="text-inherit"></lucide-icon>
           </div>
         </div>
       </div>

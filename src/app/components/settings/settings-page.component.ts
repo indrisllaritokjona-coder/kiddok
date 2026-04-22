@@ -1,4 +1,6 @@
-import { Component, inject, signal, computed, Output, EventEmitter } from '@angular/core';
+﻿import { Component, inject, signal, computed, Output, EventEmitter } from '@angular/core'
+import { LucideAngularModule } from 'lucide-angular';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data.service';
@@ -7,7 +9,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
 @Component({
   selector: 'app-settings-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule],
   template: `
     <div class="max-w-2xl mx-auto px-4 py-6 space-y-6">
 
@@ -17,13 +19,13 @@ import { I18nService } from '../../core/i18n/i18n.service';
         <div class="h-1 bg-gradient-to-r from-indigo-500 to-indigo-400"></div>
         <div class="p-6">
           <h3 class="text-lg font-extrabold text-gray-800 mb-6 flex items-center gap-3">
-            <span class="material-icons text-indigo-500 bg-indigo-50 p-2 rounded-xl">person</span>
+            <lucide-icon name="user" class="text-inherit"></lucide-icon>
             {{ i18n.t()['settings.parentProfile'] }}
           </h3>
 
           @if (saveSuccess()) {
             <div class="mb-5 p-4 bg-teal-50 border border-teal-100 rounded-2xl flex items-center gap-3 animate-fade-in">
-              <span class="material-icons text-teal-500">check_circle</span>
+              <lucide-icon name="check-circle" class="text-inherit"></lucide-icon>
               <p class="text-teal-700 text-sm font-medium">{{ i18n.t()['settings.saved'] }}</p>
             </div>
           }
@@ -56,9 +58,9 @@ import { I18nService } from '../../core/i18n/i18n.service';
                     [disabled]="isSaving()"
                     class="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-base">
               @if (isSaving()) {
-                <span class="material-icons animate-spin">progress_activity</span>
+                <lucide-icon name="loader" class="text-inherit"></lucide-icon>
               } @else {
-                <span class="material-icons">save</span>
+                <lucide-icon name="save" class="text-inherit"></lucide-icon>
               }
               {{ i18n.t()['settings.saveChanges'] }}
             </button>
@@ -69,7 +71,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
       <!-- Section 2: Language Toggle -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <h3 class="text-lg font-extrabold text-gray-800 mb-5 flex items-center gap-3">
-          <span class="material-icons text-teal-500 bg-teal-50 p-2 rounded-xl">language</span>
+          <lucide-icon name="globe" class="text-inherit"></lucide-icon>
           {{ i18n.t()['settings.language'] }}
         </h3>
         <div class="flex items-center justify-center">
@@ -77,14 +79,14 @@ import { I18nService } from '../../core/i18n/i18n.service';
             <button aria-label="Switch to Albanian" (click)="setLocale('sq')"
                     [class]="activeClass('sq')">
               @if (i18n.locale() === 'sq') {
-                <span class="material-icons text-sm">check</span>
+                <lucide-icon name="check" class="text-inherit"></lucide-icon>
               }
               {{ i18n.t()['settings.language.sq'] }}
             </button>
             <button aria-label="Switch to English" (click)="setLocale('en')"
                     [class]="activeClass('en')">
               @if (i18n.locale() === 'en') {
-                <span class="material-icons text-sm">check</span>
+                <lucide-icon name="check" class="text-inherit"></lucide-icon>
               }
               {{ i18n.t()['settings.language.en'] }}
             </button>
@@ -98,7 +100,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
         <div class="h-1 bg-gradient-to-r from-teal-500 to-teal-400"></div>
         <div class="p-6">
           <h3 class="text-lg font-extrabold text-gray-800 mb-5 flex items-center gap-3">
-            <span class="material-icons text-teal-500 bg-teal-50 p-2 rounded-xl">child_care</span>
+            <lucide-icon name="baby" class="text-inherit"></lucide-icon>
             {{ i18n.t()['settings.children'] }}
           </h3>
 
@@ -135,12 +137,12 @@ import { I18nService } from '../../core/i18n/i18n.service';
                     <div class="flex items-center gap-2">
                       <button (click)="openEditChild.emit(child)"
                               class="px-3 py-2 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-xl hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 transition-all flex items-center gap-1.5">
-                        <span class="material-icons text-sm">edit</span>
+                        <lucide-icon name="pencil" class="text-inherit"></lucide-icon>
                         {{ i18n.t()['settings.children.edit'] }}
                       </button>
                       <button (click)="requestDelete(child.id)"
                               class="px-3 py-2 bg-white border border-slate-200 text-slate-400 text-xs font-bold rounded-xl hover:bg-rose-50 hover:border-rose-300 hover:text-rose-500 transition-all flex items-center gap-1.5">
-                        <span class="material-icons text-sm">delete_outline</span>
+                        <lucide-icon name="trash-2" class="text-inherit"></lucide-icon>
                         {{ i18n.t()['settings.children.delete'] }}
                       </button>
                     </div>
@@ -152,7 +154,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
 
           <button (click)="openAddChild.emit()"
                   class="w-full border-2 border-dashed border-slate-300 text-slate-500 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm">
-            <span class="material-icons">add</span>
+            <lucide-icon name="plus" class="text-inherit"></lucide-icon>
             {{ i18n.t()['settings.children.add'] }}
           </button>
         </div>
@@ -161,20 +163,20 @@ import { I18nService } from '../../core/i18n/i18n.service';
       <!-- Section 4: Data Management -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
         <h3 class="text-lg font-extrabold text-gray-800 mb-5 flex items-center gap-3">
-          <span class="material-icons text-slate-400 bg-slate-100 p-2 rounded-xl">storage</span>
+          <lucide-icon name="database" class="text-inherit"></lucide-icon>
           {{ i18n.t()['settings.data.title'] }}
         </h3>
 
         @if (showClearConfirm()) {
           <div class="mb-5 p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl animate-fade-in">
             <p class="text-sm text-gray-700 mb-4 font-medium flex items-center gap-2">
-              <span class="material-icons text-rose-500">warning</span>
+              <lucide-icon name="alert-triangle" class="text-inherit"></lucide-icon>
               {{ i18n.t()['settings.data.clearConfirm'] }}
             </p>
             <div class="flex gap-3">
               <button (click)="confirmClearAllData()"
                       class="flex-1 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-rose-400 text-white font-bold hover:from-rose-400 hover:to-rose-300 transition-all text-sm shadow-sm flex items-center justify-center gap-2">
-                <span class="material-icons text-base">delete_forever</span>
+                <lucide-icon name="trash" class="text-inherit"></lucide-icon>
                 {{ i18n.t()['settings.confirm'] }}
               </button>
               <button (click)="cancelClearAllData()"
@@ -188,13 +190,13 @@ import { I18nService } from '../../core/i18n/i18n.service';
         <div class="space-y-3">
           <button (click)="exportData()"
                   class="w-full border-2 border-slate-200 text-slate-600 hover:bg-teal-50 hover:border-teal-300 hover:text-teal-700 py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 text-base">
-            <span class="material-icons">download</span>
+            <lucide-icon name="download" class="text-inherit"></lucide-icon>
             {{ i18n.t()['settings.data.export'] }}
           </button>
           @if (!showClearConfirm()) {
             <button (click)="requestClearAllData()"
                     class="w-full border-2 border-rose-200 text-rose-500 hover:bg-rose-50 hover:border-rose-300 py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm">
-              <span class="material-icons">delete_sweep</span>
+              <lucide-icon name="trash-2" class="text-inherit"></lucide-icon>
               {{ i18n.t()['settings.data.clear'] }}
             </button>
           }
@@ -204,7 +206,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
       <!-- Section 5: About -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center">
         <div class="flex items-center justify-center gap-3 mb-3">
-          <span class="material-icons text-indigo-500" style="font-size: 32px;">favorite</span>
+          <lucide-icon name="heart" class="text-indigo-500" style="font-size: 32px;"></lucide-icon>
           <span class="text-[28px] font-extrabold text-gray-800 tracking-tight">KidDok</span>
         </div>
         <p class="text-gray-500 font-medium text-base mb-1">{{ i18n.t()['settings.about.tagline'] }}</p>

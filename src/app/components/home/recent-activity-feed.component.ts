@@ -1,4 +1,6 @@
-import { Component, inject, computed, signal, HostListener } from '@angular/core';
+﻿import { Component, inject, computed, signal, HostListener } from '@angular/core'
+import { LucideAngularModule } from 'lucide-angular';
+
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../services/data.service';
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -20,17 +22,17 @@ interface ActivityItem {
 @Component({
   selector: 'app-recent-activity-feed',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideAngularModule],
   template: `
     <div class="mb-6">
       <h2 class="text-lg font-bold text-gray-700 mb-4 px-1 flex items-center gap-2">
-        <span class="material-icons text-teal-500 text-xl">history</span>
+        <lucide-icon name="history" class="text-inherit"></lucide-icon>
         {{ i18n.t()['home.recentActivity.title'] }}
       </h2>
 
       @if (isRefreshing()) {
         <div class="flex justify-center py-3">
-          <span class="material-icons text-teal-500 animate-spin text-2xl">refresh</span>
+          <lucide-icon name="refresh-cw" class="text-inherit"></lucide-icon>
         </div>
       }
 
@@ -64,7 +66,7 @@ interface ActivityItem {
                 <!-- Icon -->
                 <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                      [class]="item.color">
-                  <span class="material-icons text-lg">{{ item.icon }}</span>
+                  <lucide-icon [name]="item.icon" class="text-lg"></lucide-icon>
                 </div>
 
                 <!-- Content -->
@@ -76,8 +78,7 @@ interface ActivityItem {
                 <!-- Time + chevron -->
                 <div class="flex items-center gap-2 flex-shrink-0">
                   <span class="text-xs text-gray-500 font-medium">{{ item.timeLabel }}</span>
-                  <span class="material-icons text-gray-300 text-base group-hover:text-primary-400 transition-colors"
-                        [class.rotate-90]="isExpanded(item.id)">expand_more</span>
+                  <lucide-icon name="chevron-down" class="text-gray-300 text-base group-hover:text-primary-400 transition-colors {{ isExpanded(item.id) ? 'rotate-180' : '' }}"></lucide-icon>
                 </div>
               </div>
 
@@ -155,7 +156,7 @@ export class RecentActivityFeedComponent {
     const growthItems: ActivityItem[] = growths.map(e => ({
       id: e.id,
       type: 'growth' as const,
-      icon: 'trending_up',
+      icon: 'trending-up',
       color: 'bg-teal-50 text-teal-500',
       borderColor: 'border-l-teal-400',
       title: t['home.recentActivity.growthUpdated'],

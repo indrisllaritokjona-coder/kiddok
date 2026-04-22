@@ -1,12 +1,13 @@
 import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LucideAngularModule } from 'lucide-angular';
 import { DataService } from '../../services/data.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-welcome-hero',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideAngularModule],
   template: `
     @if (child()) {
       <div class="relative w-full rounded-3xl overflow-hidden shadow-soft mb-6 bg-gradient-to-br from-primary-500 via-primary-600 to-teal-500 text-white"
@@ -28,7 +29,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
           <!-- Text content -->
           <div class="flex-1 min-w-0" [style.animation]="'fadeInUp 350ms ease-out both'">
             <p class="text-primary-100 text-sm font-medium mb-1 flex items-center gap-1.5">
-              <span class="material-icons text-xs">{{ timeIcon() }}</span>
+              <lucide-icon [name]="timeIcon().replace('wb_sunny','sun').replace('wb_twilight','sunset').replace('nightlight_round','moon').replace('bedtime','bed')" class="text-xs"></lucide-icon>
               {{ timeGreeting() }}
             </p>
             <h1 class="text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
@@ -36,7 +37,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
             </h1>
             <div class="flex items-center gap-2 mt-2">
               <span class="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-bold text-white border border-white/20">
-                <span class="material-icons text-xs">cake</span>
+                <lucide-icon name="cake" class="text-xs"></lucide-icon>
                 {{ ageText() }}
               </span>
             </div>
@@ -51,7 +52,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
           <!-- Weather placeholder -->
           @if (weather()) {
             <div class="hidden md:flex items-center gap-1.5 bg-white/15 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm text-white/90">
-              <span class="material-icons text-sm">wb_cloudy</span>
+              <lucide-icon name="cloud" class="text-sm"></lucide-icon>
               <span>--°C</span>
             </div>
           }
@@ -75,7 +76,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
             (click)="addFirstChild()"
             class="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white font-semibold px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-95"
           >
-            <span class="material-icons text-lg">add</span>
+            <lucide-icon name="plus" class="text-lg"></lucide-icon>
             {{ i18n.t()['home.addFirstChild'] }}
           </button>
         </div>

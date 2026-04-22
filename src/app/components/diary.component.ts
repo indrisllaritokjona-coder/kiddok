@@ -1,4 +1,6 @@
-import { Component, inject, signal, computed } from '@angular/core';
+﻿import { Component, inject, signal, computed } from '@angular/core'
+import { LucideAngularModule } from 'lucide-angular';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService, DiaryEntry } from '../services/data.service';
@@ -39,7 +41,7 @@ interface QuickAdd {
 
 @Component({
     selector: 'app-diary',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, LucideAngularModule],
     template: `
     <div class="px-2 max-w-7xl mx-auto">
 
@@ -51,7 +53,7 @@ interface QuickAdd {
         </div>
         <button (click)="openAddEntry()"
                 class="bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white px-6 py-3 rounded-2xl font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 text-sm">
-          <span class="material-icons text-lg">add</span>
+          <lucide-icon name="plus" class="text-inherit"></lucide-icon>
           {{ i18n.t()['diary.addEntry'] }}
         </button>
       </div>
@@ -85,11 +87,11 @@ interface QuickAdd {
           <!-- Month navigation -->
           <div class="flex items-center justify-between p-5 border-b border-slate-100">
             <button (click)="prevMonth()" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
-              <span class="material-icons text-gray-600">chevron_left</span>
+              <lucide-icon name="chevron-left" class="text-inherit"></lucide-icon>
             </button>
             <h2 class="text-lg font-extrabold text-gray-800 tracking-wide">{{ monthLabel() }}</h2>
             <button (click)="nextMonth()" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
-              <span class="material-icons text-gray-600">chevron_right</span>
+              <lucide-icon name="chevron-right" class="text-inherit"></lucide-icon>
             </button>
           </div>
 
@@ -140,20 +142,15 @@ interface QuickAdd {
           <div class="p-4 space-y-3 max-h-[500px] overflow-y-auto">
             @if (filteredEntriesForDate().length === 0) {
               <div class="text-center py-10">
-                <span class="material-icons text-5xl text-slate-200 mb-3">event_note</span>
+                <lucide-icon name="inbox" class="text-inherit"></lucide-icon>
                 <p class="text-slate-400 text-sm font-medium">{{ i18n.t()['diary.emptyState'] }}</p>
-                <button (click)="openAddEntry()" class="mt-3 text-primary-600 text-sm font-bold hover:underline">
-                  + {{ i18n.t()['diary.addEntry'] }}
-                </button>
               </div>
             }
             @for (entry of filteredEntriesForDate(); track entry.id) {
               <div class="rounded-2xl border border-slate-100 p-4 bg-slate-50/60 hover:bg-slate-100/80 transition-colors group">
                 <div class="flex items-start justify-between mb-2">
                   <div class="flex items-center gap-2">
-                    <span class="material-icons text-base {{ typeIconClass(entry.type) }}">
-                      {{ typeIcon(entry.type) }}
-                    </span>
+                    <lucide-icon [name]="typeIcon(entry.type)" class="text-base {{ typeIconClass(entry.type) }}"></lucide-icon>
                     <span class="text-xs font-bold uppercase tracking-wider {{ typeColorClass(entry.type) }}">
                       {{ typeLabel(entry.type) }}
                     </span>
@@ -162,7 +159,7 @@ interface QuickAdd {
                     }
                   </div>
                   <button (click)="deleteEntry(entry)" class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all">
-                    <span class="material-icons text-sm">delete_outline</span>
+                    <lucide-icon name="trash-2" class="text-inherit"></lucide-icon>
                   </button>
                 </div>
 
@@ -170,7 +167,7 @@ interface QuickAdd {
 
                 @if (entry.type === 'symptom' && entry.duration) {
                   <p class="text-xs text-slate-500 font-medium mb-1">
-                    <span class="material-icons text-xs align-text-bottom">schedule</span>
+                    <lucide-icon name="clock" class="text-inherit"></lucide-icon>
                     {{ entry.duration }}
                   </p>
                 }
@@ -192,12 +189,12 @@ interface QuickAdd {
             <h3 class="font-extrabold text-gray-800 text-lg">{{ i18n.t()['diary.recentActivity'] }}</h3>
             <p class="text-slate-400 text-xs mt-0.5 font-medium">{{ i18n.t()['diary.recentEntries'] }}</p>
           </div>
-          <span class="material-icons text-slate-300">history</span>
+          <lucide-icon name="history" class="text-inherit"></lucide-icon>
         </div>
         <div class="p-5">
           @if (recentEntries().length === 0) {
             <div class="text-center py-8">
-              <span class="material-icons text-4xl text-slate-200 mb-2">inbox</span>
+              <lucide-icon name="inbox" class="text-inherit"></lucide-icon>
               <p class="text-slate-400 text-sm font-medium">{{ i18n.t()['diary.emptyState'] }}</p>
             </div>
           }
@@ -240,7 +237,7 @@ interface QuickAdd {
               <p class="text-slate-400 text-xs mt-0.5 font-medium">{{ selectedDateLabel() }}</p>
             </div>
             <button (click)="closeModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
-              <span class="material-icons text-gray-600 text-lg">close</span>
+              <lucide-icon name="x" class="text-inherit"></lucide-icon>
             </button>
           </div>
 
@@ -250,7 +247,7 @@ interface QuickAdd {
               <button (click)="newEntryType.set(type.value)"
                       class="flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border-2 flex flex-col items-center gap-1
                              {{ newEntryType() === type.value ? 'bg-primary-600 text-white border-primary-600' : 'bg-slate-50 text-slate-500 border-transparent hover:bg-slate-100' }}">
-                <span class="material-icons text-sm">{{ type.icon }}</span>
+                <lucide-icon [name]="type.icon" class="text-sm"></lucide-icon>
                 <div>{{ type.label() }}</div>
               </button>
             }
@@ -372,10 +369,10 @@ export class DiaryComponent {
   entryTypes = computed(() => {
     const t = this.i18n.t();
     return [
-      { value: 'symptom' as const, icon: 'sick', label: () => t['diary.type.symptom'] },
-      { value: 'meal' as const, icon: 'restaurant', label: () => t['diary.type.meal'] },
-      { value: 'sleep' as const, icon: 'bedtime', label: () => t['diary.type.sleep'] },
-      { value: 'mood' as const, icon: 'mood', label: () => t['diary.type.mood'] },
+      { value: 'symptom' as const, icon: 'thermometer', label: () => t['diary.type.symptom'] },
+      { value: 'meal' as const, icon: 'utensils', label: () => t['diary.type.meal'] },
+      { value: 'sleep' as const, icon: 'moon', label: () => t['diary.type.sleep'] },
+      { value: 'mood' as const, icon: 'smile', label: () => t['diary.type.mood'] },
     ];
   });
 
@@ -591,11 +588,11 @@ export class DiaryComponent {
   // ── Utilities ───────────────────────────────────────────────────
   typeIcon(type: EntryType): string {
     const map: Record<string, string> = {
-      symptom: 'sick',
-      meal: 'restaurant',
-      sleep: 'bedtime',
-      mood: 'mood',
-      activity: 'directions_run',
+      symptom: 'thermometer',
+      meal: 'utensils',
+      sleep: 'moon',
+      mood: 'smile',
+      activity: 'footprints',
     };
     return map[type] ?? 'circle';
   }

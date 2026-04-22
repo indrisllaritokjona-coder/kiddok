@@ -1,4 +1,6 @@
-import { Component, Input, Output, EventEmitter, inject, signal, computed, OnInit } from '@angular/core';
+﻿import { Component, Input, Output, EventEmitter, inject, signal, computed, OnInit } from '@angular/core'
+import { LucideAngularModule } from 'lucide-angular';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data.service';
@@ -42,14 +44,14 @@ interface TimelineEntry {
 
 @Component({
   selector: 'app-vaccine-schedule',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule],
   template: `
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
       <!-- Header -->
       <div class="px-5 pt-5 pb-4 border-b border-gray-100 flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
-          <span class="material-icons text-indigo-500 text-lg">vaccines</span>
+          <lucide-icon name="syringe" class="text-inherit"></lucide-icon>
         </div>
         <div>
           <h2 class="text-lg font-extrabold text-gray-800">{{ t()['vaccines.schedule.title'] }}</h2>
@@ -80,7 +82,7 @@ interface TimelineEntry {
       <div class="max-h-[480px] overflow-y-auto">
         @if (timelineEntries().length === 0) {
           <div class="flex flex-col items-center justify-center py-12 text-gray-400">
-            <span class="material-icons text-4xl mb-2">event_busy</span>
+            <lucide-icon name="calendar-x" class="text-inherit"></lucide-icon>
             <p class="text-sm">{{ t()['vaccines.emptyState'] || 'Akzni s\'ka vaksina' }}</p>
           </div>
         }
@@ -259,7 +261,7 @@ interface TimelineEntry {
           <div class="px-6 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between rounded-t-3xl">
             <h2 class="text-xl font-extrabold text-gray-800">{{ t()['vaccines.schedule.markComplete'] }}</h2>
             <button (click)="showMarkCompleteModal.set(false)" class="text-gray-500 bg-gray-100 p-2 rounded-xl">
-              <span class="material-icons">close</span>
+              <lucide-icon name="x" class="text-inherit"></lucide-icon>
             </button>
           </div>
           <div class="px-6 py-5 space-y-4">

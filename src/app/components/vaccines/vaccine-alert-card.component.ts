@@ -1,4 +1,6 @@
-import { Component, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core';
+﻿import { Component, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core'
+import { LucideAngularModule } from 'lucide-angular';
+
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../core/i18n/i18n.service';
 
@@ -13,7 +15,7 @@ export interface VaccineAlert {
 
 @Component({
   selector: 'app-vaccine-alert-card',
-  imports: [CommonModule],
+  imports: [CommonModule, LucideAngularModule],
   template: `
     <div class="relative overflow-hidden rounded-2xl border transition-all duration-200"
       [ngClass]="cardClasses()"
@@ -26,7 +28,7 @@ export interface VaccineAlert {
       @if (swipeOffset() > 0) {
         <div class="absolute inset-0 bg-rose-500 flex items-center justify-end pr-4">
           <button (click)="emitDismiss()" class="text-white font-bold text-sm flex items-center gap-1">
-            <span class="material-icons text-lg">close</span>
+            <lucide-icon name="x" class="text-inherit"></lucide-icon>
             {{ t()['vaccines.alertCard.dismiss'] }}
           </button>
         </div>
@@ -44,7 +46,7 @@ export interface VaccineAlert {
         <!-- Icon -->
         <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
           [ngClass]="iconBgClass()">
-          <span class="material-icons" [ngClass]="iconColorClass()">vaccines</span>
+          <lucide-icon name="syringe" [ngClass]="iconColorClass()"></lucide-icon>
         </div>
 
         <!-- Text -->
@@ -71,7 +73,7 @@ export interface VaccineAlert {
         <button
           (click)="emitDismiss()"
           class="hidden sm:flex flex-shrink-0 w-6 h-6 items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all">
-          <span class="material-icons text-base">close</span>
+          <lucide-icon name="x" class="text-inherit"></lucide-icon>
         </button>
       </div>
     </div>

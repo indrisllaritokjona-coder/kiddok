@@ -37,6 +37,8 @@ model Child {
   vaccines           Vaccine[]
   temperatureEntries TemperatureEntry[]
   growthEntries       GrowthEntry[]
+  diaryEntries        DiaryEntry[]
+  illnessEpisodes     IllnessEpisode[]
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 }

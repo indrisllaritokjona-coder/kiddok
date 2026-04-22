@@ -514,6 +514,14 @@ export class DataService {
     this.records.set(storedRecords ? JSON.parse(storedRecords) : []);
     this.loadTemperatureEntries(childId);
     this.loadGrowthEntries(childId);
+    // Notify NotificationService (lazy import to avoid circular dep)
+    setTimeout(() => {
+      try {
+        const { NotificationService } = require('./notification.service');
+        // Access via window to avoid static DI issues
+        (window as any).__kiddokNotif?.checkVaccineAlerts();
+      } catch { /* ignore */ }
+    }, 0);
   }
 
   // ─── Medical Records (localStorage) ─────────────────────────

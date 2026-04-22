@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService, TemperatureEntry } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
+import { NotificationService } from '../services/notification.service';
 
 @Component({
     selector: 'app-temperature-diary',
@@ -239,6 +240,7 @@ import { I18nService } from '../core/i18n/i18n.service';
 export class TemperatureDiaryComponent implements OnInit, AfterViewInit, OnDestroy {
   dataService = inject(DataService);
   i18n = inject(I18nService);
+  private notif = inject(NotificationService);
 
   @ViewChild('chartCanvas') chartCanvas!: ElementRef<HTMLCanvasElement>;
 
@@ -358,6 +360,12 @@ export class TemperatureDiaryComponent implements OnInit, AfterViewInit, OnDestr
     if (result) {
       this.saved.set(true);
       setTimeout(() => this.saved.set(false), 2500);
+      // Fire browser notification for fever
+      const temp = this.formTemp();
+      const child = this.activeChild();
+      if (temp !== null && temp >= 38.5 && child) {
+        this.notif.notifyFever(child.name, temp);
+      }
       // Reset form
       this.formTemp.set(null);
       this.formLocation.set('forehead');

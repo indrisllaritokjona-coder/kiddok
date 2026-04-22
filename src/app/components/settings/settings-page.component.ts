@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data.service';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-settings-page',
@@ -94,7 +95,121 @@ import { I18nService } from '../../core/i18n/i18n.service';
         </div>
       </div>
 
-      <!-- Section 3: Children Management -->
+      <!-- Section 3: Notifications -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <!-- Amber accent bar -->
+        <div class="h-1 bg-gradient-to-r from-amber-500 to-amber-400"></div>
+        <div class="p-6">
+          <h3 class="text-lg font-extrabold text-gray-800 mb-5 flex items-center gap-3">
+            <lucide-icon name="bell" class="text-inherit"></lucide-icon>
+            {{ i18n.t()['settings.notifications.title'] }}
+          </h3>
+
+          @if (!notifSvc.isSupported) {
+            <p class="text-sm text-amber-600 bg-amber-50 rounded-xl p-4">
+              {{ i18n.locale() === 'sq' ? 'Shfletuesi juaj nuk mbështet njoftimet.' : 'Your browser does not support notifications.' }}
+            </p>
+          } @else {
+
+            <!-- Master toggle -->
+            <div class="flex items-center justify-between py-3 border-b border-slate-100">
+              <div>
+                <p class="font-bold text-gray-800 text-sm">{{ i18n.t()['settings.notifications.enable'] }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">{{ i18n.t()['settings.notifications.enableDesc'] }}</p>
+              </div>
+              <button
+                (click)="toggleNotifications()"
+                role="switch"
+                [attr.aria-checked]="notifSvc.enabled()"
+                class="relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                [class]="notifSvc.enabled() ? 'bg-indigo-500' : 'bg-slate-200'"
+              >
+                <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform"
+                      [class]="notifSvc.enabled() ? 'translate-x-6' : 'translate-x-1'"></span>
+              </button>
+            </div>
+
+            @if (notifSvc.permissionLevel === 'denied' && !notifSvc.enabled()) {
+              <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700">
+                {{ i18n.t()['settings.notifications.browserDenied'] }}
+              </div>
+            }
+
+            @if (notifSvc.enabled()) {
+              <!-- Fever Alerts toggle -->
+              <div class="flex items-center justify-between py-3 border-b border-slate-100">
+                <div>
+                  <p class="font-bold text-gray-800 text-sm">{{ i18n.t()['settings.notifications.feverAlerts'] }}</p>
+                  <p class="text-xs text-gray-500 mt-0.5">{{ i18n.t()['settings.notifications.feverAlertsDesc'] }}</p>
+                </div>
+                <button
+                  (click)="notifSvc.updatePrefs({ feverAlerts: !notifSvc.feverAlerts() })"
+                  role="switch"
+                  [attr.aria-checked]="notifSvc.feverAlerts()"
+                  class="relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  [class]="notifSvc.feverAlerts() ? 'bg-rose-500' : 'bg-slate-200'"
+                >
+                  <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform"
+                        [class]="notifSvc.feverAlerts() ? 'translate-x-6' : 'translate-x-1'"></span>
+                </button>
+              </div>
+
+              <!-- Vaccine Alerts toggle -->
+              <div class="flex items-center justify-between py-3 border-b border-slate-100">
+                <div>
+                  <p class="font-bold text-gray-800 text-sm">{{ i18n.t()['settings.notifications.vaccineAlerts'] }}</p>
+                  <p class="text-xs text-gray-500 mt-0.5">{{ i18n.t()['settings.notifications.vaccineAlertsDesc'] }}</p>
+                </div>
+                <button
+                  (click)="notifSvc.updatePrefs({ vaccineAlerts: !notifSvc.vaccineAlerts() })"
+                  role="switch"
+                  [attr.aria-checked]="notifSvc.vaccineAlerts()"
+                  class="relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  [class]="notifSvc.vaccineAlerts() ? 'bg-teal-500' : 'bg-slate-200'"
+                >
+                  <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform"
+                        [class]="notifSvc.vaccineAlerts() ? 'translate-x-6' : 'translate-x-1'"></span>
+                </button>
+              </div>
+
+              <!-- Do Not Disturb -->
+              <div class="pt-3">
+                <p class="font-bold text-gray-800 text-sm mb-3">{{ i18n.t()['settings.notifications.dnd'] }}</p>
+                <p class="text-xs text-gray-500 mb-3">{{ i18n.t()['settings.notifications.dndDesc'] }}</p>
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center gap-2">
+                    <label class="text-xs font-semibold text-gray-600">{{ i18n.t()['settings.notifications.dndFrom'] }}</label>
+                    <select
+                      [value]="notifSvc.dndStart()"
+                      (change)="notifSvc.updatePrefs({ dndStart: +$any($event.target).value })"
+                      class="px-3 py-2 rounded-xl border-2 border-slate-200 bg-slate-50 text-sm font-medium text-gray-700 focus:border-indigo-400 focus:outline-none"
+                    >
+                      @for (h of hours; track h.value) {
+                        <option [value]="h.value">{{ h.label }}</option>
+                      }
+                    </select>
+                  </div>
+                  <span class="text-gray-400 font-medium">—</span>
+                  <div class="flex items-center gap-2">
+                    <label class="text-xs font-semibold text-gray-600">{{ i18n.t()['settings.notifications.dndTo'] }}</label>
+                    <select
+                      [value]="notifSvc.dndEnd()"
+                      (change)="notifSvc.updatePrefs({ dndEnd: +$any($event.target).value })"
+                      class="px-3 py-2 rounded-xl border-2 border-slate-200 bg-slate-50 text-sm font-medium text-gray-700 focus:border-indigo-400 focus:outline-none"
+                    >
+                      @for (h of hours; track h.value) {
+                        <option [value]="h.value">{{ h.label }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Section 4: Children Management -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <!-- Teal accent bar -->
         <div class="h-1 bg-gradient-to-r from-teal-500 to-teal-400"></div>
@@ -228,6 +343,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
 export class SettingsPageComponent {
   dataService = inject(DataService);
   i18n = inject(I18nService);
+  private notifSvc = inject(NotificationService);
 
   @Output() openEditChild = new EventEmitter<any>();
   @Output() openAddChild = new EventEmitter<void>();
@@ -237,6 +353,11 @@ export class SettingsPageComponent {
   isSaving = signal(false);
   showClearConfirm = signal(false);
   deleteConfirmId = signal<string | null>(null);
+
+  hours: { value: number; label: string }[] = Array.from({ length: 24 }, (_, i) => ({
+    value: i,
+    label: `${i.toString().padStart(2, '0')}:00`,
+  }));
 
   ngOnInit() {
     this.loadParentProfile();
@@ -260,6 +381,10 @@ export class SettingsPageComponent {
 
   setLocale(locale: 'sq' | 'en'): void {
     this.i18n.setLocale(locale);
+  }
+
+  async toggleNotifications(): Promise<void> {
+    await this.notifSvc.toggleEnabled();
   }
 
   activeClass(locale: 'sq' | 'en'): string {

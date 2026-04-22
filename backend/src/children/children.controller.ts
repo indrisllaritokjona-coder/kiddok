@@ -34,6 +34,7 @@ export class ChildrenController {
   }
 
   @Patch(':id')
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
   async update(@Request() req, @Param('id') id: string, @Body() updateChildDto: UpdateChildDto) {
     // Issue #6: IDOR check at controller level (before service call)
     const child = await this.childrenService.findOneById(id);

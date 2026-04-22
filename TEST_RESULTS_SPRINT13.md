@@ -98,10 +98,30 @@
 **Expected:** Returns correct SQ/EN string  
 **Result:** ✅ Pass — 12 keys added: `notifications.fever.title`, `notifications.vaccine.overdueTitle`, `notifications.vaccine.dueSoonTitle`, plus 9 settings keys
 
-### TC-15: TypeScript Compilation — No new errors introduced
-**Input:** `npx tsc --noEmit`  
+### TC-15: Frontend Build — No new errors introduced
+**Input:** `npx ng build`  
 **Expected:** Zero new errors from changed frontend files  
-**Result:** ✅ Pass — All pre-existing backend errors unchanged; notification service compiles clean
+**Result:** ❌ FAIL — 2 new build errors introduced by Sprint 13:
+
+**BUG 1 — TS2341: `notifSvc` is private (settings-page.component.ts)**
+```
+src/app/components/settings/settings-page.component.ts:178:31:
+  [value]="notifSvc.dndStart()"       ← private field accessed in template
+src/app/components/settings/settings-page.component.ts:179:32:
+  (change)="notifSvc.updatePrefs(...)"  ← same
+src/app/components/settings/settings-page.component.ts:183:31:
+  [value]="notifSvc.dndEnd()"         ← same
+src/app/components/settings/settings-page.component.ts:184:32:
+  (change)="notifSvc.updatePrefs(...)"  ← same
+```
+The field is declared `private notifSvc = inject(NotificationService)`. Angular templates cannot access private members. Fix: remove `private` modifier or expose public accessors.
+
+**BUG 2 — TS2591: `require` used instead of `import` (data.service.ts:520)**
+```
+src/app/services/data.service.ts:520:40:
+  const { NotificationService } = require('./notification.service');
+```
+CommonJS `require()` is not available in the Angular/TypeScript build. Fix: replace with a standard ES `import` at the top of the file, or use `import()` dynamic import.
 
 ---
 
@@ -141,6 +161,13 @@
 | Notification Service logic | 8 | 0 |
 | Settings Page UI | 4 | 0 |
 | i18n Keys | 1 | 0 |
-| TypeScript compilation | 1 | 0 |
+| Frontend build | 0 | 1 |
 | Cross-service integration | 1 | 0 |
-| **Total** | **15** | **0** |
+| **Total** | **14** | **1** |
+
+---
+
+## Bugs to Fix Before Production
+
+1. **Remove `private` from `notifSvc` field** in `settings-page.component.ts` (or make `dndStart`/`dndEnd`/`updatePrefs` public methods on the service)
+2. **Replace `require()` with `import`** in `data.service.ts` line 520 — use static ES import at file top, or dynamic `import()` if circular dependency is the concern

@@ -29,12 +29,17 @@ interface QuickAction {
         @for (action of actions(); track action.id; let i = $index) {
           <button
             (click)="navigate(action.route)"
-            class="relative group bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all duration-200 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-400"
-            [style.--stagger]="i * 50 + 'ms'"
+            (keydown.enter)="navigate(action.route)"
+            (keydown.space)="navigate(action.route)"
+            tabindex="0"
+            role="button"
+            type="button"
+            class="relative group bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-400 active:scale-95 active:transition-transform"
+            [style.animation]="'fadeInUp 500ms ease ' + (i * 60) + 'ms both'"
           >
             <!-- Badge -->
             @if (action.badge > 0) {
-              <span class="absolute top-3 right-3 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white z-10"
+              <span class="absolute top-3 right-3 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white z-10 badge-pulse"
                     [class]="action.id === 'vaccines' ? 'bg-red-500' : 'bg-orange-500'">
                 {{ action.badge > 99 ? '99+' : action.badge }}
               </span>
@@ -58,7 +63,7 @@ interface QuickAction {
     :host { display: block; }
     button { transition: transform 200ms ease, box-shadow 200ms ease; }
     button:hover { transform: translateY(-4px); }
-    button:active { transform: scale(0.98); }
+    button:active { transform: scale(0.95); }
   `]
 })
 export class QuickActionsGridComponent {
@@ -120,12 +125,7 @@ export class QuickActionsGridComponent {
   });
 
   navigate(route: string) {
-    // Find the ShellComponent's navigate method via the router
-    // We'll use the router to navigate to the tab
-    this.router.navigate([], { queryParams: { tab: route } }).catch(() => {
-      // Fallback: navigate directly if in shell context
-    });
-    // Post-message to shell via a custom event
+    this.router.navigate([], { queryParams: { tab: route } }).catch(() => {});
     window.dispatchEvent(new CustomEvent('kiddok:navigate', { detail: route }));
   }
 

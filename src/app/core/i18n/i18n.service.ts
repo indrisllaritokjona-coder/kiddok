@@ -151,6 +151,12 @@ const translations = {
   'child.documentAttached': { sq: 'Dokument i ngarkuar', en: 'Document attached' },
   // Temperature Diary
   'temperature.current': { sq: 'Temperatura aktuale', en: 'Current Temperature' },
+  'home.greeting.morning': { sq: 'Mirëmëngjes', en: 'Good morning' },
+  'home.greeting.afternoon': { sq: 'Mirëditë', en: 'Good afternoon' },
+  'home.greeting.evening': { sq: 'Mirëmbrëma', en: 'Good evening' },
+  'home.greeting.night': { sq: 'Natën e mirë', en: 'Good night' },
+  'home.addFirstChild': { sq: 'Shto fëmijën e parë', en: 'Add your first child' },
+  'home.welcome.subtitle': { sq: 'Të dhënat e tua mjekësore në një vend', en: 'Your medical records in one place' },
   // ─── HOME PAGE ───────────────────────────────────────────────
   'home.welcome.morning': { sq: 'Mirëmëngjes', en: 'Good morning' },
   'home.welcome.afternoon': { sq: 'Mirëmbrëma', en: 'Good afternoon' },

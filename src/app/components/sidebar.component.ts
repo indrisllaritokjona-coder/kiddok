@@ -18,7 +18,7 @@ interface NavItem {
       <!-- Brand row -->
       <div class="sidebar__brand">
         <span class="sidebar__logo">KidDok</span>
-        <button class="locale-toggle" (click)="i18n.toggleLocale()">
+        <button class="locale-toggle" (click)="i18n.toggleLocale()" [attr.aria-label]="'Switch to ' + (i18n.locale() === 'sq' ? 'English' : 'Albanian')">
           {{ i18n.locale() === 'sq' ? 'EN' : 'SQ' }}
         </button>
       </div>

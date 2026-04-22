@@ -59,9 +59,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
             } @else {
               <div class="animate-slide-up">
                 <h2 class="text-3xl font-extrabold text-gray-800 mb-2 tracking-tight">{{ i18n.t()['child.selectChild'] }}</h2>
-                <p class="text-gray-500 text-sm mb-10 font-medium">
                 <p class="text-gray-500 text-sm mb-10 font-medium leading-relaxed">{{ i18n.t()['sidebar.selectChildToContinue'] }}</p>
-                </p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   @for (child of dataService.children(); track child.id) {
                     <div class="bg-white rounded-[2rem] p-8 shadow-md border border-slate-100 hover:shadow-xl hover:border-primary-200 transition-all group relative card-hover">

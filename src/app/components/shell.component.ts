@@ -611,8 +611,8 @@ export class ShellComponent {
   // Issue #9: save success toast
   saveSuccess = signal(false);
   // Issue #8: dirty-flag for medical document optimization (base64 only sent when changed)
-  // TODO: implement dirty-flag optimization — track originalDocument and only send if changed
   originalDocument = signal<string | null>(null);
+  documentDirty = signal(false);
 
   // ── Add Child Form signals ─────────────────────────────────────
   addNameInvalid = signal(false);
@@ -712,6 +712,7 @@ export class ShellComponent {
     this.editGender = child.gender || '';
     // Issue #8: track original document for dirty-flag optimization
     this.originalDocument.set(child.medicalDocument || null);
+    this.documentDirty.set(false);
     // Reset delete confirm state
     this.showDeleteConfirm.set(false);
   }
@@ -757,8 +758,9 @@ export class ShellComponent {
       gender: this.editGender || undefined,
       criticalAllergies: this.editChildAllergies || undefined,
       medicalNotes: this.editChildMedicalNotes || undefined,
-      medicalDocument: this.editChildDocument() || undefined,
-      documentIssueDate: this.editChildDocumentDate || undefined,
+      // Issue #8: only send medicalDocument if it was actually changed (dirty flag)
+      medicalDocument: this.documentDirty() ? (this.editChildDocument() || undefined) : undefined,
+      documentIssueDate: this.documentDirty() ? (this.editChildDocumentDate || undefined) : undefined,
     }).then(() => {
       // Issue #9: show success toast
       this.saveSuccess.set(true);
@@ -787,6 +789,7 @@ export class ShellComponent {
       return;
     }
     this.documentError.set(null);
+    this.documentDirty.set(true);
     const reader = new FileReader();
     reader.onload = () => {
       this.editChildDocument.set(reader.result as string);

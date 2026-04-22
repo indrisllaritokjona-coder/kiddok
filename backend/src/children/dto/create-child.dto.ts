@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsNumber, IsDateString } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsNumber, IsDateString, Max } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class CreateChildDto {
@@ -20,7 +20,7 @@ export class CreateChildDto {
 
   @IsNumber()
   @IsOptional()
-  @Transform(({ value }) => (value !== '' ? parseFloat(value) : undefined))
+  @Transform(({ value }) => (value !== '' && value != null ? parseFloat(value) : undefined))
   birthWeight?: number;
 
   @IsString()

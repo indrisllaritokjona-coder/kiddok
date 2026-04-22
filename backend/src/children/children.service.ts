@@ -55,6 +55,11 @@ export class ChildrenService {
     return child;
   }
 
+  // Issue #6: Separate method for controller-level IDOR check (no userId filter)
+  async findOneById(id: string) {
+    return this.prisma.child.findUnique({ where: { id } });
+  }
+
   async update(id: string, userId: string, data: any) {
     // ensure belongs to user
     await this.findOne(id, userId);

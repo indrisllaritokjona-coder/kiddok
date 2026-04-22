@@ -18,6 +18,20 @@ let ChildrenService = class ChildrenService {
         this.prisma = prisma;
     }
     async create(userId, data) {
+        const MAX_DOCUMENT_SIZE = 5 * 1024 * 1024;
+        if (data.medicalDocument) {
+            const base64Size = data.medicalDocument.length * 0.75;
+            if (base64Size > MAX_DOCUMENT_SIZE) {
+                throw new common_1.BadRequestException('Dokumenti tejkalon limitin prej 5MB. / Document exceeds 5MB limit.');
+            }
+        }
+        if (data.documentIssueDate) {
+            const parsed = new Date(data.documentIssueDate);
+            if (isNaN(parsed.getTime())) {
+                throw new common_1.BadRequestException('Data e lëshimit të dokumentit nuk është e vlefshme. / Document issue date is invalid.');
+            }
+            data.documentIssueDate = parsed;
+        }
         return this.prisma.child.create({
             data: {
                 ...data,
@@ -34,7 +48,7 @@ let ChildrenService = class ChildrenService {
     }
     async findOne(id, userId) {
         const child = await this.prisma.child.findFirst({
-            where: { id, userId },
+            where: { id, OR: [{ userId }, { familyMembers: { some: { userId } } }] },
             include: {
                 healthRecords: true,
                 vaccines: true
@@ -45,10 +59,29 @@ let ChildrenService = class ChildrenService {
         }
         return child;
     }
+    async findOneById(id) {
+        return this.prisma.child.findUnique({ where: { id } });
+    }
+    async hasAccess(childId, userId) {
+        const child = await this.prisma.child.findFirst({
+            where: { id: childId },
+            include: { familyMembers: { where: { userId } } },
+        });
+        if (!child)
+            return false;
+        return child.userId === userId || child.familyMembers.length > 0;
+    }
     async update(id, userId, data) {
         await this.findOne(id, userId);
         if (data.dateOfBirth) {
             data.dateOfBirth = new Date(data.dateOfBirth);
+        }
+        const MAX_DOCUMENT_SIZE = 5 * 1024 * 1024;
+        if (data.medicalDocument) {
+            const base64Size = data.medicalDocument.length * 0.75;
+            if (base64Size > MAX_DOCUMENT_SIZE) {
+                throw new common_1.BadRequestException('Dokumenti tejkalon limitin prej 5MB. / Document exceeds 5MB limit.');
+            }
         }
         return this.prisma.child.update({
             where: { id },

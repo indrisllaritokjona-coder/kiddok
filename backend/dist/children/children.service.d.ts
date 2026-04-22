@@ -41,11 +41,12 @@ export declare class ChildrenService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            medications: string | null;
+            childId: string;
             date: Date;
             type: string;
             symptoms: string | null;
             diagnosis: string | null;
-            medications: string | null;
             notes: string | null;
             attachments: string[];
             doctorName: string | null;
@@ -55,15 +56,14 @@ export declare class ChildrenService {
             medicationDose: string | null;
             medicationTime: string | null;
             medicationEffectiveness: string | null;
-            childId: string;
         }[];
         vaccines: {
             id: string;
             name: string;
             createdAt: Date;
             updatedAt: Date;
-            notes: string | null;
             childId: string;
+            notes: string | null;
             dateAdministered: Date | null;
             dueDate: Date | null;
             provider: string | null;
@@ -86,6 +86,24 @@ export declare class ChildrenService {
         medicalNotes: string | null;
         userId: string;
     }>;
+    findOneById(id: string): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        dateOfBirth: Date;
+        gender: string | null;
+        bloodType: string | null;
+        allergies: string | null;
+        birthWeight: number | null;
+        deliveryDoctor: string | null;
+        criticalAllergies: string | null;
+        medicalDocument: string | null;
+        documentIssueDate: Date | null;
+        medicalNotes: string | null;
+        userId: string;
+    } | null>;
+    hasAccess(childId: string, userId: string): Promise<boolean>;
     update(id: string, userId: string, data: any): Promise<{
         id: string;
         name: string;

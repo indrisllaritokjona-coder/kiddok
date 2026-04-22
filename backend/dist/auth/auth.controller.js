@@ -16,6 +16,7 @@ exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
 const passport_1 = require("@nestjs/passport");
+const throttler_1 = require("@nestjs/throttler");
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
@@ -52,6 +53,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "register", null);
 __decorate([
+    (0, common_1.UseGuards)(throttler_1.ThrottlerGuard),
+    (0, throttler_1.Throttle)({ short: { limit: 5, ttl: 60000 } }),
     (0, common_1.Post)('login'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -59,6 +62,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
+    (0, common_1.UseGuards)(throttler_1.ThrottlerGuard),
+    (0, throttler_1.Throttle)({ short: { limit: 5, ttl: 60000 } }),
     (0, common_1.Post)('dev-login'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),

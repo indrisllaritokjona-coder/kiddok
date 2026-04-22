@@ -6,11 +6,12 @@ export declare class HealthRecordsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        medications: string | null;
+        childId: string;
         date: Date;
         type: string;
         symptoms: string | null;
         diagnosis: string | null;
-        medications: string | null;
         notes: string | null;
         attachments: string[];
         doctorName: string | null;
@@ -20,17 +21,17 @@ export declare class HealthRecordsController {
         medicationDose: string | null;
         medicationTime: string | null;
         medicationEffectiveness: string | null;
-        childId: string;
     }>;
     findAllByChild(req: any, childId: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        medications: string | null;
+        childId: string;
         date: Date;
         type: string;
         symptoms: string | null;
         diagnosis: string | null;
-        medications: string | null;
         notes: string | null;
         attachments: string[];
         doctorName: string | null;
@@ -40,17 +41,17 @@ export declare class HealthRecordsController {
         medicationDose: string | null;
         medicationTime: string | null;
         medicationEffectiveness: string | null;
-        childId: string;
     }[]>;
     findOne(req: any, id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        medications: string | null;
+        childId: string;
         date: Date;
         type: string;
         symptoms: string | null;
         diagnosis: string | null;
-        medications: string | null;
         notes: string | null;
         attachments: string[];
         doctorName: string | null;
@@ -60,17 +61,17 @@ export declare class HealthRecordsController {
         medicationDose: string | null;
         medicationTime: string | null;
         medicationEffectiveness: string | null;
-        childId: string;
     }>;
     update(req: any, id: string, updateData: any): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        medications: string | null;
+        childId: string;
         date: Date;
         type: string;
         symptoms: string | null;
         diagnosis: string | null;
-        medications: string | null;
         notes: string | null;
         attachments: string[];
         doctorName: string | null;
@@ -80,17 +81,17 @@ export declare class HealthRecordsController {
         medicationDose: string | null;
         medicationTime: string | null;
         medicationEffectiveness: string | null;
-        childId: string;
     }>;
     remove(req: any, id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        medications: string | null;
+        childId: string;
         date: Date;
         type: string;
         symptoms: string | null;
         diagnosis: string | null;
-        medications: string | null;
         notes: string | null;
         attachments: string[];
         doctorName: string | null;
@@ -100,6 +101,5 @@ export declare class HealthRecordsController {
         medicationDose: string | null;
         medicationTime: string | null;
         medicationEffectiveness: string | null;
-        childId: string;
     }>;
 }

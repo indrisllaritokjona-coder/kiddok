@@ -343,7 +343,7 @@ import { NotificationService } from '../../services/notification.service';
 export class SettingsPageComponent {
   dataService = inject(DataService);
   i18n = inject(I18nService);
-  private notifSvc = inject(NotificationService);
+  notifSvc = inject(NotificationService);
 
   @Output() openEditChild = new EventEmitter<any>();
   @Output() openAddChild = new EventEmitter<void>();

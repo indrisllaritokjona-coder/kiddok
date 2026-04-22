@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ToastService } from './toast.service';
+import { NotificationService } from './notification.service';
 
 export interface ChildProfile {
   id: string;
@@ -514,12 +515,11 @@ export class DataService {
     this.records.set(storedRecords ? JSON.parse(storedRecords) : []);
     this.loadTemperatureEntries(childId);
     this.loadGrowthEntries(childId);
-    // Notify NotificationService (lazy import to avoid circular dep)
+    // Trigger vaccine alert check (NotificationService is providedIn: 'root', instantiate directly)
     setTimeout(() => {
       try {
-        const { NotificationService } = require('./notification.service');
-        // Access via window to avoid static DI issues
-        (window as any).__kiddokNotif?.checkVaccineAlerts();
+        const notifSvc = new NotificationService();
+        notifSvc.checkVaccineAlerts();
       } catch { /* ignore */ }
     }, 0);
   }

@@ -1,8 +1,10 @@
 import { ChildrenService } from './children.service';
+import { CreateChildDto } from './dto/create-child.dto';
+import { UpdateChildDto } from './dto/update-child.dto';
 export declare class ChildrenController {
     private readonly childrenService;
     constructor(childrenService: ChildrenService);
-    create(req: any, createChildDto: any): Promise<{
+    create(req: any, createChildDto: CreateChildDto): Promise<{
         id: string;
         name: string;
         createdAt: Date;
@@ -37,39 +39,6 @@ export declare class ChildrenController {
         userId: string;
     }[]>;
     findOne(req: any, id: string): Promise<{
-        healthRecords: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            date: Date;
-            type: string;
-            symptoms: string | null;
-            diagnosis: string | null;
-            medications: string | null;
-            notes: string | null;
-            attachments: string[];
-            doctorName: string | null;
-            temperature: number | null;
-            temperatureTime: string | null;
-            medicationName: string | null;
-            medicationDose: string | null;
-            medicationTime: string | null;
-            medicationEffectiveness: string | null;
-            childId: string;
-        }[];
-        vaccines: {
-            id: string;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            notes: string | null;
-            childId: string;
-            dateAdministered: Date | null;
-            dueDate: Date | null;
-            provider: string | null;
-            completed: boolean;
-        }[];
-    } & {
         id: string;
         name: string;
         createdAt: Date;
@@ -86,7 +55,7 @@ export declare class ChildrenController {
         medicalNotes: string | null;
         userId: string;
     }>;
-    update(req: any, id: string, updateData: any): Promise<{
+    update(req: any, id: string, updateChildDto: UpdateChildDto): Promise<{
         id: string;
         name: string;
         createdAt: Date;

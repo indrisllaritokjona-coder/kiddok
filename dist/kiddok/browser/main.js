@@ -1837,6 +1837,9 @@ function forkJoin(...args) {
   return resultSelector ? result.pipe(mapOneOrManyArgs(resultSelector)) : result;
 }
 
+// node_modules/rxjs/dist/esm/internal/observable/never.js
+var NEVER = new Observable(noop);
+
 // node_modules/rxjs/dist/esm/internal/operators/filter.js
 function filter(predicate, thisArg) {
   return operate((source, subscriber) => {
@@ -22654,6 +22657,9 @@ function runPlatformInitializers(injector) {
     inits?.forEach((init) => init());
   });
 }
+function isDevMode() {
+  return typeof ngDevMode === "undefined" || !!ngDevMode;
+}
 var APPLICATION_IS_STABLE_TIMEOUT = 1e4;
 var STABILITY_WARNING_THRESHOLD = APPLICATION_IS_STABLE_TIMEOUT - 1e3;
 var ChangeDetectorRef = class {
@@ -37668,6 +37674,384 @@ function provideRouterInitializer() {
  * License: MIT
  */
 
+// node_modules/@angular/service-worker/fesm2022/service-worker.mjs
+/**
+ * @license Angular v21.2.9
+ * (c) 2010-2026 Google LLC. https://angular.dev/
+ * License: MIT
+ */
+var ERR_SW_NOT_SUPPORTED = "Service workers are disabled or not supported by this browser";
+var NgswCommChannel = class {
+  serviceWorker;
+  worker;
+  registration;
+  events;
+  constructor(serviceWorker, injector) {
+    this.serviceWorker = serviceWorker;
+    if (!serviceWorker) {
+      this.worker = this.events = this.registration = new Observable((subscriber) => subscriber.error(new RuntimeError(5601, (typeof ngDevMode === "undefined" || ngDevMode) && ERR_SW_NOT_SUPPORTED)));
+    } else {
+      let currentWorker = null;
+      const workerSubject = new Subject();
+      this.worker = new Observable((subscriber) => {
+        if (currentWorker !== null) {
+          subscriber.next(currentWorker);
+        }
+        return workerSubject.subscribe((v) => subscriber.next(v));
+      });
+      const updateController = () => {
+        const {
+          controller
+        } = serviceWorker;
+        if (controller === null) {
+          return;
+        }
+        currentWorker = controller;
+        workerSubject.next(currentWorker);
+      };
+      serviceWorker.addEventListener("controllerchange", updateController);
+      updateController();
+      this.registration = this.worker.pipe(switchMap(() => serviceWorker.getRegistration().then((registration) => {
+        if (!registration) {
+          throw new RuntimeError(5601, (typeof ngDevMode === "undefined" || ngDevMode) && ERR_SW_NOT_SUPPORTED);
+        }
+        return registration;
+      })));
+      const _events = new Subject();
+      this.events = _events.asObservable();
+      const messageListener = (event) => {
+        const {
+          data
+        } = event;
+        if (data?.type) {
+          _events.next(data);
+        }
+      };
+      serviceWorker.addEventListener("message", messageListener);
+      const appRef = injector?.get(ApplicationRef, null, {
+        optional: true
+      });
+      appRef?.onDestroy(() => {
+        serviceWorker.removeEventListener("controllerchange", updateController);
+        serviceWorker.removeEventListener("message", messageListener);
+      });
+    }
+  }
+  postMessage(action, payload) {
+    return new Promise((resolve) => {
+      this.worker.pipe(take(1)).subscribe((sw) => {
+        sw.postMessage(__spreadValues({
+          action
+        }, payload));
+        resolve();
+      });
+    });
+  }
+  postMessageWithOperation(type, payload, operationNonce) {
+    const waitForOperationCompleted = this.waitForOperationCompleted(operationNonce);
+    const postMessage = this.postMessage(type, payload);
+    return Promise.all([postMessage, waitForOperationCompleted]).then(([, result]) => result);
+  }
+  generateNonce() {
+    return Math.round(Math.random() * 1e7);
+  }
+  eventsOfType(type) {
+    let filterFn;
+    if (typeof type === "string") {
+      filterFn = (event) => event.type === type;
+    } else {
+      filterFn = (event) => type.includes(event.type);
+    }
+    return this.events.pipe(filter(filterFn));
+  }
+  nextEventOfType(type) {
+    return this.eventsOfType(type).pipe(take(1));
+  }
+  waitForOperationCompleted(nonce) {
+    return new Promise((resolve, reject) => {
+      this.eventsOfType("OPERATION_COMPLETED").pipe(filter((event) => event.nonce === nonce), take(1), map((event) => {
+        if (event.result !== void 0) {
+          return event.result;
+        }
+        throw new Error(event.error);
+      })).subscribe({
+        next: resolve,
+        error: reject
+      });
+    });
+  }
+  get isEnabled() {
+    return !!this.serviceWorker;
+  }
+};
+var SwPush = class _SwPush {
+  sw;
+  messages;
+  notificationClicks;
+  notificationCloses;
+  pushSubscriptionChanges;
+  subscription;
+  get isEnabled() {
+    return this.sw.isEnabled;
+  }
+  pushManager = null;
+  subscriptionChanges = new Subject();
+  constructor(sw) {
+    this.sw = sw;
+    if (!sw.isEnabled) {
+      this.messages = NEVER;
+      this.notificationClicks = NEVER;
+      this.notificationCloses = NEVER;
+      this.pushSubscriptionChanges = NEVER;
+      this.subscription = NEVER;
+      return;
+    }
+    this.messages = this.sw.eventsOfType("PUSH").pipe(map((message) => message.data));
+    this.notificationClicks = this.sw.eventsOfType("NOTIFICATION_CLICK").pipe(map((message) => message.data));
+    this.notificationCloses = this.sw.eventsOfType("NOTIFICATION_CLOSE").pipe(map((message) => message.data));
+    this.pushSubscriptionChanges = this.sw.eventsOfType("PUSH_SUBSCRIPTION_CHANGE").pipe(map((message) => message.data));
+    this.pushManager = this.sw.registration.pipe(map((registration) => registration.pushManager));
+    const workerDrivenSubscriptions = this.pushManager.pipe(switchMap((pm) => pm.getSubscription()));
+    this.subscription = new Observable((subscriber) => {
+      const workerDrivenSubscription = workerDrivenSubscriptions.subscribe(subscriber);
+      const subscriptionChanges = this.subscriptionChanges.subscribe(subscriber);
+      return () => {
+        workerDrivenSubscription.unsubscribe();
+        subscriptionChanges.unsubscribe();
+      };
+    });
+  }
+  requestSubscription(options) {
+    if (!this.sw.isEnabled || this.pushManager === null) {
+      return Promise.reject(new Error(ERR_SW_NOT_SUPPORTED));
+    }
+    const pushOptions = {
+      userVisibleOnly: true
+    };
+    let key = this.decodeBase64(options.serverPublicKey.replace(/_/g, "/").replace(/-/g, "+"));
+    let applicationServerKey = new Uint8Array(new ArrayBuffer(key.length));
+    for (let i = 0; i < key.length; i++) {
+      applicationServerKey[i] = key.charCodeAt(i);
+    }
+    pushOptions.applicationServerKey = applicationServerKey;
+    return new Promise((resolve, reject) => {
+      this.pushManager.pipe(switchMap((pm) => pm.subscribe(pushOptions)), take(1)).subscribe({
+        next: (sub) => {
+          this.subscriptionChanges.next(sub);
+          resolve(sub);
+        },
+        error: reject
+      });
+    });
+  }
+  unsubscribe() {
+    if (!this.sw.isEnabled) {
+      return Promise.reject(new Error(ERR_SW_NOT_SUPPORTED));
+    }
+    const doUnsubscribe = (sub) => {
+      if (sub === null) {
+        throw new RuntimeError(5602, (typeof ngDevMode === "undefined" || ngDevMode) && "Not subscribed to push notifications.");
+      }
+      return sub.unsubscribe().then((success) => {
+        if (!success) {
+          throw new RuntimeError(5603, (typeof ngDevMode === "undefined" || ngDevMode) && "Unsubscribe failed!");
+        }
+        this.subscriptionChanges.next(null);
+      });
+    };
+    return new Promise((resolve, reject) => {
+      this.subscription.pipe(take(1), switchMap(doUnsubscribe)).subscribe({
+        next: resolve,
+        error: reject
+      });
+    });
+  }
+  decodeBase64(input2) {
+    return atob(input2);
+  }
+  static \u0275fac = function SwPush_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _SwPush)(\u0275\u0275inject(NgswCommChannel));
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+    token: _SwPush,
+    factory: _SwPush.\u0275fac
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SwPush, [{
+    type: Injectable
+  }], () => [{
+    type: NgswCommChannel
+  }], null);
+})();
+var SwUpdate = class _SwUpdate {
+  sw;
+  versionUpdates;
+  unrecoverable;
+  get isEnabled() {
+    return this.sw.isEnabled;
+  }
+  ongoingCheckForUpdate = null;
+  constructor(sw) {
+    this.sw = sw;
+    if (!sw.isEnabled) {
+      this.versionUpdates = NEVER;
+      this.unrecoverable = NEVER;
+      return;
+    }
+    this.versionUpdates = this.sw.eventsOfType(["VERSION_DETECTED", "VERSION_INSTALLATION_FAILED", "VERSION_READY", "NO_NEW_VERSION_DETECTED"]);
+    this.unrecoverable = this.sw.eventsOfType("UNRECOVERABLE_STATE");
+  }
+  checkForUpdate() {
+    if (!this.sw.isEnabled) {
+      return Promise.reject(new Error(ERR_SW_NOT_SUPPORTED));
+    }
+    if (this.ongoingCheckForUpdate) {
+      return this.ongoingCheckForUpdate;
+    }
+    const nonce = this.sw.generateNonce();
+    this.ongoingCheckForUpdate = this.sw.postMessageWithOperation("CHECK_FOR_UPDATES", {
+      nonce
+    }, nonce).finally(() => {
+      this.ongoingCheckForUpdate = null;
+    });
+    return this.ongoingCheckForUpdate;
+  }
+  activateUpdate() {
+    if (!this.sw.isEnabled) {
+      return Promise.reject(new RuntimeError(5601, (typeof ngDevMode === "undefined" || ngDevMode) && ERR_SW_NOT_SUPPORTED));
+    }
+    const nonce = this.sw.generateNonce();
+    return this.sw.postMessageWithOperation("ACTIVATE_UPDATE", {
+      nonce
+    }, nonce);
+  }
+  static \u0275fac = function SwUpdate_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _SwUpdate)(\u0275\u0275inject(NgswCommChannel));
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+    token: _SwUpdate,
+    factory: _SwUpdate.\u0275fac
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SwUpdate, [{
+    type: Injectable
+  }], () => [{
+    type: NgswCommChannel
+  }], null);
+})();
+var SCRIPT = new InjectionToken(typeof ngDevMode !== "undefined" && ngDevMode ? "NGSW_REGISTER_SCRIPT" : "");
+function ngswAppInitializer() {
+  if (false) {
+    return;
+  }
+  const options = inject2(SwRegistrationOptions);
+  if (!("serviceWorker" in navigator && options.enabled !== false)) {
+    return;
+  }
+  const script = inject2(SCRIPT);
+  const ngZone = inject2(NgZone);
+  const appRef = inject2(ApplicationRef);
+  ngZone.runOutsideAngular(() => {
+    const sw = navigator.serviceWorker;
+    const onControllerChange = () => sw.controller?.postMessage({
+      action: "INITIALIZE"
+    });
+    sw.addEventListener("controllerchange", onControllerChange);
+    appRef.onDestroy(() => {
+      sw.removeEventListener("controllerchange", onControllerChange);
+    });
+  });
+  ngZone.runOutsideAngular(() => {
+    let readyToRegister;
+    const {
+      registrationStrategy
+    } = options;
+    if (typeof registrationStrategy === "function") {
+      readyToRegister = new Promise((resolve) => registrationStrategy().subscribe(() => resolve()));
+    } else {
+      const [strategy, ...args] = (registrationStrategy || "registerWhenStable:30000").split(":");
+      switch (strategy) {
+        case "registerImmediately":
+          readyToRegister = Promise.resolve();
+          break;
+        case "registerWithDelay":
+          readyToRegister = delayWithTimeout(+args[0] || 0);
+          break;
+        case "registerWhenStable":
+          readyToRegister = Promise.race([appRef.whenStable(), delayWithTimeout(+args[0])]);
+          break;
+        default:
+          throw new RuntimeError(5600, (typeof ngDevMode === "undefined" || ngDevMode) && `Unknown ServiceWorker registration strategy: ${options.registrationStrategy}`);
+      }
+    }
+    readyToRegister.then(() => {
+      if (appRef.destroyed) {
+        return;
+      }
+      navigator.serviceWorker.register(script, {
+        scope: options.scope,
+        updateViaCache: options.updateViaCache,
+        type: options.type
+      }).catch((err) => console.error(formatRuntimeError(5604, (typeof ngDevMode === "undefined" || ngDevMode) && "Service worker registration failed with: " + err)));
+    });
+  });
+}
+function delayWithTimeout(timeout) {
+  return new Promise((resolve) => setTimeout(resolve, timeout));
+}
+function ngswCommChannelFactory() {
+  const opts = inject2(SwRegistrationOptions);
+  const injector = inject2(Injector);
+  const isBrowser = true;
+  return new NgswCommChannel(isBrowser && opts.enabled !== false ? navigator.serviceWorker : void 0, injector);
+}
+var SwRegistrationOptions = class {
+  enabled;
+  updateViaCache;
+  type;
+  scope;
+  registrationStrategy;
+};
+function provideServiceWorker(script, options = {}) {
+  return makeEnvironmentProviders([SwPush, SwUpdate, {
+    provide: SCRIPT,
+    useValue: script
+  }, {
+    provide: SwRegistrationOptions,
+    useValue: options
+  }, {
+    provide: NgswCommChannel,
+    useFactory: ngswCommChannelFactory
+  }, provideAppInitializer(ngswAppInitializer)]);
+}
+var ServiceWorkerModule = class _ServiceWorkerModule {
+  static register(script, options = {}) {
+    return {
+      ngModule: _ServiceWorkerModule,
+      providers: [provideServiceWorker(script, options)]
+    };
+  }
+  static \u0275fac = function ServiceWorkerModule_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _ServiceWorkerModule)();
+  };
+  static \u0275mod = /* @__PURE__ */ \u0275\u0275defineNgModule({
+    type: _ServiceWorkerModule
+  });
+  static \u0275inj = /* @__PURE__ */ \u0275\u0275defineInjector({
+    providers: [SwPush, SwUpdate]
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ServiceWorkerModule, [{
+    type: NgModule,
+    args: [{
+      providers: [SwPush, SwUpdate]
+    }]
+  }], null, null);
+})();
+
 // node_modules/@angular/common/locales/it.js
 /**
  * @license
@@ -38872,580 +39256,6 @@ var ToastService = class _ToastService {
   }], null, null);
 })();
 
-// src/app/services/data.service.ts
-var DataService = class _DataService {
-  constructor(http) {
-    this.http = http;
-    this.AUTH_KEY = "kiddok_access_token";
-    this.CHILDREN_KEY = "kiddok_children";
-    this.PARENT_KEY = "kiddok_parent_profile";
-    this.ACTIVE_CHILD_KEY = "kiddok_active_child";
-    this.API_URL = environment.apiUrl;
-    this.toast = inject2(ToastService);
-    this.isAuthenticated = signal(!!localStorage.getItem(this.AUTH_KEY), ...ngDevMode ? [{ debugName: "isAuthenticated" }] : (
-      /* istanbul ignore next */
-      []
-    ));
-    this.children = signal([], ...ngDevMode ? [{ debugName: "children" }] : (
-      /* istanbul ignore next */
-      []
-    ));
-    this.activeChildId = signal(null, ...ngDevMode ? [{ debugName: "activeChildId" }] : (
-      /* istanbul ignore next */
-      []
-    ));
-    this.currentTab = signal("home", ...ngDevMode ? [{ debugName: "currentTab" }] : (
-      /* istanbul ignore next */
-      []
-    ));
-    this.illnesses = signal([], ...ngDevMode ? [{ debugName: "illnesses" }] : (
-      /* istanbul ignore next */
-      []
-    ));
-    this.records = signal([], ...ngDevMode ? [{ debugName: "records" }] : (
-      /* istanbul ignore next */
-      []
-    ));
-    this.temperatureEntries = signal([], ...ngDevMode ? [{ debugName: "temperatureEntries" }] : (
-      /* istanbul ignore next */
-      []
-    ));
-    this.growthEntries = signal([], ...ngDevMode ? [{ debugName: "growthEntries" }] : (
-      /* istanbul ignore next */
-      []
-    ));
-    this.parentProfile = signal({ name: "", surname: "", phone: "" }, ...ngDevMode ? [{ debugName: "parentProfile" }] : (
-      /* istanbul ignore next */
-      []
-    ));
-    this.diaryEntries = signal([], ...ngDevMode ? [{ debugName: "diaryEntries" }] : (
-      /* istanbul ignore next */
-      []
-    ));
-    this.init();
-  }
-  init() {
-    return __async(this, null, function* () {
-      yield this.loadChildrenFromApi();
-      const storedChildren = this.loadFromStorage(this.CHILDREN_KEY);
-      if (storedChildren && storedChildren.length > 0 && this.children().length === 0) {
-        this.children.set(storedChildren);
-      }
-      const storedParent = this.loadFromStorage(this.PARENT_KEY);
-      if (storedParent) {
-        this.parentProfile.set(storedParent);
-      }
-      const storedActiveId = localStorage.getItem(this.ACTIVE_CHILD_KEY);
-      if (storedActiveId) {
-        this.activeChildId.set(storedActiveId);
-        this.loadChildDetails(storedActiveId);
-      } else if (this.children().length > 0) {
-        const first2 = this.children()[0];
-        this.switchChild(first2.id);
-      }
-    });
-  }
-  addDiaryEntry(entry) {
-    const newEntry = __spreadProps(__spreadValues({}, entry), { id: "de_" + Date.now() });
-    const updated = [newEntry, ...this.diaryEntries()];
-    this.diaryEntries.set(updated);
-    const cid = entry.childId;
-    if (cid) {
-      try {
-        localStorage.setItem(`kiddok_diary_${cid}`, JSON.stringify(updated));
-      } catch (e) {
-      }
-    }
-    return newEntry;
-  }
-  getDiaryEntriesByChild(childId) {
-    return this.diaryEntries().filter((e) => e.childId === childId);
-  }
-  loadDiaryEntries(childId) {
-    const stored = localStorage.getItem(`kiddok_diary_${childId}`);
-    this.diaryEntries.set(stored ? JSON.parse(stored) : []);
-  }
-  // ─── API calls ───────────────────────────────────────────────
-  getHeaders() {
-    const token = localStorage.getItem(this.AUTH_KEY);
-    return {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    };
-  }
-  /** Load all children from PostgreSQL via REST */
-  loadChildrenFromApi() {
-    return __async(this, null, function* () {
-      const token = localStorage.getItem(this.AUTH_KEY);
-      if (!token)
-        return;
-      try {
-        const children = yield firstValueFrom(this.http.get(`${this.API_URL}/children`, this.getHeaders()));
-        const profiles = children.map((c) => ({
-          id: c.id,
-          userId: c.userId,
-          name: c.name,
-          dateOfBirth: c.dateOfBirth,
-          gender: c.gender ?? void 0,
-          bloodType: c.bloodType ?? void 0,
-          birthWeight: c.birthWeight ?? void 0,
-          deliveryDoctor: c.deliveryDoctor ?? void 0,
-          criticalAllergies: c.criticalAllergies ?? void 0,
-          allergies: c.allergies ?? void 0,
-          medicalDocument: c.medicalDocument ?? void 0,
-          documentIssueDate: c.documentIssueDate ?? void 0,
-          medicalNotes: c.medicalNotes ?? void 0,
-          avatarUrl: c.avatarUrl ?? `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(c.name)}`
-        }));
-        this.children.set(profiles);
-        this.saveToStorage(this.CHILDREN_KEY, profiles);
-      } catch (err) {
-        console.error("[DataService] loadChildrenFromApi failed:", err);
-        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
-      }
-    });
-  }
-  /** Create a new child via POST /children */
-  createChild(data) {
-    return __async(this, null, function* () {
-      const payload = {
-        name: data.name,
-        dateOfBirth: data.dateOfBirth,
-        gender: data.gender ?? null,
-        bloodType: data.bloodType ?? null,
-        birthWeight: data.birthWeight ?? null,
-        deliveryDoctor: data.deliveryDoctor ?? null,
-        criticalAllergies: data.criticalAllergies ?? null,
-        allergies: data.allergies ?? null,
-        medicalDocument: data.medicalDocument ?? null,
-        documentIssueDate: data.documentIssueDate ? new Date(data.documentIssueDate) : null,
-        medicalNotes: data.medicalNotes ?? null
-      };
-      try {
-        const created = yield firstValueFrom(this.http.post(`${this.API_URL}/children`, payload, this.getHeaders()));
-        const profile = {
-          id: created.id,
-          userId: created.userId,
-          name: created.name,
-          dateOfBirth: created.dateOfBirth,
-          gender: created.gender ?? void 0,
-          bloodType: created.bloodType ?? void 0,
-          birthWeight: created.birthWeight ?? void 0,
-          deliveryDoctor: created.deliveryDoctor ?? void 0,
-          criticalAllergies: created.criticalAllergies ?? void 0,
-          avatarUrl: created.avatarUrl ?? `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(created.name)}`
-        };
-        const updated = [...this.children(), profile];
-        this.children.set(updated);
-        this.saveToStorage(this.CHILDREN_KEY, updated);
-        return profile;
-      } catch (err) {
-        console.error("[DataService] createChild failed:", err);
-        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
-        throw err;
-      }
-    });
-  }
-  /** Update an existing child via PATCH /children/:id */
-  updateChildApi(id, data) {
-    return __async(this, null, function* () {
-      const payload = {
-        name: data.name,
-        dateOfBirth: data.dateOfBirth,
-        gender: data.gender ?? null,
-        bloodType: data.bloodType ?? null,
-        birthWeight: data.birthWeight ?? null,
-        deliveryDoctor: data.deliveryDoctor ?? null,
-        criticalAllergies: data.criticalAllergies ?? null,
-        allergies: data.allergies ?? null,
-        medicalNotes: data.medicalNotes ?? null
-      };
-      if (data.medicalDocument !== void 0) {
-        payload.medicalDocument = data.medicalDocument;
-      }
-      if (data.documentIssueDate !== void 0) {
-        payload.documentIssueDate = data.documentIssueDate ? new Date(data.documentIssueDate) : null;
-      }
-      try {
-        const updated = yield firstValueFrom(this.http.patch(`${this.API_URL}/children/${id}`, payload, this.getHeaders()));
-        const profile = {
-          id: updated.id,
-          userId: updated.userId,
-          name: updated.name,
-          dateOfBirth: updated.dateOfBirth,
-          gender: updated.gender ?? void 0,
-          bloodType: updated.bloodType ?? void 0,
-          birthWeight: updated.birthWeight ?? void 0,
-          deliveryDoctor: updated.deliveryDoctor ?? void 0,
-          criticalAllergies: updated.criticalAllergies ?? void 0,
-          allergies: updated.allergies ?? void 0,
-          medicalDocument: updated.medicalDocument ?? void 0,
-          documentIssueDate: updated.documentIssueDate ?? void 0,
-          medicalNotes: updated.medicalNotes ?? void 0,
-          avatarUrl: updated.avatarUrl ?? `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(updated.name)}`
-        };
-        const current = this.children().map((c) => c.id === id ? profile : c);
-        this.children.set(current);
-        this.saveToStorage(this.CHILDREN_KEY, current);
-        return profile;
-      } catch (err) {
-        console.error("[DataService] updateChildApi failed:", err);
-        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
-        throw err;
-      }
-    });
-  }
-  /** Delete a child via DELETE /children/:id */
-  deleteChildApi(id) {
-    return __async(this, null, function* () {
-      try {
-        yield firstValueFrom(this.http.delete(`${this.API_URL}/children/${id}`, this.getHeaders()));
-      } catch (err) {
-        console.error("[DataService] deleteChildApi failed:", err);
-        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
-        throw err;
-      }
-      const updated = this.children().filter((c) => c.id !== id);
-      this.children.set(updated);
-      this.saveToStorage(this.CHILDREN_KEY, updated);
-    });
-  }
-  loadTemperatureEntries(childId) {
-    return __async(this, null, function* () {
-      try {
-        const entries = yield firstValueFrom(this.http.get(`${this.API_URL}/temperature-entries/child/${childId}`, this.getHeaders()));
-        this.temperatureEntries.set(entries);
-        return entries;
-      } catch (err) {
-        console.error("[DataService] loadTemperatureEntries failed:", err);
-        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
-        return [];
-      }
-    });
-  }
-  createTemperatureEntry(data) {
-    return __async(this, null, function* () {
-      try {
-        const created = yield firstValueFrom(this.http.post(`${this.API_URL}/temperature-entries`, data, this.getHeaders()));
-        const updated = [created, ...this.temperatureEntries()];
-        this.temperatureEntries.set(updated);
-        return created;
-      } catch (err) {
-        console.error("[DataService] createTemperatureEntry failed:", err);
-        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
-        return null;
-      }
-    });
-  }
-  deleteTemperatureEntry(id) {
-    return __async(this, null, function* () {
-      try {
-        yield firstValueFrom(this.http.delete(`${this.API_URL}/temperature-entries/${id}`, this.getHeaders()));
-        const updated = this.temperatureEntries().filter((e) => e.id !== id);
-        this.temperatureEntries.set(updated);
-      } catch (err) {
-        console.error("[DataService] deleteTemperatureEntry failed:", err);
-        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
-      }
-    });
-  }
-  loadGrowthEntries(childId) {
-    return __async(this, null, function* () {
-      try {
-        const entries = yield firstValueFrom(this.http.get(`${this.API_URL}/growth-entries/child/${childId}`, this.getHeaders()));
-        this.growthEntries.set(entries);
-        return entries;
-      } catch (err) {
-        console.error("[DataService] loadGrowthEntries failed:", err);
-        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
-        return [];
-      }
-    });
-  }
-  createGrowthEntry(data) {
-    return __async(this, null, function* () {
-      try {
-        const created = yield firstValueFrom(this.http.post(`${this.API_URL}/growth-entries`, data, this.getHeaders()));
-        const updated = [created, ...this.growthEntries()];
-        this.growthEntries.set(updated);
-        return created;
-      } catch (err) {
-        console.error("[DataService] createGrowthEntry failed:", err);
-        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
-        return null;
-      }
-    });
-  }
-  deleteGrowthEntry(id) {
-    return __async(this, null, function* () {
-      try {
-        yield firstValueFrom(this.http.delete(`${this.API_URL}/growth-entries/${id}`, this.getHeaders()));
-        const updated = this.growthEntries().filter((e) => e.id !== id);
-        this.growthEntries.set(updated);
-      } catch (err) {
-        console.error("[DataService] deleteGrowthEntry failed:", err);
-        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
-      }
-    });
-  }
-  // ─── Auth ───────────────────────────────────────────────────
-  login(username, password) {
-    return __async(this, null, function* () {
-      if (password === "1234") {
-        try {
-          const result = yield firstValueFrom(this.http.post("http://localhost:3000/auth/dev-login", {
-            pin: "1234",
-            name: username || "Dev Parent"
-          }));
-          localStorage.setItem(this.AUTH_KEY, result.access_token);
-          this.isAuthenticated.set(true);
-          yield this.loadChildrenFromApi();
-          return true;
-        } catch (err) {
-          console.error("[DataService] dev-login failed:", err);
-          this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
-          localStorage.setItem(this.AUTH_KEY, "dev-token-" + Date.now());
-          this.isAuthenticated.set(true);
-          return true;
-        }
-      }
-      return false;
-    });
-  }
-  logout() {
-    localStorage.removeItem(this.AUTH_KEY);
-    this.isAuthenticated.set(false);
-    this.children.set([]);
-    this.activeChildId.set(null);
-    this.illnesses.set([]);
-    this.records.set([]);
-    localStorage.removeItem(this.ACTIVE_CHILD_KEY);
-  }
-  // ─── Children (local helpers still used for in-memory state) ──
-  addChild(name, dateOfBirth, birthWeight, deliveryDoctor, bloodType) {
-    const avatarUrl = `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(name)}`;
-    const newChild = {
-      id: "child_" + Date.now(),
-      userId: "parent_1",
-      name,
-      dateOfBirth,
-      birthWeight,
-      deliveryDoctor,
-      bloodType,
-      avatarUrl
-    };
-    const updated = [...this.children(), newChild];
-    this.children.set(updated);
-    this.saveToStorage(this.CHILDREN_KEY, updated);
-    this.switchChild(newChild.id);
-  }
-  updateChild(id, name, dateOfBirth, birthWeight, deliveryDoctor, bloodType) {
-    const updated = this.children().map((c) => {
-      if (c.id !== id)
-        return c;
-      return __spreadProps(__spreadValues({}, c), { name, dateOfBirth, birthWeight, deliveryDoctor, bloodType });
-    });
-    this.children.set(updated);
-    this.saveToStorage(this.CHILDREN_KEY, updated);
-  }
-  switchChild(id) {
-    this.activeChildId.set(id);
-    localStorage.setItem(this.ACTIVE_CHILD_KEY, id);
-    this.loadChildDetails(id);
-  }
-  loadChildDetails(childId) {
-    const storedIllnesses = localStorage.getItem(`kiddok_illnesses_${childId}`);
-    this.illnesses.set(storedIllnesses ? JSON.parse(storedIllnesses) : []);
-    const storedRecords = localStorage.getItem(`kiddok_records_${childId}`);
-    this.records.set(storedRecords ? JSON.parse(storedRecords) : []);
-    this.loadTemperatureEntries(childId);
-    this.loadGrowthEntries(childId);
-  }
-  // ─── Medical Records (localStorage) ─────────────────────────
-  addIllness(data) {
-    const cid = this.activeChildId();
-    if (!cid)
-      return;
-    const episode = {
-      id: "ill_" + Date.now(),
-      childId: cid,
-      title: data.title || "",
-      symptoms: data.symptoms || "",
-      medications: data.medications || "",
-      loggedAt: (/* @__PURE__ */ new Date()).toISOString()
-    };
-    const updated = [...this.illnesses(), episode];
-    this.illnesses.set(updated);
-    localStorage.setItem(`kiddok_illnesses_${cid}`, JSON.stringify(updated));
-  }
-  addVaccine(data) {
-    const cid = this.activeChildId();
-    if (!cid)
-      return;
-    const record = {
-      id: "rec_" + Date.now(),
-      childId: cid,
-      title: data.title || "",
-      dueDate: data.dueDate || "",
-      completed: false,
-      notes: data.notes || ""
-    };
-    const updated = [...this.records(), record];
-    this.records.set(updated);
-    localStorage.setItem(`kiddok_records_${cid}`, JSON.stringify(updated));
-  }
-  // ─── Parent Profile ──────────────────────────────────────────
-  fetchParentProfile() {
-    return __async(this, null, function* () {
-      const stored = this.loadFromStorage(this.PARENT_KEY);
-      if (stored) {
-        this.parentProfile.set(stored);
-        return stored;
-      }
-      try {
-        const token = localStorage.getItem(this.AUTH_KEY);
-        if (!token)
-          return { name: "", surname: "", phone: "" };
-        const profile = yield firstValueFrom(this.http.get(`${this.API_URL}/parent`, this.getHeaders()));
-        this.parentProfile.set(profile);
-        this.saveToStorage(this.PARENT_KEY, profile);
-        return profile;
-      } catch (e) {
-        return { name: "", surname: "", phone: "" };
-      }
-    });
-  }
-  updateParentProfile(data) {
-    return __async(this, null, function* () {
-      const updated = __spreadValues(__spreadValues({}, this.parentProfile()), data);
-      try {
-        const result = yield firstValueFrom(this.http.patch(`${this.API_URL}/parent`, data, this.getHeaders()));
-        this.parentProfile.set(result);
-        this.saveToStorage(this.PARENT_KEY, result);
-        return result;
-      } catch (err) {
-        console.error("[DataService] updateParentProfile failed:", err);
-        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
-        this.parentProfile.set(updated);
-        this.saveToStorage(this.PARENT_KEY, updated);
-        return updated;
-      }
-    });
-  }
-  deleteChild(childId) {
-    return __async(this, null, function* () {
-      try {
-        yield firstValueFrom(this.http.delete(`${this.API_URL}/children/${childId}`, this.getHeaders()));
-      } catch (e) {
-      }
-      const updated = this.children().filter((c) => c.id !== childId);
-      this.children.set(updated);
-      this.saveToStorage(this.CHILDREN_KEY, updated);
-      try {
-        localStorage.removeItem(`kiddok_diary_${childId}`);
-        localStorage.removeItem(`kiddok_illnesses_${childId}`);
-        localStorage.removeItem(`kiddok_records_${childId}`);
-      } catch (e) {
-      }
-      if (this.activeChildId() === childId) {
-        const next = updated[0];
-        if (next)
-          this.switchChild(next.id);
-        else
-          this.activeChildId.set(null);
-      }
-    });
-  }
-  clearAllData() {
-    return __async(this, null, function* () {
-      try {
-        localStorage.clear();
-      } catch (e) {
-      }
-      this.children.set([]);
-      this.parentProfile.set({ name: "", surname: "", phone: "" });
-      this.activeChildId.set(null);
-      this.illnesses.set([]);
-      this.records.set([]);
-      this.temperatureEntries.set([]);
-      this.growthEntries.set([]);
-      this.diaryEntries.set([]);
-    });
-  }
-  exportAllData() {
-    const children = this.children();
-    const exportData = {
-      exportedAt: (/* @__PURE__ */ new Date()).toISOString(),
-      version: "1.0.0",
-      parentProfile: this.parentProfile(),
-      children: children.map((child) => __spreadProps(__spreadValues({}, child), {
-        diary: this.getDiaryEntriesByChild(child.id),
-        illnesses: this.illnesses().filter((i) => i.childId === child.id),
-        records: this.records().filter((r) => r.childId === child.id)
-      }))
-    };
-    return exportData;
-  }
-  saveParentProfile(profile) {
-    this.parentProfile.set(profile);
-    this.saveToStorage(this.PARENT_KEY, profile);
-  }
-  getParentName() {
-    return this.parentProfile().name;
-  }
-  getChildAge(child) {
-    const today = /* @__PURE__ */ new Date();
-    const dob = new Date(child.dateOfBirth);
-    let years = today.getFullYear() - dob.getFullYear();
-    let months = today.getMonth() - dob.getMonth();
-    if (months < 0) {
-      years--;
-      months += 12;
-    }
-    const dayDiff = today.getDate() - dob.getDate();
-    if (dayDiff < 0) {
-      months--;
-      if (months < 0) {
-        years--;
-        months += 12;
-      }
-    }
-    return { years, months };
-  }
-  // ─── Helpers ────────────────────────────────────────────────
-  saveToStorage(key, value) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (e) {
-    }
-  }
-  loadFromStorage(key) {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : null;
-    } catch (e) {
-      return null;
-    }
-  }
-  static {
-    this.\u0275fac = function DataService_Factory(__ngFactoryType__) {
-      return new (__ngFactoryType__ || _DataService)(\u0275\u0275inject(HttpClient));
-    };
-  }
-  static {
-    this.\u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _DataService, factory: _DataService.\u0275fac, providedIn: "root" });
-  }
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(DataService, [{
-    type: Injectable,
-    args: [{
-      providedIn: "root"
-    }]
-  }], () => [{ type: HttpClient }], null);
-})();
-
 // src/app/core/i18n/i18n.service.ts
 var translations = {
   // Sidebar
@@ -39459,6 +39269,9 @@ var translations = {
   "sidebar.nav.growth": { sq: "Rritja", en: "Growth" },
   "sidebar.nav.diary": { sq: "Ditari", en: "Diary" },
   "sidebar.nav.vaccines": { sq: "Vaksinat", en: "Vaccines" },
+  "sidebar.nav.medications": { sq: "Medikamentet", en: "Medications" },
+  "sidebar.nav.appointments": { sq: "Terminet", en: "Appointments" },
+  "sidebar.nav.labResults": { sq: "Laboratori", en: "Lab Results" },
   "sidebar.nav.settings": { sq: "Konfigurime", en: "Settings" },
   "sidebar.footer.settings": { sq: "Konfigurime", en: "Settings" },
   "sidebar.footer.logout": { sq: "Dil nga Sistemi", en: "Sign Out" },
@@ -39505,6 +39318,7 @@ var translations = {
   "nav.settings": { sq: "Konfigurime", en: "Settings" },
   "nav.temperatureDiary": { sq: "Ditari i Temperatur\xC3\xABs", en: "Temperature Diary" },
   "nav.growthTracking": { sq: "Rritja", en: "Growth" },
+  "nav.medications": { sq: "Medikamentet", en: "Medications" },
   // Sidebar
   "sidebar.logout": { sq: "Dil nga Sistemi", en: "Sign Out" },
   // Language
@@ -39805,7 +39619,127 @@ var translations = {
   "vaccines.alertCard.overdue": { sq: "e vonuar {n} dit\xC3\xAB", en: "overdue by {n} days" },
   "vaccines.alertCard.dueSoon": { sq: "p\xC3\xABr shkak sot", en: "due today" },
   "vaccines.alertCard.upcoming": { sq: "n\xC3\xAB pritje", en: "upcoming" },
-  "vaccines.alertCard.dismiss": { sq: "Hiqe", en: "Dismiss" }
+  "vaccines.alertCard.dismiss": { sq: "Hiqe", en: "Dismiss" },
+  // Records (Vaccine/Medical Records page)
+  "records.title": { sq: "Dosja e Vaksinave", en: "Vaccine Records" },
+  "records.subtitle": { sq: "Kalendari zyrtar i mjekimeve dhe rekomandimeve t\xEB mjekut.", en: "Official schedule of treatments and doctor recommendations." },
+  "records.addRecord": { sq: "Shto Dokument i Ri", en: "Add New Record" },
+  "records.formTitle": { sq: "Skeda e Vaksinimit", en: "Vaccination Record" },
+  "records.nameLabel": { sq: "Em\xEBrtimi / P\xEBrshkrimi", en: "Name / Description" },
+  "records.namePlaceholder": { sq: "Psh: Vaksina MMR II", en: "e.g. MMR II Vaccine" },
+  "records.statusLabel": { sq: "Kryerja \xEBsht\xEB...", en: "Status is..." },
+  "records.completed": { sq: "P\xEBrfunduar", en: "Completed" },
+  "records.pending": { sq: "N\xEB Pritje", en: "Pending" },
+  "records.dateLabel": { sq: "Data e Planifikimit/B\xEBrjes", en: "Scheduled / Completion Date" },
+  "records.updateButton": { sq: "P\xEBrdit\xEBso Dosjen", en: "Update Record" },
+  "records.emptyTitle": { sq: "Asnj\xEB e dh\xEBn\xEB laboratorike.", en: "No medical records yet." },
+  "records.emptyHint": { sq: "Regjistro t\xEB pakt\xEBn nj\xEB vaksin\xEB ose vizit\xEB te mjeku.", en: "Record at least one vaccine or doctor visit." },
+  "records.status.done": { sq: "Kryer", en: "Done" },
+  "records.status.planned": { sq: "N\xEB plan", en: "Planned" },
+  // Push Notifications
+  "notifications.fever.title": { sq: "Temperatura e lart\xEB!", en: "High temperature!" },
+  "notifications.vaccine.overdueTitle": { sq: "Vaksina e vonuar!", en: "Vaccine overdue!" },
+  "notifications.vaccine.dueSoonTitle": { sq: "Vaksina p\xEBr shkak!", en: "Vaccine due soon!" },
+  // Settings — Notifications section
+  "settings.notifications.title": { sq: "Njoftimet", en: "Notifications" },
+  "settings.notifications.enable": { sq: "Aktivizo Njoftimet", en: "Enable Notifications" },
+  "settings.notifications.enableDesc": { sq: "Merrni njoftime n\xEB shfletues p\xEBr ethe dhe vaksina", en: "Receive browser notifications for fever and vaccines" },
+  "settings.notifications.feverAlerts": { sq: "Njoftimet p\xEBr ethe", en: "Fever Alerts" },
+  "settings.notifications.feverAlertsDesc": { sq: "Temperatura \u2265 38.5\xB0C", en: "Temperature \u2265 38.5\xB0C" },
+  "settings.notifications.vaccineAlerts": { sq: "Njoftimet p\xEBr vaksina", en: "Vaccine Alerts" },
+  "settings.notifications.vaccineAlertsDesc": { sq: "Vaksinat e vonuara dhe n\xEB afat", en: "Overdue and upcoming vaccines" },
+  "settings.notifications.dnd": { sq: "Mos m\xEB pengo (Do Not Disturb)", en: "Do Not Disturb" },
+  "settings.notifications.dndDesc": { sq: "Njoftimet pushohen gjat\xEB or\xEBve t\xEB caktuara", en: "Notifications paused during set hours" },
+  "settings.notifications.dndFrom": { sq: "Nga", en: "From" },
+  "settings.notifications.dndTo": { sq: "Deri", en: "To" },
+  "settings.notifications.browserDenied": { sq: "Njoftimet jan\xEB bllokuar nga shfletuesi. Ju lutemi hiqni bllokimin n\xEB cil\xEBsimet e shfletuesit.", en: "Notifications are blocked by your browser. Please unblock them in browser settings." },
+  // Medications
+  "medications.title": { sq: "Medikamentet", en: "Medications" },
+  "medications.add": { sq: "Shto Medikament", en: "Add Medication" },
+  "medications.addFirst": { sq: "Shto medikamentin e par\xEB", en: "Add first medication" },
+  "medications.empty": { sq: "Nuk ka medikamente", en: "No medications" },
+  "medications.emptyHint": { sq: "Shtoni medikamentet e para p\xEBr t\xEB ndjekur trajtimin", en: "Add medications to track treatment progress" },
+  "medications.name": { sq: "Emri i medikamentit", en: "Medication name" },
+  "medications.namePlaceholder": { sq: "P.sh. Amoxicillin", en: "e.g. Amoxicillin" },
+  "medications.dosage": { sq: "Doza", en: "Dosage" },
+  "medications.frequency": { sq: "Frekuenca", en: "Frequency" },
+  "medications.startDate": { sq: "Data e fillimit", en: "Start date" },
+  "medications.endDate": { sq: "Data e p\xEBrfundimit", en: "End date" },
+  "medications.prescribedBy": { sq: "P\xEBrshkruar nga", en: "Prescribed by" },
+  "medications.prescribedByPlaceholder": { sq: "P.sh. Dr. Elena Hoxha", en: "e.g. Dr. John Smith" },
+  "medications.notes": { sq: "Sh\xEBnime", en: "Notes" },
+  "medications.notesPlaceholder": { sq: "Sh\xEBno detajet shtes\xEB...", en: "Enter additional details..." },
+  "medications.active": { sq: "Aktiv", en: "Active" },
+  "medications.activeLabel": { sq: "medikamente active", en: "active medications" },
+  "medications.activeDesc": { sq: "N\xEB p\xEBrdorim aktualisht", en: "Currently in use" },
+  "medications.inactive": { sq: "Jo aktiv", en: "Inactive" },
+  "medications.ongoing": { sq: "N\xEB vazhdim", en: "Ongoing" },
+  "medications.optional": { sq: "opsionale", en: "optional" },
+  "medications.edit": { sq: "Redakto", en: "Edit" },
+  "medications.delete": { sq: "Fshi", en: "Delete" },
+  "medications.cancel": { sq: "Anulo", en: "Cancel" },
+  "medications.save": { sq: "Ruaj", en: "Save" },
+  "medications.saving": { sq: "Duke ruajtur...", en: "Saving..." },
+  "medications.saveError": { sq: "Ruajtja d\xEBshtoi. Provo p\xEBrs\xEBri.", en: "Save failed. Please try again." },
+  "medications.editMed": { sq: "Redakto Medikamentin", en: "Edit Medication" },
+  "medications.addMed": { sq: "Shto Medikament", en: "Add Medication" },
+  "medications.deleteConfirmTitle": { sq: "Fshij Medikamentin?", en: "Delete Medication?" },
+  "medications.activeHint": { sq: "Medikamenti n\xEB p\xEBrdorim aktualisht", en: "Medication currently in use" },
+  // Appointments
+  "appointments.title": { sq: "Terminet", en: "Appointments" },
+  "appointments.add": { sq: "Shto Termin", en: "Add Appointment" },
+  "appointments.addFirst": { sq: "Shto terminin e par\xEB", en: "Add first appointment" },
+  "appointments.empty": { sq: "Nuk ka termine", en: "No appointments" },
+  "appointments.emptyHint": { sq: "Shtoni terminin e par\xEB p\xEBr ta ndjekur", en: "Add your first appointment to track visits" },
+  "appointments.upcomingLabel": { sq: "termine t\xEB ardhshme", en: "upcoming appointments" },
+  "appointments.upcomingDesc": { sq: "N\xEB 30 dit\xEBt e ardhshme", en: "In the next 30 days" },
+  "appointments.upcoming": { sq: "S\xEB shpejti", en: "Upcoming" },
+  "appointments.edit": { sq: "Redakto", en: "Edit" },
+  "appointments.delete": { sq: "Fshi", en: "Delete" },
+  "appointments.cancel": { sq: "Anulo", en: "Cancel" },
+  "appointments.save": { sq: "Ruaj", en: "Save" },
+  "appointments.saving": { sq: "Duke ruajtur...", en: "Saving..." },
+  "appointments.saveError": { sq: "Ruajtja d\xEBshtoi. Provo p\xEBrs\xEBri.", en: "Save failed. Please try again." },
+  "appointments.editAppt": { sq: "Redakto Terminin", en: "Edit Appointment" },
+  "appointments.addAppt": { sq: "Shto Termin", en: "Add Appointment" },
+  "appointments.deleteConfirmTitle": { sq: "Fshij Terminin?", en: "Delete Appointment?" },
+  "appointments.titleLabel": { sq: "Titulli", en: "Title" },
+  "appointments.titlePlaceholder": { sq: "P.sh. Kontroll\xEB e p\xEBrgjithshme", en: "e.g. Annual checkup" },
+  "appointments.dateTime": { sq: "Data dhe Ora", en: "Date & Time" },
+  "appointments.doctor": { sq: "Doktori", en: "Doctor" },
+  "appointments.doctorPlaceholder": { sq: "P.sh. Dr. Elena Hoxha", en: "e.g. Dr. John Smith" },
+  "appointments.location": { sq: "Vendi", en: "Location" },
+  "appointments.locationPlaceholder": { sq: "P.sh. Qendra Sh\xEBndet\xEBsore Nr. 3", en: "e.g. Health Center No. 3" },
+  "appointments.notes": { sq: "Sh\xEBnime", en: "Notes" },
+  "appointments.notesPlaceholder": { sq: "Sh\xEBno detajet shtes\xEB...", en: "Enter additional details..." },
+  "appointments.optional": { sq: "opsionale", en: "optional" },
+  // Lab Results
+  "labResults.title": { sq: "Rezultatet e Laboratorit", en: "Lab Results" },
+  "labResults.add": { sq: "Shto Rezultat", en: "Add Result" },
+  "labResults.addFirst": { sq: "Shto rezultatin e par\xEB", en: "Add first lab result" },
+  "labResults.empty": { sq: "Nuk ka rezultate laboratorike", en: "No lab results" },
+  "labResults.emptyHint": { sq: "Shtoni rezultatet e testimit p\xEBr t\xEB ndjekur sh\xEBndetin", en: "Add test results to track health indicators" },
+  "labResults.view": { sq: "Shiko Detajet", en: "View Details" },
+  "labResults.delete": { sq: "Fshi", en: "Delete" },
+  "labResults.cancel": { sq: "Anulo", en: "Cancel" },
+  "labResults.save": { sq: "Ruaj", en: "Save" },
+  "labResults.saving": { sq: "Duke ruajtur...", en: "Saving..." },
+  "labResults.saveError": { sq: "Ruajtja d\xEBshtoi. Provo p\xEBrs\xEBri.", en: "Save failed. Please try again." },
+  "labResults.addResult": { sq: "Shto Rezultat Laboratori", en: "Add Lab Result" },
+  "labResults.deleteConfirmTitle": { sq: "Fshij Rezultatin?", en: "Delete Lab Result?" },
+  "labResults.testName": { sq: "Emri i Testit", en: "Test Name" },
+  "labResults.testNamePlaceholder": { sq: "P.sh. Gjak i plot\xEB", en: "e.g. Complete blood count" },
+  "labResults.result": { sq: "Rezultati", en: "Result" },
+  "labResults.unit": { sq: "Nj\xEBsia", en: "Unit" },
+  "labResults.referenceRange": { sq: "Vlera Referente", en: "Reference Range" },
+  "labResults.refRange": { sq: "Ref", en: "Ref" },
+  "labResults.date": { sq: "Data e Testit", en: "Test Date" },
+  "labResults.doctor": { sq: "Doktori", en: "Doctor" },
+  "labResults.doctorPlaceholder": { sq: "P.sh. Dr. Arben Basha", en: "e.g. Dr. Sarah Jones" },
+  "labResults.notes": { sq: "Sh\xEBnime", en: "Notes" },
+  "labResults.notesPlaceholder": { sq: "Sh\xEBno detajet shtes\xEB...", en: "Enter additional details..." },
+  "labResults.optional": { sq: "opsionale", en: "optional" },
+  "labResults.close": { sq: "Mbyll", en: "Close" }
 };
 var I18nService = class _I18nService {
   constructor() {
@@ -39864,6 +39798,823 @@ var I18nService = class _I18nService {
     type: Injectable,
     args: [{ providedIn: "root" }]
   }], null, null);
+})();
+
+// src/app/services/notification.service.ts
+var PREFS_KEY = "kiddok_notification_prefs";
+var VACCINE_DUE_DAYS = 3;
+var NotificationService = class _NotificationService {
+  constructor() {
+    this.i18n = inject2(I18nService);
+    this.data = inject2(DataService);
+    this.enabled = signal(false, ...ngDevMode ? [{ debugName: "enabled" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.feverAlerts = signal(true, ...ngDevMode ? [{ debugName: "feverAlerts" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.vaccineAlerts = signal(true, ...ngDevMode ? [{ debugName: "vaccineAlerts" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.dndStart = signal(22, ...ngDevMode ? [{ debugName: "dndStart" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.dndEnd = signal(7, ...ngDevMode ? [{ debugName: "dndEnd" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this._initialized = false;
+    this.loadPrefs();
+    window.__kiddokNotif = this;
+  }
+  // ─── Preferences persistence ─────────────────────────────────
+  loadPrefs() {
+    try {
+      const raw = localStorage.getItem(PREFS_KEY);
+      if (raw) {
+        const prefs = JSON.parse(raw);
+        this.enabled.set(prefs.enabled ?? false);
+        this.feverAlerts.set(prefs.feverAlerts ?? true);
+        this.vaccineAlerts.set(prefs.vaccineAlerts ?? true);
+        this.dndStart.set(prefs.dndStart ?? 22);
+        this.dndEnd.set(prefs.dndEnd ?? 7);
+      }
+    } catch (e) {
+    }
+    if (this.enabled() && Notification.permission === "default") {
+      this.requestPermission();
+    }
+  }
+  savePrefs() {
+    const prefs = {
+      enabled: this.enabled(),
+      feverAlerts: this.feverAlerts(),
+      vaccineAlerts: this.vaccineAlerts(),
+      dndStart: this.dndStart(),
+      dndEnd: this.dndEnd()
+    };
+    try {
+      localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+    } catch (e) {
+    }
+  }
+  // ─── Permission ──────────────────────────────────────────────
+  get permissionLevel() {
+    return Notification.permission;
+  }
+  get isSupported() {
+    return typeof Notification !== "undefined";
+  }
+  requestPermission() {
+    return __async(this, null, function* () {
+      if (!this.isSupported)
+        return false;
+      try {
+        const result = yield Notification.requestPermission();
+        if (result === "granted") {
+          this.enabled.set(true);
+          this.savePrefs();
+          return true;
+        }
+      } catch (e) {
+      }
+      return false;
+    });
+  }
+  // ─── Master toggle (used by Settings) ────────────────────────
+  toggleEnabled() {
+    return __async(this, null, function* () {
+      if (this.enabled()) {
+        this.enabled.set(false);
+        this.savePrefs();
+        return;
+      }
+      if (Notification.permission === "denied") {
+        console.warn("[NotificationService] Browser notifications permanently denied.");
+        return;
+      }
+      const granted = yield this.requestPermission();
+      if (!granted) {
+        this.enabled.set(false);
+      }
+      this.savePrefs();
+    });
+  }
+  updatePrefs(prefs) {
+    if (prefs.enabled !== void 0)
+      this.enabled.set(prefs.enabled);
+    if (prefs.feverAlerts !== void 0)
+      this.feverAlerts.set(prefs.feverAlerts);
+    if (prefs.vaccineAlerts !== void 0)
+      this.vaccineAlerts.set(prefs.vaccineAlerts);
+    if (prefs.dndStart !== void 0)
+      this.dndStart.set(prefs.dndStart);
+    if (prefs.dndEnd !== void 0)
+      this.dndEnd.set(prefs.dndEnd);
+    this.savePrefs();
+  }
+  // ─── Do Not Disturb check ────────────────────────────────────
+  isDndActive() {
+    if (!this.enabled())
+      return true;
+    const now = /* @__PURE__ */ new Date();
+    const hour = now.getHours();
+    const { dndStart, dndEnd } = { dndStart: this.dndStart(), dndEnd: this.dndEnd() };
+    if (dndStart < dndEnd) {
+      return hour >= dndStart || hour < dndEnd;
+    } else {
+      return hour >= dndStart || hour < dndEnd;
+    }
+  }
+  // ─── Core send ───────────────────────────────────────────────
+  send(title, body, options) {
+    if (!this.isSupported)
+      return false;
+    if (!this.enabled())
+      return false;
+    if (this.isDndActive())
+      return false;
+    if (Notification.permission !== "granted")
+      return false;
+    try {
+      const notif = new Notification(title, __spreadValues({
+        icon: "/assets/icons/icon-192x192.png",
+        badge: "/assets/icons/icon-72x72.png",
+        lang: this.i18n.locale() === "sq" ? "sq-AL" : "en-US",
+        tag: "kiddok-notif"
+      }, options));
+      notif.onclick = () => {
+        window.focus();
+        notif.close();
+      };
+      return true;
+    } catch (err) {
+      console.error("[NotificationService] send failed:", err);
+      return false;
+    }
+  }
+  // ─── Fever alert ─────────────────────────────────────────────
+  /**
+   * Call after a temperature entry is saved.
+   * Shows a browser notification if temp >= FEVER_THRESHOLD.
+   */
+  notifyFever(childName, temperature) {
+    if (!this.feverAlerts())
+      return;
+    const t = this.i18n.t();
+    const locale = this.i18n.locale();
+    const title = t["notifications.fever.title"] ?? (locale === "sq" ? "Temperatura e lart\xEB!" : "High temperature!");
+    const body = locale === "sq" ? `${temperature}\xB0C \u2014 ${childName}` : `${temperature}\xB0C \u2014 ${childName}`;
+    this.send(title, body);
+  }
+  // ─── Vaccine alerts ───────────────────────────────────────────
+  /**
+   * Check all vaccine records for the active child and fire
+   * notifications for due/overdue vaccines.
+   * Call on app init / child switch.
+   */
+  checkVaccineAlerts() {
+    if (!this.vaccineAlerts())
+      return;
+    const locale = this.i18n.locale();
+    const t = this.i18n.t();
+    const childId = this.data.activeChildId();
+    if (!childId)
+      return;
+    const records = this.data.records().filter((r) => r.childId === childId);
+    const now = Date.now();
+    for (const record of records) {
+      if (record.completed)
+        continue;
+      const dueMs = new Date(record.dueDate).getTime();
+      const daysUntilDue = Math.ceil((dueMs - now) / 864e5);
+      let shouldNotify = false;
+      let title = "";
+      let body = "";
+      if (daysUntilDue < 0) {
+        shouldNotify = true;
+        const daysOverdue = Math.abs(daysUntilDue);
+        title = t["notifications.vaccine.overdueTitle"] ?? (locale === "sq" ? "Vaksina e vonuar!" : "Vaccine overdue!");
+        body = locale === "sq" ? `${record.title} \u2014 e vonuar ${daysOverdue} dit\xEB` : `${record.title} \u2014 ${daysOverdue} day${daysOverdue !== 1 ? "s" : ""} overdue`;
+      } else if (daysUntilDue <= VACCINE_DUE_DAYS) {
+        shouldNotify = true;
+        title = t["notifications.vaccine.dueSoonTitle"] ?? (locale === "sq" ? "Vaksina p\xEBr shkak!" : "Vaccine due soon!");
+        body = locale === "sq" ? `${record.title} \u2014 p\xEBr shkak ${daysUntilDue === 0 ? "sot" : `pas ${daysUntilDue} dit\xEBsh`}` : `${record.title} \u2014 due ${daysUntilDue === 0 ? "today" : `in ${daysUntilDue} days`}`;
+      }
+      if (shouldNotify) {
+        this.send(title, body);
+        break;
+      }
+    }
+  }
+  static {
+    this.\u0275fac = function NotificationService_Factory(__ngFactoryType__) {
+      return new (__ngFactoryType__ || _NotificationService)();
+    };
+  }
+  static {
+    this.\u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _NotificationService, factory: _NotificationService.\u0275fac, providedIn: "root" });
+  }
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(NotificationService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], () => [], null);
+})();
+
+// src/app/services/data.service.ts
+var DataService = class _DataService {
+  constructor(http) {
+    this.http = http;
+    this.AUTH_KEY = "kiddok_access_token";
+    this.CHILDREN_KEY = "kiddok_children";
+    this.PARENT_KEY = "kiddok_parent_profile";
+    this.ACTIVE_CHILD_KEY = "kiddok_active_child";
+    this.API_URL = environment.apiUrl;
+    this.toast = inject2(ToastService);
+    this.isAuthenticated = signal(!!localStorage.getItem(this.AUTH_KEY), ...ngDevMode ? [{ debugName: "isAuthenticated" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.children = signal([], ...ngDevMode ? [{ debugName: "children" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.activeChildId = signal(null, ...ngDevMode ? [{ debugName: "activeChildId" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.currentTab = signal("home", ...ngDevMode ? [{ debugName: "currentTab" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.illnesses = signal([], ...ngDevMode ? [{ debugName: "illnesses" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.records = signal([], ...ngDevMode ? [{ debugName: "records" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.temperatureEntries = signal([], ...ngDevMode ? [{ debugName: "temperatureEntries" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.growthEntries = signal([], ...ngDevMode ? [{ debugName: "growthEntries" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.parentProfile = signal({ name: "", surname: "", phone: "" }, ...ngDevMode ? [{ debugName: "parentProfile" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.diaryEntries = signal([], ...ngDevMode ? [{ debugName: "diaryEntries" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.init();
+  }
+  init() {
+    return __async(this, null, function* () {
+      yield this.loadChildrenFromApi();
+      const storedChildren = this.loadFromStorage(this.CHILDREN_KEY);
+      if (storedChildren && storedChildren.length > 0 && this.children().length === 0) {
+        this.children.set(storedChildren);
+      }
+      const storedParent = this.loadFromStorage(this.PARENT_KEY);
+      if (storedParent) {
+        this.parentProfile.set(storedParent);
+      }
+      const storedActiveId = localStorage.getItem(this.ACTIVE_CHILD_KEY);
+      if (storedActiveId) {
+        this.activeChildId.set(storedActiveId);
+        this.loadChildDetails(storedActiveId);
+      } else if (this.children().length > 0) {
+        const first2 = this.children()[0];
+        this.switchChild(first2.id);
+      }
+    });
+  }
+  addDiaryEntry(entry) {
+    const newEntry = __spreadProps(__spreadValues({}, entry), { id: "de_" + Date.now() });
+    const updated = [newEntry, ...this.diaryEntries()];
+    this.diaryEntries.set(updated);
+    const cid = entry.childId;
+    if (cid) {
+      try {
+        localStorage.setItem(`kiddok_diary_${cid}`, JSON.stringify(updated));
+      } catch (e) {
+      }
+    }
+    return newEntry;
+  }
+  getDiaryEntriesByChild(childId) {
+    return this.diaryEntries().filter((e) => e.childId === childId);
+  }
+  loadDiaryEntries(childId) {
+    const stored = localStorage.getItem(`kiddok_diary_${childId}`);
+    this.diaryEntries.set(stored ? JSON.parse(stored) : []);
+  }
+  // ─── API calls ───────────────────────────────────────────────
+  getHeaders() {
+    const token = localStorage.getItem(this.AUTH_KEY);
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    };
+  }
+  /** Sanitise avatar URL — only allow https:// DiceBear CDN */
+  isValidUrl(url) {
+    try {
+      const u3 = new URL(url);
+      return u3.protocol === "https:" && u3.hostname === "api.dicebear.com";
+    } catch (e) {
+      return false;
+    }
+  }
+  /** Load all children from PostgreSQL via REST */
+  loadChildrenFromApi() {
+    return __async(this, null, function* () {
+      const token = localStorage.getItem(this.AUTH_KEY);
+      if (!token)
+        return;
+      try {
+        const children = yield firstValueFrom(this.http.get(`${this.API_URL}/children`, this.getHeaders()));
+        const profiles = children.map((c) => ({
+          id: c.id,
+          userId: c.userId,
+          name: c.name,
+          dateOfBirth: c.dateOfBirth,
+          gender: c.gender ?? void 0,
+          bloodType: c.bloodType ?? void 0,
+          birthWeight: c.birthWeight ?? void 0,
+          deliveryDoctor: c.deliveryDoctor ?? void 0,
+          criticalAllergies: c.criticalAllergies ?? void 0,
+          allergies: c.allergies ?? void 0,
+          medicalDocument: c.medicalDocument ?? void 0,
+          documentIssueDate: c.documentIssueDate ?? void 0,
+          medicalNotes: c.medicalNotes ?? void 0,
+          avatarUrl: c.avatarUrl && this.isValidUrl(c.avatarUrl) ? c.avatarUrl : `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(c.name)}`
+        }));
+        this.children.set(profiles);
+        this.saveToStorage(this.CHILDREN_KEY, profiles);
+      } catch (err) {
+        console.error("[DataService] loadChildrenFromApi failed:", err);
+        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
+      }
+    });
+  }
+  /** Create a new child via POST /children */
+  createChild(data) {
+    return __async(this, null, function* () {
+      const payload = {
+        name: data.name,
+        dateOfBirth: data.dateOfBirth,
+        gender: data.gender ?? null,
+        bloodType: data.bloodType ?? null,
+        birthWeight: data.birthWeight ?? null,
+        deliveryDoctor: data.deliveryDoctor ?? null,
+        criticalAllergies: data.criticalAllergies ?? null,
+        allergies: data.allergies ?? null,
+        medicalDocument: data.medicalDocument ?? null,
+        documentIssueDate: data.documentIssueDate ? new Date(data.documentIssueDate) : null,
+        medicalNotes: data.medicalNotes ?? null
+      };
+      try {
+        const created = yield firstValueFrom(this.http.post(`${this.API_URL}/children`, payload, this.getHeaders()));
+        const profile = {
+          id: created.id,
+          userId: created.userId,
+          name: created.name,
+          dateOfBirth: created.dateOfBirth,
+          gender: created.gender ?? void 0,
+          bloodType: created.bloodType ?? void 0,
+          birthWeight: created.birthWeight ?? void 0,
+          deliveryDoctor: created.deliveryDoctor ?? void 0,
+          criticalAllergies: created.criticalAllergies ?? void 0,
+          avatarUrl: created.avatarUrl && this.isValidUrl(created.avatarUrl) ? created.avatarUrl : `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(created.name)}`
+        };
+        const updated = [...this.children(), profile];
+        this.children.set(updated);
+        this.saveToStorage(this.CHILDREN_KEY, updated);
+        return profile;
+      } catch (err) {
+        console.error("[DataService] createChild failed:", err);
+        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
+        throw err;
+      }
+    });
+  }
+  /** Update an existing child via PATCH /children/:id */
+  updateChildApi(id, data) {
+    return __async(this, null, function* () {
+      const payload = {
+        name: data.name,
+        dateOfBirth: data.dateOfBirth,
+        gender: data.gender ?? null,
+        bloodType: data.bloodType ?? null,
+        birthWeight: data.birthWeight ?? null,
+        deliveryDoctor: data.deliveryDoctor ?? null,
+        criticalAllergies: data.criticalAllergies ?? null,
+        allergies: data.allergies ?? null,
+        medicalNotes: data.medicalNotes ?? null
+      };
+      if (data.medicalDocument !== void 0) {
+        payload.medicalDocument = data.medicalDocument;
+      }
+      if (data.documentIssueDate !== void 0) {
+        payload.documentIssueDate = data.documentIssueDate ? new Date(data.documentIssueDate) : null;
+      }
+      try {
+        const updated = yield firstValueFrom(this.http.patch(`${this.API_URL}/children/${id}`, payload, this.getHeaders()));
+        const profile = {
+          id: updated.id,
+          userId: updated.userId,
+          name: updated.name,
+          dateOfBirth: updated.dateOfBirth,
+          gender: updated.gender ?? void 0,
+          bloodType: updated.bloodType ?? void 0,
+          birthWeight: updated.birthWeight ?? void 0,
+          deliveryDoctor: updated.deliveryDoctor ?? void 0,
+          criticalAllergies: updated.criticalAllergies ?? void 0,
+          allergies: updated.allergies ?? void 0,
+          medicalDocument: updated.medicalDocument ?? void 0,
+          documentIssueDate: updated.documentIssueDate ?? void 0,
+          medicalNotes: updated.medicalNotes ?? void 0,
+          avatarUrl: updated.avatarUrl && this.isValidUrl(updated.avatarUrl) ? updated.avatarUrl : `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(updated.name)}`
+        };
+        const current = this.children().map((c) => c.id === id ? profile : c);
+        this.children.set(current);
+        this.saveToStorage(this.CHILDREN_KEY, current);
+        return profile;
+      } catch (err) {
+        console.error("[DataService] updateChildApi failed:", err);
+        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
+        throw err;
+      }
+    });
+  }
+  /** Delete a child via DELETE /children/:id */
+  deleteChildApi(id) {
+    return __async(this, null, function* () {
+      try {
+        yield firstValueFrom(this.http.delete(`${this.API_URL}/children/${id}`, this.getHeaders()));
+      } catch (err) {
+        console.error("[DataService] deleteChildApi failed:", err);
+        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
+        throw err;
+      }
+      const updated = this.children().filter((c) => c.id !== id);
+      this.children.set(updated);
+      this.saveToStorage(this.CHILDREN_KEY, updated);
+    });
+  }
+  loadTemperatureEntries(childId) {
+    return __async(this, null, function* () {
+      try {
+        const entries = yield firstValueFrom(this.http.get(`${this.API_URL}/temperature-entries/child/${childId}`, this.getHeaders()));
+        this.temperatureEntries.set(entries);
+        return entries;
+      } catch (err) {
+        console.error("[DataService] loadTemperatureEntries failed:", err);
+        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
+        return [];
+      }
+    });
+  }
+  createTemperatureEntry(data) {
+    return __async(this, null, function* () {
+      try {
+        const created = yield firstValueFrom(this.http.post(`${this.API_URL}/temperature-entries`, data, this.getHeaders()));
+        const updated = [created, ...this.temperatureEntries()];
+        this.temperatureEntries.set(updated);
+        return created;
+      } catch (err) {
+        console.error("[DataService] createTemperatureEntry failed:", err);
+        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
+        return null;
+      }
+    });
+  }
+  deleteTemperatureEntry(id) {
+    return __async(this, null, function* () {
+      try {
+        yield firstValueFrom(this.http.delete(`${this.API_URL}/temperature-entries/${id}`, this.getHeaders()));
+        const updated = this.temperatureEntries().filter((e) => e.id !== id);
+        this.temperatureEntries.set(updated);
+      } catch (err) {
+        console.error("[DataService] deleteTemperatureEntry failed:", err);
+        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
+      }
+    });
+  }
+  loadGrowthEntries(childId) {
+    return __async(this, null, function* () {
+      try {
+        const entries = yield firstValueFrom(this.http.get(`${this.API_URL}/growth-entries/child/${childId}`, this.getHeaders()));
+        this.growthEntries.set(entries);
+        return entries;
+      } catch (err) {
+        console.error("[DataService] loadGrowthEntries failed:", err);
+        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
+        return [];
+      }
+    });
+  }
+  createGrowthEntry(data) {
+    return __async(this, null, function* () {
+      try {
+        const created = yield firstValueFrom(this.http.post(`${this.API_URL}/growth-entries`, data, this.getHeaders()));
+        const updated = [created, ...this.growthEntries()];
+        this.growthEntries.set(updated);
+        return created;
+      } catch (err) {
+        console.error("[DataService] createGrowthEntry failed:", err);
+        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
+        return null;
+      }
+    });
+  }
+  deleteGrowthEntry(id) {
+    return __async(this, null, function* () {
+      try {
+        yield firstValueFrom(this.http.delete(`${this.API_URL}/growth-entries/${id}`, this.getHeaders()));
+        const updated = this.growthEntries().filter((e) => e.id !== id);
+        this.growthEntries.set(updated);
+      } catch (err) {
+        console.error("[DataService] deleteGrowthEntry failed:", err);
+        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
+      }
+    });
+  }
+  // ─── Auth ───────────────────────────────────────────────────
+  login(username, password) {
+    return __async(this, null, function* () {
+      if (password === "1234") {
+        try {
+          const result = yield firstValueFrom(this.http.post("http://localhost:3000/auth/dev-login", {
+            pin: "1234",
+            name: username || "Dev Parent"
+          }));
+          localStorage.setItem(this.AUTH_KEY, result.access_token);
+          this.isAuthenticated.set(true);
+          yield this.loadChildrenFromApi();
+          return true;
+        } catch (err) {
+          console.error("[DataService] dev-login failed:", err);
+          this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
+          localStorage.setItem(this.AUTH_KEY, "dev-token-" + Date.now());
+          this.isAuthenticated.set(true);
+          return true;
+        }
+      }
+      return false;
+    });
+  }
+  logout() {
+    localStorage.removeItem(this.AUTH_KEY);
+    this.isAuthenticated.set(false);
+    this.children.set([]);
+    this.activeChildId.set(null);
+    this.illnesses.set([]);
+    this.records.set([]);
+    localStorage.removeItem(this.ACTIVE_CHILD_KEY);
+  }
+  // ─── Children (local helpers still used for in-memory state) ──
+  addChild(name, dateOfBirth, birthWeight, deliveryDoctor, bloodType) {
+    const avatarUrl = `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(name)}`;
+    const newChild = {
+      id: "child_" + Date.now(),
+      userId: "parent_1",
+      name,
+      dateOfBirth,
+      birthWeight,
+      deliveryDoctor,
+      bloodType,
+      avatarUrl
+    };
+    const updated = [...this.children(), newChild];
+    this.children.set(updated);
+    this.saveToStorage(this.CHILDREN_KEY, updated);
+    this.switchChild(newChild.id);
+  }
+  updateChild(id, name, dateOfBirth, birthWeight, deliveryDoctor, bloodType) {
+    const updated = this.children().map((c) => {
+      if (c.id !== id)
+        return c;
+      return __spreadProps(__spreadValues({}, c), { name, dateOfBirth, birthWeight, deliveryDoctor, bloodType });
+    });
+    this.children.set(updated);
+    this.saveToStorage(this.CHILDREN_KEY, updated);
+  }
+  switchChild(id) {
+    this.activeChildId.set(id);
+    localStorage.setItem(this.ACTIVE_CHILD_KEY, id);
+    this.loadChildDetails(id);
+  }
+  loadChildDetails(childId) {
+    const storedIllnesses = localStorage.getItem(`kiddok_illnesses_${childId}`);
+    this.illnesses.set(storedIllnesses ? JSON.parse(storedIllnesses) : []);
+    const storedRecords = localStorage.getItem(`kiddok_records_${childId}`);
+    this.records.set(storedRecords ? JSON.parse(storedRecords) : []);
+    this.loadTemperatureEntries(childId);
+    this.loadGrowthEntries(childId);
+    setTimeout(() => {
+      try {
+        const notifSvc = new NotificationService();
+        notifSvc.checkVaccineAlerts();
+      } catch (e) {
+      }
+    }, 0);
+  }
+  // ─── Medical Records (localStorage) ─────────────────────────
+  addIllness(data) {
+    const cid = this.activeChildId();
+    if (!cid)
+      return;
+    const episode = {
+      id: "ill_" + Date.now(),
+      childId: cid,
+      title: data.title || "",
+      symptoms: data.symptoms || "",
+      medications: data.medications || "",
+      loggedAt: (/* @__PURE__ */ new Date()).toISOString()
+    };
+    const updated = [...this.illnesses(), episode];
+    this.illnesses.set(updated);
+    localStorage.setItem(`kiddok_illnesses_${cid}`, JSON.stringify(updated));
+  }
+  addVaccine(data) {
+    const cid = this.activeChildId();
+    if (!cid)
+      return;
+    const record = {
+      id: "rec_" + Date.now(),
+      childId: cid,
+      title: data.title || "",
+      dueDate: data.dueDate || "",
+      completed: false,
+      notes: data.notes || ""
+    };
+    const updated = [...this.records(), record];
+    this.records.set(updated);
+    localStorage.setItem(`kiddok_records_${cid}`, JSON.stringify(updated));
+  }
+  // ─── Parent Profile ──────────────────────────────────────────
+  fetchParentProfile() {
+    return __async(this, null, function* () {
+      const stored = this.loadFromStorage(this.PARENT_KEY);
+      if (stored) {
+        this.parentProfile.set(stored);
+        return stored;
+      }
+      try {
+        const token = localStorage.getItem(this.AUTH_KEY);
+        if (!token)
+          return { name: "", surname: "", phone: "" };
+        const profile = yield firstValueFrom(this.http.get(`${this.API_URL}/parent`, this.getHeaders()));
+        this.parentProfile.set(profile);
+        this.saveToStorage(this.PARENT_KEY, profile);
+        return profile;
+      } catch (e) {
+        return { name: "", surname: "", phone: "" };
+      }
+    });
+  }
+  updateParentProfile(data) {
+    return __async(this, null, function* () {
+      const updated = __spreadValues(__spreadValues({}, this.parentProfile()), data);
+      try {
+        const result = yield firstValueFrom(this.http.patch(`${this.API_URL}/parent`, data, this.getHeaders()));
+        this.parentProfile.set(result);
+        this.saveToStorage(this.PARENT_KEY, result);
+        return result;
+      } catch (err) {
+        console.error("[DataService] updateParentProfile failed:", err);
+        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
+        this.parentProfile.set(updated);
+        this.saveToStorage(this.PARENT_KEY, updated);
+        return updated;
+      }
+    });
+  }
+  deleteChild(childId) {
+    return __async(this, null, function* () {
+      try {
+        yield firstValueFrom(this.http.delete(`${this.API_URL}/children/${childId}`, this.getHeaders()));
+      } catch (e) {
+      }
+      const updated = this.children().filter((c) => c.id !== childId);
+      this.children.set(updated);
+      this.saveToStorage(this.CHILDREN_KEY, updated);
+      try {
+        localStorage.removeItem(`kiddok_diary_${childId}`);
+        localStorage.removeItem(`kiddok_illnesses_${childId}`);
+        localStorage.removeItem(`kiddok_records_${childId}`);
+      } catch (e) {
+      }
+      if (this.activeChildId() === childId) {
+        const next = updated[0];
+        if (next)
+          this.switchChild(next.id);
+        else
+          this.activeChildId.set(null);
+      }
+    });
+  }
+  clearAllData() {
+    return __async(this, null, function* () {
+      try {
+        localStorage.clear();
+      } catch (e) {
+      }
+      this.children.set([]);
+      this.parentProfile.set({ name: "", surname: "", phone: "" });
+      this.activeChildId.set(null);
+      this.illnesses.set([]);
+      this.records.set([]);
+      this.temperatureEntries.set([]);
+      this.growthEntries.set([]);
+      this.diaryEntries.set([]);
+    });
+  }
+  exportAllData() {
+    const children = this.children();
+    const exportData = {
+      exportedAt: (/* @__PURE__ */ new Date()).toISOString(),
+      version: "1.0.0",
+      parentProfile: this.parentProfile(),
+      children: children.map((child) => __spreadProps(__spreadValues({}, child), {
+        diary: this.getDiaryEntriesByChild(child.id),
+        illnesses: this.illnesses().filter((i) => i.childId === child.id),
+        records: this.records().filter((r) => r.childId === child.id)
+      }))
+    };
+    return exportData;
+  }
+  saveParentProfile(profile) {
+    this.parentProfile.set(profile);
+    this.saveToStorage(this.PARENT_KEY, profile);
+  }
+  getParentName() {
+    return this.parentProfile().name;
+  }
+  getChildAge(child) {
+    const today = /* @__PURE__ */ new Date();
+    const dob = new Date(child.dateOfBirth);
+    let years = today.getFullYear() - dob.getFullYear();
+    let months = today.getMonth() - dob.getMonth();
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    const dayDiff = today.getDate() - dob.getDate();
+    if (dayDiff < 0) {
+      months--;
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+    }
+    return { years, months };
+  }
+  // ─── Helpers ────────────────────────────────────────────────
+  saveToStorage(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+    }
+  }
+  loadFromStorage(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  static {
+    this.\u0275fac = function DataService_Factory(__ngFactoryType__) {
+      return new (__ngFactoryType__ || _DataService)(\u0275\u0275inject(HttpClient));
+    };
+  }
+  static {
+    this.\u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _DataService, factory: _DataService.\u0275fac, providedIn: "root" });
+  }
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(DataService, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root"
+    }]
+  }], () => [{ type: HttpClient }], null);
 })();
 
 // src/app/components/home/welcome-hero.component.ts
@@ -47234,6 +47985,7 @@ var TemperatureDiaryComponent = class _TemperatureDiaryComponent {
   constructor() {
     this.dataService = inject2(DataService);
     this.i18n = inject2(I18nService);
+    this.notif = inject2(NotificationService);
     this.quickTemps = [37.5, 38, 38.5, 39, 39.5];
     this.locations = [
       { value: "forehead", label: () => this.i18n.t()["temperature.location.forehead"] },
@@ -47358,6 +48110,11 @@ var TemperatureDiaryComponent = class _TemperatureDiaryComponent {
       if (result) {
         this.saved.set(true);
         setTimeout(() => this.saved.set(false), 2500);
+        const temp = this.formTemp();
+        const child = this.activeChild();
+        if (temp !== null && temp >= 38.5 && child) {
+          this.notif.notifyFever(child.name, temp);
+        }
         this.formTemp.set(null);
         this.formLocation.set("forehead");
         this.formNotes = "";
@@ -47904,7 +48661,7 @@ var TemperatureDiaryComponent = class _TemperatureDiaryComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TemperatureDiaryComponent, { className: "TemperatureDiaryComponent", filePath: "src/app/components/temperature-diary.component.ts", lineNumber: 239 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TemperatureDiaryComponent, { className: "TemperatureDiaryComponent", filePath: "src/app/components/temperature-diary.component.ts", lineNumber: 240 });
 })();
 
 // src/app/components/growth-tracking.component.ts
@@ -48926,7 +49683,7 @@ function RecordsComponent_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
     const _r1 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "div", 7)(1, "div", 11)(2, "h3", 12);
-    \u0275\u0275text(3, "Skeda e Vaksinimit");
+    \u0275\u0275text(3);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(4, "button", 13);
     \u0275\u0275listener("click", function RecordsComponent_Conditional_11_Template_button_click_4_listener() {
@@ -48937,7 +49694,7 @@ function RecordsComponent_Conditional_11_Template(rf, ctx) {
     \u0275\u0275element(5, "lucide-icon", 14);
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(6, "div", 15)(7, "div")(8, "label", 16);
-    \u0275\u0275text(9, "Em\xEBrtimi / P\xEBrshkrimi");
+    \u0275\u0275text(9);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(10, "input", 17);
     \u0275\u0275twoWayListener("ngModelChange", function RecordsComponent_Conditional_11_Template_input_ngModelChange_10_listener($event) {
@@ -48948,7 +49705,7 @@ function RecordsComponent_Conditional_11_Template(rf, ctx) {
     });
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(11, "div")(12, "label", 16);
-    \u0275\u0275text(13, "Kryerja \xEBsht\xEB...");
+    \u0275\u0275text(13);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(14, "div", 18)(15, "label", 19)(16, "input", 20);
     \u0275\u0275twoWayListener("ngModelChange", function RecordsComponent_Conditional_11_Template_input_ngModelChange_16_listener($event) {
@@ -48960,7 +49717,7 @@ function RecordsComponent_Conditional_11_Template(rf, ctx) {
     \u0275\u0275elementEnd();
     \u0275\u0275element(17, "lucide-icon", 21);
     \u0275\u0275elementStart(18, "span", 22);
-    \u0275\u0275text(19, "P\xEBrfunduar");
+    \u0275\u0275text(19);
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(20, "label", 19)(21, "input", 20);
     \u0275\u0275twoWayListener("ngModelChange", function RecordsComponent_Conditional_11_Template_input_ngModelChange_21_listener($event) {
@@ -48972,10 +49729,10 @@ function RecordsComponent_Conditional_11_Template(rf, ctx) {
     \u0275\u0275elementEnd();
     \u0275\u0275element(22, "lucide-icon", 23);
     \u0275\u0275elementStart(23, "span", 22);
-    \u0275\u0275text(24, "N\xEB Pritje");
+    \u0275\u0275text(24);
     \u0275\u0275elementEnd()()()();
     \u0275\u0275elementStart(25, "div")(26, "label", 16);
-    \u0275\u0275text(27, "Data e Planifikimit/B\xEBrjes");
+    \u0275\u0275text(27);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(28, "input", 24);
     \u0275\u0275twoWayListener("ngModelChange", function RecordsComponent_Conditional_11_Template_input_ngModelChange_28_listener($event) {
@@ -48991,25 +49748,46 @@ function RecordsComponent_Conditional_11_Template(rf, ctx) {
       const ctx_r1 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r1.submit());
     });
-    \u0275\u0275text(30, " P\xEBrdit\xEBso Dosjen ");
+    \u0275\u0275text(30);
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext();
-    \u0275\u0275advance(10);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(ctx_r1.t()["records.formTitle"]);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("size", 16);
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(ctx_r1.t()["records.nameLabel"]);
+    \u0275\u0275advance();
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.fTitle);
-    \u0275\u0275advance(5);
+    \u0275\u0275property("placeholder", ctx_r1.t()["records.namePlaceholder"]);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(ctx_r1.t()["records.statusLabel"]);
+    \u0275\u0275advance(2);
     \u0275\u0275property("ngClass", ctx_r1.fCompleted ? "border-primary-500 bg-primary-50" : "border-gray-200 bg-slate-50");
     \u0275\u0275advance();
     \u0275\u0275property("value", true);
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.fCompleted);
-    \u0275\u0275advance(4);
+    \u0275\u0275advance();
+    \u0275\u0275property("size", 16);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r1.t()["records.completed"]);
+    \u0275\u0275advance();
     \u0275\u0275property("ngClass", !ctx_r1.fCompleted ? "border-orange-500 bg-orange-50" : "border-gray-200 bg-slate-50");
     \u0275\u0275advance();
     \u0275\u0275property("value", false);
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.fCompleted);
-    \u0275\u0275advance(7);
+    \u0275\u0275advance();
+    \u0275\u0275property("size", 16);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r1.t()["records.pending"]);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(ctx_r1.t()["records.dateLabel"]);
+    \u0275\u0275advance();
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.fDate);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", ctx_r1.t()["records.updateButton"], " ");
   }
 }
 function RecordsComponent_Conditional_13_Template(rf, ctx) {
@@ -49017,25 +49795,44 @@ function RecordsComponent_Conditional_13_Template(rf, ctx) {
     \u0275\u0275elementStart(0, "div", 9);
     \u0275\u0275element(1, "lucide-icon", 26);
     \u0275\u0275elementStart(2, "p", 27);
-    \u0275\u0275text(3, "Asnj\xEB e dh\xEBn\xEB laboratorike.");
+    \u0275\u0275text(3);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(4, "p", 28);
-    \u0275\u0275text(5, "Regjistro t\xEB pakt\xEBn nj\xEB vaksin\xEB ose vizit\xEB te mjeku.");
+    \u0275\u0275text(5);
     \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275advance();
+    \u0275\u0275property("size", 48);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r1.t()["records.emptyTitle"]);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r1.t()["records.emptyHint"]);
   }
 }
 function RecordsComponent_Conditional_14_For_2_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span", 36);
-    \u0275\u0275text(1, "Kryer");
+    \u0275\u0275text(1);
     \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(ctx_r1.t()["records.status.done"]);
   }
 }
 function RecordsComponent_Conditional_14_For_2_Conditional_12_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span", 37);
-    \u0275\u0275text(1, " N\xEB plan ");
+    \u0275\u0275text(1);
     \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r1.t()["records.status.planned"], " ");
   }
 }
 function RecordsComponent_Conditional_14_For_2_Template(rf, ctx) {
@@ -49051,7 +49848,7 @@ function RecordsComponent_Conditional_14_For_2_Template(rf, ctx) {
     \u0275\u0275pipe(9, "date");
     \u0275\u0275elementEnd()()();
     \u0275\u0275elementStart(10, "div", 35);
-    \u0275\u0275conditionalCreate(11, RecordsComponent_Conditional_14_For_2_Conditional_11_Template, 2, 0, "span", 36)(12, RecordsComponent_Conditional_14_For_2_Conditional_12_Template, 2, 0, "span", 37);
+    \u0275\u0275conditionalCreate(11, RecordsComponent_Conditional_14_For_2_Conditional_11_Template, 2, 1, "span", 36)(12, RecordsComponent_Conditional_14_For_2_Conditional_12_Template, 2, 1, "span", 37);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -49060,7 +49857,7 @@ function RecordsComponent_Conditional_14_For_2_Template(rf, ctx) {
     \u0275\u0275advance(2);
     \u0275\u0275property("ngClass", entry_r3.completed ? "bg-teal-50 text-teal-500 border-teal-100" : "bg-orange-50 text-orange-500 border-orange-100");
     \u0275\u0275advance();
-    \u0275\u0275property("name", entry_r3.completed ? "check-circle-2" : "hourglass");
+    \u0275\u0275property("name", entry_r3.completed ? "check-circle" : "clock");
     \u0275\u0275advance(3);
     \u0275\u0275textInterpolate(entry_r3.title);
     \u0275\u0275advance();
@@ -49087,6 +49884,8 @@ function RecordsComponent_Conditional_14_Template(rf, ctx) {
 var RecordsComponent = class _RecordsComponent {
   constructor() {
     this.dataService = inject2(DataService);
+    this.i18n = inject2(I18nService);
+    this.t = this.i18n.t;
     this.isAdding = signal(false, ...ngDevMode ? [{ debugName: "isAdding" }] : (
       /* istanbul ignore next */
       []
@@ -49116,29 +49915,37 @@ var RecordsComponent = class _RecordsComponent {
     };
   }
   static {
-    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _RecordsComponent, selectors: [["app-records"]], decls: 15, vars: 3, consts: [[1, "px-2"], [1, "flex", "items-center", "justify-between", "mb-8", "flex-col", "sm:flex-row", "gap-4"], [1, "text-3xl", "font-extrabold", "text-gray-800", "mb-1"], [1, "text-gray-500", "font-medium"], [1, "bg-slate-900", "hover:bg-primary-600", "text-white", "px-6", "py-3.5", "rounded-2xl", "font-bold", "shadow-soft", "transition-all", "transform", "hover:-translate-y-0.5", "flex", "items-center", "gap-2", 3, "click"], ["name", "calendar-clock", 1, "text-inherit"], [1, "grid", "grid-cols-1", "xl:grid-cols-3", "gap-8", "items-start", "relative"], [1, "bg-white", "p-8", "rounded-3xl", "shadow-soft", "xl:col-span-1", "animate-slide-up", "border", "border-gray-100", "sticky", "top-4"], [1, "space-y-4", 3, "ngClass"], [1, "text-center", "py-20", "bg-white", "border", "border-dashed", "border-gray-200", "rounded-3xl"], [1, "grid", "gap-6", "items-start", 3, "ngClass"], [1, "flex", "items-center", "justify-between", "mb-6", "border-b", "border-gray-100", "pb-4"], [1, "font-bold", "text-xl", "text-gray-800"], [1, "text-gray-500", "hover:text-gray-600", "bg-gray-100", "p-1.5", "rounded-xl", 3, "click"], ["name", "x", 1, "text-inherit"], [1, "space-y-5"], [1, "block", "text-xs", "font-bold", "text-gray-700", "uppercase", "tracking-widest", "mb-2", "ml-1"], ["type", "text", "placeholder", "Psh: Vaksina MMR II", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border", "border-gray-200", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "font-semibold", 3, "ngModelChange", "ngModel"], [1, "flex", "gap-4"], [1, "flex-1", "cursor-pointer", "flex", "items-center", "p-3", "rounded-2xl", "border", 3, "ngClass"], ["type", "radio", 1, "hidden", 3, "ngModelChange", "value", "ngModel"], ["name", "check-circle", 1, "text-inherit"], [1, "font-bold", "text-sm", "text-gray-700"], ["name", "clock", 1, "text-inherit"], ["type", "date", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border", "border-gray-200", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-600", "font-medium", 3, "ngModelChange", "ngModel"], [1, "w-full", "bg-gradient-to-r", "from-teal-500", "to-teal-400", "text-white", "font-bold", "py-4", "rounded-2xl", "mt-4", "shadow-md", "hover:shadow-lg", "transition-all", "hover:-translate-y-0.5", 3, "click"], ["name", "folder-open", 1, "text-inherit"], [1, "text-xl", "font-bold", "text-gray-700", "mb-2"], [1, "text-gray-500"], [1, "bg-white", "rounded-3xl", "p-6", "shadow-sm", "border", "hover:border-teal-200", "hover:shadow-md", "transition-all", "group", "relative", 3, "ngClass"], [1, "w-14", "h-14", "rounded-2xl", "flex-shrink-0", "flex", "items-center", "justify-center", "border", 3, "ngClass"], [1, "text-3xl", 3, "name"], [1, "flex-1", "mt-1"], [1, "text-lg", "font-extrabold", "text-gray-800", "leading-tight", "mb-1"], [1, "text-sm", "font-semibold", 3, "ngClass"], [1, "absolute", "right-4", "top-4"], [1, "bg-teal-50", "text-teal-600", "px-3", "py-1", "rounded-full", "text-xs", "font-bold", "border", "border-teal-200/50"], [1, "bg-orange-50", "text-orange-600", "px-3", "py-1", "rounded-full", "text-xs", "font-bold", "flex", "items-center", "gap-1", "border", "border-orange-200/50"]], template: function RecordsComponent_Template(rf, ctx) {
+    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _RecordsComponent, selectors: [["app-records"]], decls: 15, vars: 7, consts: [[1, "px-2"], [1, "flex", "items-center", "justify-between", "mb-8", "flex-col", "sm:flex-row", "gap-4"], [1, "text-3xl", "font-extrabold", "text-gray-800", "mb-1"], [1, "text-gray-500", "font-medium"], [1, "bg-slate-900", "hover:bg-primary-600", "text-white", "px-6", "py-3.5", "rounded-2xl", "font-bold", "shadow-soft", "transition-all", "transform", "hover:-translate-y-0.5", "flex", "items-center", "gap-2", 3, "click"], ["name", "calendar-plus", 1, "text-inherit", 3, "size"], [1, "grid", "grid-cols-1", "xl:grid-cols-3", "gap-8", "items-start", "relative"], [1, "bg-white", "p-8", "rounded-3xl", "shadow-soft", "xl:col-span-1", "animate-slide-up", "border", "border-gray-100", "sticky", "top-4"], [1, "space-y-4", 3, "ngClass"], [1, "text-center", "py-20", "bg-white", "border", "border-dashed", "border-gray-200", "rounded-3xl"], [1, "grid", "gap-6", "items-start", 3, "ngClass"], [1, "flex", "items-center", "justify-between", "mb-6", "border-b", "border-gray-100", "pb-4"], [1, "font-bold", "text-xl", "text-gray-800"], [1, "text-gray-500", "hover:text-gray-600", "bg-gray-100", "p-1.5", "rounded-xl", 3, "click"], ["name", "x", 1, "text-inherit", 3, "size"], [1, "space-y-5"], [1, "block", "text-xs", "font-bold", "text-gray-700", "uppercase", "tracking-widest", "mb-2", "ml-1"], ["type", "text", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border", "border-gray-200", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "font-semibold", 3, "ngModelChange", "ngModel", "placeholder"], [1, "flex", "gap-4"], [1, "flex-1", "cursor-pointer", "flex", "items-center", "p-3", "rounded-2xl", "border", 3, "ngClass"], ["type", "radio", 1, "hidden", 3, "ngModelChange", "value", "ngModel"], ["name", "check-circle", 1, "text-inherit", "mr-2", 3, "size"], [1, "font-bold", "text-sm", "text-gray-700"], ["name", "clock", 1, "text-inherit", "mr-2", 3, "size"], ["type", "date", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border", "border-gray-200", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-600", "font-medium", 3, "ngModelChange", "ngModel"], [1, "w-full", "bg-gradient-to-r", "from-teal-500", "to-teal-400", "text-white", "font-bold", "py-4", "rounded-2xl", "mt-4", "shadow-md", "hover:shadow-lg", "transition-all", "hover:-translate-y-0.5", 3, "click"], ["name", "folder-open", 1, "text-inherit", "mx-auto", "mb-4", 2, "color", "#9ca3af", 3, "size"], [1, "text-xl", "font-bold", "text-gray-700", "mb-2"], [1, "text-gray-500"], [1, "bg-white", "rounded-3xl", "p-6", "shadow-sm", "border", "hover:border-teal-200", "hover:shadow-md", "transition-all", "group", "relative", 3, "ngClass"], [1, "w-14", "h-14", "rounded-2xl", "flex-shrink-0", "flex", "items-center", "justify-center", "border", 3, "ngClass"], [1, "text-3xl", 3, "name"], [1, "flex-1", "mt-1"], [1, "text-lg", "font-extrabold", "text-gray-800", "leading-tight", "mb-1"], [1, "text-sm", "font-semibold", 3, "ngClass"], [1, "absolute", "right-4", "top-4"], [1, "bg-teal-50", "text-teal-600", "px-3", "py-1", "rounded-full", "text-xs", "font-bold", "border", "border-teal-200/50"], [1, "bg-orange-50", "text-orange-600", "px-3", "py-1", "rounded-full", "text-xs", "font-bold", "flex", "items-center", "gap-1", "border", "border-orange-200/50"]], template: function RecordsComponent_Template(rf, ctx) {
       if (rf & 1) {
         \u0275\u0275elementStart(0, "div", 0)(1, "div", 1)(2, "div")(3, "h1", 2);
-        \u0275\u0275text(4, "Dosja e Vaksinave");
+        \u0275\u0275text(4);
         \u0275\u0275elementEnd();
         \u0275\u0275elementStart(5, "p", 3);
-        \u0275\u0275text(6, "Kalendari zyrtar i mjekimeve dhe rekomandimeve t\xEB mjekut.");
+        \u0275\u0275text(6);
         \u0275\u0275elementEnd()();
         \u0275\u0275elementStart(7, "button", 4);
         \u0275\u0275listener("click", function RecordsComponent_Template_button_click_7_listener() {
           return ctx.isAdding.set(true);
         });
         \u0275\u0275element(8, "lucide-icon", 5);
-        \u0275\u0275text(9, " Shto Dokument i Ri ");
+        \u0275\u0275text(9);
         \u0275\u0275elementEnd()();
         \u0275\u0275elementStart(10, "div", 6);
-        \u0275\u0275conditionalCreate(11, RecordsComponent_Conditional_11_Template, 31, 8, "div", 7);
+        \u0275\u0275conditionalCreate(11, RecordsComponent_Conditional_11_Template, 31, 19, "div", 7);
         \u0275\u0275elementStart(12, "div", 8);
-        \u0275\u0275conditionalCreate(13, RecordsComponent_Conditional_13_Template, 6, 0, "div", 9)(14, RecordsComponent_Conditional_14_Template, 3, 1, "div", 10);
+        \u0275\u0275conditionalCreate(13, RecordsComponent_Conditional_13_Template, 6, 3, "div", 9)(14, RecordsComponent_Conditional_14_Template, 3, 1, "div", 10);
         \u0275\u0275elementEnd()()();
       }
       if (rf & 2) {
-        \u0275\u0275advance(11);
+        \u0275\u0275advance(4);
+        \u0275\u0275textInterpolate(ctx.t()["records.title"]);
+        \u0275\u0275advance(2);
+        \u0275\u0275textInterpolate(ctx.t()["records.subtitle"]);
+        \u0275\u0275advance(2);
+        \u0275\u0275property("size", 18);
+        \u0275\u0275advance();
+        \u0275\u0275textInterpolate1(" ", ctx.t()["records.addRecord"], " ");
+        \u0275\u0275advance(2);
         \u0275\u0275conditional(ctx.isAdding() ? 11 : -1);
         \u0275\u0275advance();
         \u0275\u0275property("ngClass", ctx.isAdding() ? "xl:col-span-2" : "xl:col-span-3");
@@ -49153,56 +49960,62 @@ var RecordsComponent = class _RecordsComponent {
     type: Component,
     args: [{
       selector: "app-records",
+      standalone: true,
       imports: [CommonModule, FormsModule, LucideAngularModule],
       template: `
     <div class="px-2">
-       <div class="flex items-center justify-between mb-8 flex-col sm:flex-row gap-4">
+      <div class="flex items-center justify-between mb-8 flex-col sm:flex-row gap-4">
         <div>
-           <h1 class="text-3xl font-extrabold text-gray-800 mb-1">Dosja e Vaksinave</h1>
-           <p class="text-gray-500 font-medium">Kalendari zyrtar i mjekimeve dhe rekomandimeve t\xEB mjekut.</p>
+          <h1 class="text-3xl font-extrabold text-gray-800 mb-1">{{ t()['records.title'] }}</h1>
+          <p class="text-gray-500 font-medium">{{ t()['records.subtitle'] }}</p>
         </div>
         <button (click)="isAdding.set(true)" class="bg-slate-900 hover:bg-primary-600 text-white px-6 py-3.5 rounded-2xl font-bold shadow-soft transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
-          <lucide-icon name="calendar-clock" class="text-inherit"></lucide-icon> Shto Dokument i Ri
+          <lucide-icon name="calendar-plus" class="text-inherit" [size]="18"></lucide-icon>
+          {{ t()['records.addRecord'] }}
         </button>
       </div>
 
-       <div class="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start relative">
-        
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start relative">
+
         <!-- Add Panel -->
         @if (isAdding()) {
           <div class="bg-white p-8 rounded-3xl shadow-soft xl:col-span-1 animate-slide-up border border-gray-100 sticky top-4">
             <div class="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
-               <h3 class="font-bold text-xl text-gray-800">Skeda e Vaksinimit</h3>
-               <button (click)="isAdding.set(false)" class="text-gray-500 hover:text-gray-600 bg-gray-100 p-1.5 rounded-xl"><lucide-icon name="x" class="text-inherit"></lucide-icon></button>
+               <h3 class="font-bold text-xl text-gray-800">{{ t()['records.formTitle'] }}</h3>
+               <button (click)="isAdding.set(false)" class="text-gray-500 hover:text-gray-600 bg-gray-100 p-1.5 rounded-xl">
+                 <lucide-icon name="x" class="text-inherit" [size]="16"></lucide-icon>
+               </button>
             </div>
-            
+
             <div class="space-y-5">
               <div>
-                <label class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2 ml-1">Em\xEBrtimi / P\xEBrshkrimi</label>
-                <input [(ngModel)]="fTitle" type="text" class="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all font-semibold" placeholder="Psh: Vaksina MMR II">
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2 ml-1">{{ t()['records.nameLabel'] }}</label>
+                <input [(ngModel)]="fTitle" type="text" class="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all font-semibold" [placeholder]="t()['records.namePlaceholder']">
               </div>
-              
+
               <div>
-                <label class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2 ml-1">Kryerja \xEBsht\xEB...</label>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2 ml-1">{{ t()['records.statusLabel'] }}</label>
                 <div class="flex gap-4">
                   <label class="flex-1 cursor-pointer flex items-center p-3 rounded-2xl border" [ngClass]="fCompleted ? 'border-primary-500 bg-primary-50' : 'border-gray-200 bg-slate-50'">
                     <input type="radio" [value]="true" [(ngModel)]="fCompleted" class="hidden">
-                    <lucide-icon name="check-circle" class="text-inherit"></lucide-icon> <span class="font-bold text-sm text-gray-700">P\xEBrfunduar</span>
+                    <lucide-icon name="check-circle" class="text-inherit mr-2" [size]="16"></lucide-icon>
+                    <span class="font-bold text-sm text-gray-700">{{ t()['records.completed'] }}</span>
                   </label>
                   <label class="flex-1 cursor-pointer flex items-center p-3 rounded-2xl border" [ngClass]="!fCompleted ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-slate-50'">
                     <input type="radio" [value]="false" [(ngModel)]="fCompleted" class="hidden">
-                    <lucide-icon name="clock" class="text-inherit"></lucide-icon> <span class="font-bold text-sm text-gray-700">N\xEB Pritje</span>
+                    <lucide-icon name="clock" class="text-inherit mr-2" [size]="16"></lucide-icon>
+                    <span class="font-bold text-sm text-gray-700">{{ t()['records.pending'] }}</span>
                   </label>
                 </div>
               </div>
 
               <div>
-                <label class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2 ml-1">Data e Planifikimit/B\xEBrjes</label>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2 ml-1">{{ t()['records.dateLabel'] }}</label>
                 <input [(ngModel)]="fDate" type="date" class="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-600 font-medium">
               </div>
 
               <button (click)="submit()" class="w-full bg-gradient-to-r from-teal-500 to-teal-400 text-white font-bold py-4 rounded-2xl mt-4 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
-                P\xEBrdit\xEBso Dosjen
+                {{ t()['records.updateButton'] }}
               </button>
             </div>
           </div>
@@ -49212,21 +50025,19 @@ var RecordsComponent = class _RecordsComponent {
         <div class="space-y-4" [ngClass]="isAdding() ? 'xl:col-span-2' : 'xl:col-span-3'">
           @if (records().length === 0) {
              <div class="text-center py-20 bg-white border border-dashed border-gray-200 rounded-3xl">
-                <lucide-icon name="folder-open" class="text-inherit"></lucide-icon>
-                <p class="text-xl font-bold text-gray-700 mb-2">Asnj\xEB e dh\xEBn\xEB laboratorike.</p>
-                <p class="text-gray-500">Regjistro t\xEB pakt\xEBn nj\xEB vaksin\xEB ose vizit\xEB te mjeku.</p>
+                <lucide-icon name="folder-open" class="text-inherit mx-auto mb-4" [size]="48" style="color: #9ca3af;"></lucide-icon>
+                <p class="text-xl font-bold text-gray-700 mb-2">{{ t()['records.emptyTitle'] }}</p>
+                <p class="text-gray-500">{{ t()['records.emptyHint'] }}</p>
              </div>
           } @else {
-             <!-- Use a sleek grid layout -->
              <div class="grid gap-6 items-start" [ngClass]="isAdding() ? 'grid-cols-1 2xl:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'">
               @for (entry of records(); track entry.id) {
                 <div class="bg-white rounded-3xl p-6 shadow-sm border hover:border-teal-200 hover:shadow-md transition-all group relative" [ngClass]="entry.completed ? 'border-gray-100' : 'border-orange-100 bg-orange-50/10'">
                   <div class="flex gap-4">
-                     <!-- Icon Box -->
                      <div class="w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center border" [ngClass]="entry.completed ? 'bg-teal-50 text-teal-500 border-teal-100' : 'bg-orange-50 text-orange-500 border-orange-100'">
-                       <lucide-icon [name]="entry.completed ? 'check-circle-2' : 'hourglass'" class="text-3xl"></lucide-icon>
+                       <lucide-icon [name]="entry.completed ? 'check-circle' : 'clock'" class="text-3xl"></lucide-icon>
                      </div>
-                     
+
                      <div class="flex-1 mt-1">
                        <h3 class="text-lg font-extrabold text-gray-800 leading-tight mb-1">{{ entry.title }}</h3>
                        <p class="text-sm font-semibold" [ngClass]="entry.completed ? 'text-teal-600' : 'text-orange-600'">
@@ -49234,14 +50045,13 @@ var RecordsComponent = class _RecordsComponent {
                        </p>
                      </div>
                   </div>
-                  
-                  <!-- Tag indicator -->
+
                   <div class="absolute right-4 top-4">
                      @if(entry.completed) {
-                       <span class="bg-teal-50 text-teal-600 px-3 py-1 rounded-full text-xs font-bold border border-teal-200/50">Kryer</span>
+                       <span class="bg-teal-50 text-teal-600 px-3 py-1 rounded-full text-xs font-bold border border-teal-200/50">{{ t()['records.status.done'] }}</span>
                      } @else {
                        <span class="bg-orange-50 text-orange-600 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 border border-orange-200/50">
-                         N\xEB plan
+                         {{ t()['records.status.planned'] }}
                        </span>
                      }
                   </div>
@@ -49258,7 +50068,7 @@ var RecordsComponent = class _RecordsComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(RecordsComponent, { className: "RecordsComponent", filePath: "src/app/components/records.component.ts", lineNumber: 112 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(RecordsComponent, { className: "RecordsComponent", filePath: "src/app/components/records.component.ts", lineNumber: 115 });
 })();
 
 // src/app/components/vaccines/vaccine-schedule.constant.ts
@@ -51857,8 +52667,3380 @@ var VaccinesComponent = class _VaccinesComponent {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(VaccinesComponent, { className: "VaccinesComponent", filePath: "src/app/components/vaccines.component.ts", lineNumber: 326 });
 })();
 
-// src/app/components/sidebar.component.ts
+// src/app/components/medications/medications.component.ts
+var _c07 = () => [1, 2, 3];
 var _forTrack010 = ($index, $item) => $item.id;
+var _forTrack13 = ($index, $item) => $item.value;
+function MedicationsComponent_Conditional_6_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 4);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    let tmp_1_0;
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate((tmp_1_0 = ctx_r0.activeChild()) == null ? null : tmp_1_0.name);
+  }
+}
+function MedicationsComponent_Conditional_10_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 7)(1, "div", 11)(2, "div", 12);
+    \u0275\u0275element(3, "lucide-icon", 13);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "div", 14)(5, "p", 15);
+    \u0275\u0275text(6);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(7, "p", 16);
+    \u0275\u0275text(8);
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(6);
+    \u0275\u0275textInterpolate2("", ctx_r0.activeMedications().length, " ", ctx_r0.i18n.t()["medications.activeLabel"] || "medikamente active");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["medications.activeDesc"] || "N\xEB p\xEBrdorim aktualisht");
+  }
+}
+function MedicationsComponent_Conditional_11_For_2_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 17)(1, "div", 18);
+    \u0275\u0275element(2, "div", 19);
+    \u0275\u0275elementStart(3, "div", 20);
+    \u0275\u0275element(4, "div", 21)(5, "div", 22);
+    \u0275\u0275elementEnd()()();
+  }
+}
+function MedicationsComponent_Conditional_11_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 8);
+    \u0275\u0275repeaterCreate(1, MedicationsComponent_Conditional_11_For_2_Template, 6, 0, "div", 17, \u0275\u0275repeaterTrackByIdentity);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    \u0275\u0275advance();
+    \u0275\u0275repeater(\u0275\u0275pureFunction0(0, _c07));
+  }
+}
+function MedicationsComponent_Conditional_12_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r2 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 9);
+    \u0275\u0275namespaceSVG();
+    \u0275\u0275elementStart(1, "svg", 23);
+    \u0275\u0275element(2, "circle", 24)(3, "path", 25)(4, "circle", 26);
+    \u0275\u0275elementEnd();
+    \u0275\u0275namespaceHTML();
+    \u0275\u0275elementStart(5, "h3", 27);
+    \u0275\u0275text(6);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(7, "p", 28);
+    \u0275\u0275text(8);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(9, "button", 29);
+    \u0275\u0275listener("click", function MedicationsComponent_Conditional_12_Template_button_click_9_listener() {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.openAddModal());
+    });
+    \u0275\u0275element(10, "lucide-icon", 30);
+    \u0275\u0275text(11);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(6);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.empty"] || "Nuk ka medikamente", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.emptyHint"] || "Shtoni medikamentet e para p\xEBr t\xEB ndjekur trajtimin", " ");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.addFirst"] || "Shto medikamentin e par\xEB", " ");
+  }
+}
+function MedicationsComponent_Conditional_13_For_2_Conditional_19_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275text(0);
+  }
+  if (rf & 2) {
+    const med_r4 = \u0275\u0275nextContext().$implicit;
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275textInterpolate1(" \u2192 ", ctx_r0.formatDate(med_r4.endDate), " ");
+  }
+}
+function MedicationsComponent_Conditional_13_For_2_Conditional_20_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275text(0);
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(3);
+    \u0275\u0275textInterpolate1(" \u2192 ", ctx_r0.i18n.t()["medications.ongoing"] || "N\xEB vazhdim", " ");
+  }
+}
+function MedicationsComponent_Conditional_13_For_2_Conditional_21_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 42);
+    \u0275\u0275element(1, "lucide-icon", 50);
+    \u0275\u0275elementStart(2, "span");
+    \u0275\u0275text(3);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const med_r4 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(med_r4.prescribedBy);
+  }
+}
+function MedicationsComponent_Conditional_13_For_2_Conditional_22_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 44);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const med_r4 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", med_r4.notes, " ");
+  }
+}
+function MedicationsComponent_Conditional_13_For_2_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r3 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 31)(1, "div", 32)(2, "div", 33)(3, "div", 34);
+    \u0275\u0275element(4, "lucide-icon", 35);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "div", 36)(6, "div", 37)(7, "h3", 38);
+    \u0275\u0275text(8);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(9, "span", 39);
+    \u0275\u0275text(10);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(11, "div", 40);
+    \u0275\u0275element(12, "lucide-icon", 41);
+    \u0275\u0275elementStart(13, "span");
+    \u0275\u0275text(14);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(15, "div", 42);
+    \u0275\u0275element(16, "lucide-icon", 43);
+    \u0275\u0275elementStart(17, "span");
+    \u0275\u0275text(18);
+    \u0275\u0275conditionalCreate(19, MedicationsComponent_Conditional_13_For_2_Conditional_19_Template, 1, 1)(20, MedicationsComponent_Conditional_13_For_2_Conditional_20_Template, 1, 1);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275conditionalCreate(21, MedicationsComponent_Conditional_13_For_2_Conditional_21_Template, 4, 1, "div", 42);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275conditionalCreate(22, MedicationsComponent_Conditional_13_For_2_Conditional_22_Template, 2, 1, "div", 44);
+    \u0275\u0275elementStart(23, "div", 45)(24, "button", 46);
+    \u0275\u0275listener("click", function MedicationsComponent_Conditional_13_For_2_Template_button_click_24_listener() {
+      const med_r4 = \u0275\u0275restoreView(_r3).$implicit;
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.openEditModal(med_r4));
+    });
+    \u0275\u0275element(25, "lucide-icon", 47);
+    \u0275\u0275text(26);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(27, "button", 48);
+    \u0275\u0275listener("click", function MedicationsComponent_Conditional_13_For_2_Template_button_click_27_listener() {
+      const med_r4 = \u0275\u0275restoreView(_r3).$implicit;
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.confirmDelete(med_r4));
+    });
+    \u0275\u0275element(28, "lucide-icon", 49);
+    \u0275\u0275text(29);
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    const med_r4 = ctx.$implicit;
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(3);
+    \u0275\u0275property("ngClass", med_r4.active ? "bg-green-100" : "bg-gray-100");
+    \u0275\u0275advance();
+    \u0275\u0275property("name", med_r4.active ? "pill" : "pill-off")("ngClass", med_r4.active ? "text-green-600" : "text-gray-400");
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(med_r4.name);
+    \u0275\u0275advance();
+    \u0275\u0275property("ngClass", med_r4.active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500");
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", med_r4.active ? ctx_r0.i18n.t()["medications.active"] || "Aktiv" : ctx_r0.i18n.t()["medications.inactive"] || "Jo aktiv", " ");
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate2("", med_r4.dosage, " \u2014 ", ctx_r0.frequencyLabel(med_r4.frequency));
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate1("", ctx_r0.formatDate(med_r4.startDate), " ");
+    \u0275\u0275advance();
+    \u0275\u0275conditional(med_r4.endDate ? 19 : 20);
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional(med_r4.prescribedBy ? 21 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(med_r4.notes ? 22 : -1);
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.edit"] || "Redakto", " ");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.delete"] || "Fshi", " ");
+  }
+}
+function MedicationsComponent_Conditional_13_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 8);
+    \u0275\u0275repeaterCreate(1, MedicationsComponent_Conditional_13_For_2_Template, 30, 14, "div", 31, _forTrack010);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance();
+    \u0275\u0275repeater(ctx_r0.medications());
+  }
+}
+function MedicationsComponent_Conditional_14_For_21_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r6 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 75);
+    \u0275\u0275listener("click", function MedicationsComponent_Conditional_14_For_21_Template_button_click_0_listener() {
+      const freq_r7 = \u0275\u0275restoreView(_r6).$implicit;
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.formFrequency.set(freq_r7.value));
+    });
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const freq_r7 = ctx.$implicit;
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275property("ngClass", ctx_r0.formFrequency() === freq_r7.value ? "bg-indigo-500 text-white border-indigo-500" : "bg-slate-50 text-slate-600 border-slate-200 hover:border-indigo-200");
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.isSq() ? freq_r7.labelSq : freq_r7.labelEn, " ");
+  }
+}
+function MedicationsComponent_Conditional_14_Conditional_52_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 71);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r0.saveError(), " ");
+  }
+}
+function MedicationsComponent_Conditional_14_Conditional_57_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "lucide-icon", 76);
+    \u0275\u0275text(1);
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.saving"] || "Duke ruajtur...", " ");
+  }
+}
+function MedicationsComponent_Conditional_14_Conditional_58_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "lucide-icon", 77);
+    \u0275\u0275text(1);
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.save"] || "Ruaj", " ");
+  }
+}
+function MedicationsComponent_Conditional_14_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r5 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 51);
+    \u0275\u0275listener("click", function MedicationsComponent_Conditional_14_Template_div_click_0_listener() {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.closeModal());
+    });
+    \u0275\u0275elementStart(1, "div", 52);
+    \u0275\u0275listener("click", function MedicationsComponent_Conditional_14_Template_div_click_1_listener($event) {
+      return $event.stopPropagation();
+    });
+    \u0275\u0275elementStart(2, "div", 53)(3, "h2", 54);
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "button", 55);
+    \u0275\u0275listener("click", function MedicationsComponent_Conditional_14_Template_button_click_5_listener() {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.closeModal());
+    });
+    \u0275\u0275element(6, "lucide-icon", 56);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(7, "div", 57)(8, "div")(9, "label", 58);
+    \u0275\u0275text(10);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(11, "input", 59);
+    \u0275\u0275twoWayListener("ngModelChange", function MedicationsComponent_Conditional_14_Template_input_ngModelChange_11_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formName, $event) || (ctx_r0.formName = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(12, "div")(13, "label", 58);
+    \u0275\u0275text(14);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(15, "input", 60);
+    \u0275\u0275twoWayListener("ngModelChange", function MedicationsComponent_Conditional_14_Template_input_ngModelChange_15_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formDosage, $event) || (ctx_r0.formDosage = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(16, "div")(17, "label", 58);
+    \u0275\u0275text(18);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(19, "div", 61);
+    \u0275\u0275repeaterCreate(20, MedicationsComponent_Conditional_14_For_21_Template, 2, 2, "button", 62, _forTrack13);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(22, "div")(23, "label", 58);
+    \u0275\u0275text(24);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(25, "input", 63);
+    \u0275\u0275twoWayListener("ngModelChange", function MedicationsComponent_Conditional_14_Template_input_ngModelChange_25_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formStartDate, $event) || (ctx_r0.formStartDate = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(26, "div")(27, "label", 58);
+    \u0275\u0275text(28);
+    \u0275\u0275elementStart(29, "span", 64);
+    \u0275\u0275text(30);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(31, "input", 63);
+    \u0275\u0275twoWayListener("ngModelChange", function MedicationsComponent_Conditional_14_Template_input_ngModelChange_31_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formEndDate, $event) || (ctx_r0.formEndDate = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(32, "div")(33, "label", 58);
+    \u0275\u0275text(34);
+    \u0275\u0275elementStart(35, "span", 64);
+    \u0275\u0275text(36);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(37, "input", 59);
+    \u0275\u0275twoWayListener("ngModelChange", function MedicationsComponent_Conditional_14_Template_input_ngModelChange_37_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formPrescribedBy, $event) || (ctx_r0.formPrescribedBy = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(38, "div", 65)(39, "div")(40, "p", 66);
+    \u0275\u0275text(41);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(42, "p", 67);
+    \u0275\u0275text(43);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(44, "button", 68);
+    \u0275\u0275listener("click", function MedicationsComponent_Conditional_14_Template_button_click_44_listener() {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.formActive.set(!ctx_r0.formActive()));
+    })("click", function MedicationsComponent_Conditional_14_Template_button_click_44_listener() {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.formActive.set(!ctx_r0.formActive()));
+    });
+    \u0275\u0275element(45, "span", 69);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(46, "div")(47, "label", 58);
+    \u0275\u0275text(48);
+    \u0275\u0275elementStart(49, "span", 64);
+    \u0275\u0275text(50);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(51, "textarea", 70);
+    \u0275\u0275twoWayListener("ngModelChange", function MedicationsComponent_Conditional_14_Template_textarea_ngModelChange_51_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formNotes, $event) || (ctx_r0.formNotes = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275conditionalCreate(52, MedicationsComponent_Conditional_14_Conditional_52_Template, 2, 1, "div", 71);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(53, "div", 72)(54, "button", 73);
+    \u0275\u0275listener("click", function MedicationsComponent_Conditional_14_Template_button_click_54_listener() {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.closeModal());
+    });
+    \u0275\u0275text(55);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(56, "button", 74);
+    \u0275\u0275listener("click", function MedicationsComponent_Conditional_14_Template_button_click_56_listener() {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.saveMedication());
+    });
+    \u0275\u0275conditionalCreate(57, MedicationsComponent_Conditional_14_Conditional_57_Template, 2, 1)(58, MedicationsComponent_Conditional_14_Conditional_58_Template, 2, 1);
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.editingMed() ? ctx_r0.i18n.t()["medications.editMed"] || "Redakto Medikamentin" : ctx_r0.i18n.t()["medications.addMed"] || "Shto Medikament", " ");
+    \u0275\u0275advance(6);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.name"] || "Emri i medikamentit", " * ");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formName);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.t()["medications.namePlaceholder"] || "P.sh. Amoxicillin");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.dosage"] || "Doza", " * ");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formDosage);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.frequency"] || "Frekuenca", " * ");
+    \u0275\u0275advance(2);
+    \u0275\u0275repeater(ctx_r0.quickFrequencies);
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.startDate"] || "Data e fillimit", " * ");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formStartDate);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.endDate"] || "Data e p\xEBrfundimit", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1("(", ctx_r0.i18n.t()["medications.optional"] || "opsionale", ")");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formEndDate);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.prescribedBy"] || "P\xEBrshkruar nga", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1("(", ctx_r0.i18n.t()["medications.optional"] || "opsionale", ")");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formPrescribedBy);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.t()["medications.prescribedByPlaceholder"] || "P.sh. Dr. Elena Hoxha");
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["medications.active"] || "Aktiv");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["medications.activeHint"] || "Medikamenti n\xEB p\xEBrdorim aktualisht");
+    \u0275\u0275advance();
+    \u0275\u0275property("ngClass", ctx_r0.formActive() ? "bg-indigo-500" : "bg-slate-300");
+    \u0275\u0275advance();
+    \u0275\u0275property("ngClass", ctx_r0.formActive() ? "translate-x-5" : "translate-x-0");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.notes"] || "Sh\xEBnime", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1("(", ctx_r0.i18n.t()["medications.optional"] || "opsionale", ")");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formNotes);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.t()["medications.notesPlaceholder"] || "Sh\xEBno detajet shtes\xEB...");
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.saveError() ? 52 : -1);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.cancel"] || "Anulo", " ");
+    \u0275\u0275advance();
+    \u0275\u0275property("disabled", ctx_r0.saving() || !ctx_r0.canSave());
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.saving() ? 57 : 58);
+  }
+}
+function MedicationsComponent_Conditional_15_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r8 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 51);
+    \u0275\u0275listener("click", function MedicationsComponent_Conditional_15_Template_div_click_0_listener() {
+      \u0275\u0275restoreView(_r8);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.showDeleteModal.set(false));
+    });
+    \u0275\u0275elementStart(1, "div", 78);
+    \u0275\u0275listener("click", function MedicationsComponent_Conditional_15_Template_div_click_1_listener($event) {
+      return $event.stopPropagation();
+    });
+    \u0275\u0275elementStart(2, "div", 79);
+    \u0275\u0275element(3, "lucide-icon", 80);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "h3", 81);
+    \u0275\u0275text(5);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(6, "p", 82);
+    \u0275\u0275text(7);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(8, "div", 83)(9, "button", 84);
+    \u0275\u0275listener("click", function MedicationsComponent_Conditional_15_Template_button_click_9_listener() {
+      \u0275\u0275restoreView(_r8);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.showDeleteModal.set(false));
+    });
+    \u0275\u0275text(10);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(11, "button", 85);
+    \u0275\u0275listener("click", function MedicationsComponent_Conditional_15_Template_button_click_11_listener() {
+      \u0275\u0275restoreView(_r8);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.deleteMedication());
+    });
+    \u0275\u0275text(12);
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    let tmp_2_0;
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(5);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.deleteConfirmTitle"] || "Fshij Medikamentin?", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", (tmp_2_0 = ctx_r0.deletingMed()) == null ? null : tmp_2_0.name, " ");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.cancel"] || "Anulo", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.delete"] || "Fshi", " ");
+  }
+}
+var QUICK_FREQUENCIES = [
+  { value: "once_daily", labelSq: "1x dit\xEBn", labelEn: "Once daily" },
+  { value: "twice_daily", labelSq: "2x dit\xEBn", labelEn: "Twice daily" },
+  { value: "three_times_daily", labelSq: "3x dit\xEBn", labelEn: "Three times daily" },
+  { value: "every_8_hours", labelSq: "\xC7do 8 or\xEB", labelEn: "Every 8 hours" },
+  { value: "as_needed", labelSq: "Sipas nevoj\xEBs", labelEn: "As needed" }
+];
+var MedicationsComponent = class _MedicationsComponent {
+  constructor() {
+    this.i18n = inject2(I18nService);
+    this.data = inject2(DataService);
+    this.quickFrequencies = QUICK_FREQUENCIES;
+    this.loading = signal(false, ...ngDevMode ? [{ debugName: "loading" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.saving = signal(false, ...ngDevMode ? [{ debugName: "saving" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.showModal = signal(false, ...ngDevMode ? [{ debugName: "showModal" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.showDeleteModal = signal(false, ...ngDevMode ? [{ debugName: "showDeleteModal" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.editingMed = signal(null, ...ngDevMode ? [{ debugName: "editingMed" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.deletingMed = signal(null, ...ngDevMode ? [{ debugName: "deletingMed" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.saveError = signal(null, ...ngDevMode ? [{ debugName: "saveError" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formName = signal("", ...ngDevMode ? [{ debugName: "formName" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formDosage = signal("", ...ngDevMode ? [{ debugName: "formDosage" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formFrequency = signal("once_daily", ...ngDevMode ? [{ debugName: "formFrequency" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formStartDate = signal("", ...ngDevMode ? [{ debugName: "formStartDate" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formEndDate = signal("", ...ngDevMode ? [{ debugName: "formEndDate" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formPrescribedBy = signal("", ...ngDevMode ? [{ debugName: "formPrescribedBy" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formNotes = signal("", ...ngDevMode ? [{ debugName: "formNotes" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formActive = signal(true, ...ngDevMode ? [{ debugName: "formActive" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.activeChild = computed(() => {
+      const id = this.data.activeChildId();
+      return this.data.children().find((c) => c.id === id) ?? null;
+    }, ...ngDevMode ? [{ debugName: "activeChild" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.medications = signal([], ...ngDevMode ? [{ debugName: "medications" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.activeMedications = computed(() => this.medications().filter((m) => m.active), ...ngDevMode ? [{ debugName: "activeMedications" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.canSave = computed(() => !!(this.formName().trim() && this.formDosage().trim() && this.formFrequency() && this.formStartDate()), ...ngDevMode ? [{ debugName: "canSave" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+  }
+  ngOnInit() {
+    this.loadMedications();
+  }
+  ngOnDestroy() {
+  }
+  loadMedications() {
+    return __async(this, null, function* () {
+      const childId = this.data.activeChildId();
+      if (!childId)
+        return;
+      this.loading.set(true);
+      try {
+        const token = localStorage.getItem(this.data.AUTH_KEY);
+        const response = yield fetch(`${this.data.API_URL}/medications/child/${childId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = yield response.json();
+          this.medications.set(Array.isArray(data) ? data : []);
+        }
+      } catch (e) {
+      } finally {
+        this.loading.set(false);
+      }
+    });
+  }
+  openAddModal() {
+    this.editingMed.set(null);
+    this.formName.set("");
+    this.formDosage.set("");
+    this.formFrequency.set("once_daily");
+    this.formStartDate.set((/* @__PURE__ */ new Date()).toISOString().split("T")[0]);
+    this.formEndDate.set("");
+    this.formPrescribedBy.set("");
+    this.formNotes.set("");
+    this.formActive.set(true);
+    this.saveError.set(null);
+    this.showModal.set(true);
+  }
+  openEditModal(med) {
+    this.editingMed.set(med);
+    this.formName.set(med.name);
+    this.formDosage.set(med.dosage);
+    this.formFrequency.set(med.frequency);
+    this.formStartDate.set(med.startDate ? med.startDate.split("T")[0] : "");
+    this.formEndDate.set(med.endDate ? med.endDate.split("T")[0] : "");
+    this.formPrescribedBy.set(med.prescribedBy || "");
+    this.formNotes.set(med.notes || "");
+    this.formActive.set(med.active);
+    this.saveError.set(null);
+    this.showModal.set(true);
+  }
+  closeModal() {
+    this.showModal.set(false);
+    this.editingMed.set(null);
+  }
+  saveMedication() {
+    return __async(this, null, function* () {
+      if (!this.canSave())
+        return;
+      const childId = this.data.activeChildId();
+      if (!childId)
+        return;
+      this.saving.set(true);
+      this.saveError.set(null);
+      const payload = {
+        name: this.formName().trim(),
+        dosage: this.formDosage().trim(),
+        frequency: this.formFrequency(),
+        startDate: new Date(this.formStartDate()).toISOString(),
+        endDate: this.formEndDate() ? new Date(this.formEndDate()).toISOString() : void 0,
+        prescribedBy: this.formPrescribedBy().trim() || void 0,
+        notes: this.formNotes().trim() || void 0,
+        active: this.formActive()
+      };
+      try {
+        const token = localStorage.getItem(this.data.AUTH_KEY);
+        const editing = this.editingMed();
+        const url = editing ? `${this.data.API_URL}/medications/${editing.id}` : `${this.data.API_URL}/medications/${childId}`;
+        const method = editing ? "PATCH" : "POST";
+        const response = yield fetch(url, {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+          const err = yield response.json().catch(() => ({}));
+          throw new Error(err.message || "Save failed");
+        }
+        const saved = yield response.json();
+        const meds = [...this.medications()];
+        if (editing) {
+          const idx = meds.findIndex((m) => m.id === saved.id);
+          if (idx >= 0)
+            meds[idx] = __spreadValues(__spreadValues({}, meds[idx]), saved);
+        } else {
+          meds.unshift(saved);
+        }
+        this.medications.set(meds);
+        this.closeModal();
+      } catch (err) {
+        this.saveError.set(err.message || this.i18n.t()["medications.saveError"] || "Ruajtja d\xEBshtoi.");
+      } finally {
+        this.saving.set(false);
+      }
+    });
+  }
+  confirmDelete(med) {
+    this.deletingMed.set(med);
+    this.showDeleteModal.set(true);
+  }
+  deleteMedication() {
+    return __async(this, null, function* () {
+      const med = this.deletingMed();
+      if (!med)
+        return;
+      try {
+        const token = localStorage.getItem(this.data.AUTH_KEY);
+        const response = yield fetch(`${this.data.API_URL}/medications/${med.id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.ok) {
+          this.medications.set(this.medications().filter((m) => m.id !== med.id));
+        }
+      } catch (e) {
+      } finally {
+        this.showDeleteModal.set(false);
+        this.deletingMed.set(null);
+      }
+    });
+  }
+  frequencyLabel(freq) {
+    const f = QUICK_FREQUENCIES.find((f2) => f2.value === freq);
+    return f ? this.i18n.isSq() ? f.labelSq : f.labelEn : freq;
+  }
+  formatDate(dateStr) {
+    if (!dateStr)
+      return "";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString(this.i18n.isSq() ? "sq-AL" : "en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
+  static {
+    this.\u0275fac = function MedicationsComponent_Factory(__ngFactoryType__) {
+      return new (__ngFactoryType__ || _MedicationsComponent)();
+    };
+  }
+  static {
+    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _MedicationsComponent, selectors: [["app-medications"]], decls: 16, vars: 9, consts: [[1, "min-h-screen", "bg-gray-50", "pb-24"], [1, "bg-white", "border-b", "border-gray-100", "px-4", "pt-6", "pb-4"], [1, "flex", "items-center", "justify-between"], [1, "text-3xl", "font-extrabold", "text-gray-800"], [1, "text-slate-400", "text-sm", "mt-1", "font-medium"], [1, "bg-indigo-500", "hover:bg-indigo-600", "text-white", "px-5", "py-2.5", "rounded-2xl", "font-bold", "shadow-sm", "transition-all", "flex", "items-center", "gap-2", "text-sm", 3, "click"], ["name", "plus", 1, "text-inherit"], [1, "px-4", "mt-4"], [1, "px-4", "mt-4", "space-y-3"], [1, "flex", "flex-col", "items-center", "justify-center", "mt-20", "px-4"], [1, "fixed", "inset-0", "z-50", "flex", "items-center", "justify-center", "p-4", "bg-black/40", "backdrop-blur-sm"], [1, "bg-indigo-50", "border", "border-indigo-200", "rounded-2xl", "p-4", "flex", "items-center", "gap-3"], [1, "w-10", "h-10", "bg-indigo-100", "rounded-full", "flex", "items-center", "justify-center", "flex-shrink-0"], ["name", "pill", 1, "text-indigo-500", "w-5", "h-5"], [1, "flex-1"], [1, "font-bold", "text-indigo-700", "text-sm"], [1, "text-xs", "text-indigo-500"], [1, "bg-white", "rounded-2xl", "p-5", "border", "border-gray-100", "animate-pulse"], [1, "flex", "gap-4"], [1, "w-12", "h-12", "rounded-xl", "bg-gray-200"], [1, "flex-1", "space-y-2"], [1, "h-4", "bg-gray-200", "rounded", "w-1/2"], [1, "h-3", "bg-gray-100", "rounded", "w-1/3"], ["width", "160", "height", "160", "viewBox", "0 0 160 160", "fill", "none", 1, "mb-6"], ["cx", "80", "cy", "80", "r", "60", "fill", "#EEF2FF"], ["d", "M65 75h30M65 85h20", "stroke", "#6366F1", "stroke-width", "4", "stroke-linecap", "round"], ["cx", "80", "cy", "80", "r", "40", "stroke", "#C7D2FE", "stroke-width", "3", "fill", "none"], [1, "text-xl", "font-extrabold", "text-gray-700", "mb-2"], [1, "text-slate-400", "text-center", "mb-6", "text-sm"], [1, "bg-indigo-500", "hover:bg-indigo-600", "text-white", "px-6", "py-3", "rounded-2xl", "font-bold", "shadow-sm", "transition-all", "text-sm", 3, "click"], ["name", "plus", 1, "text-inherit", "inline", "w-4", "h-4", "mr-1"], [1, "bg-white", "rounded-2xl", "border", "border-gray-100", "shadow-sm", "overflow-hidden"], [1, "p-5"], [1, "flex", "items-start", "gap-4"], [1, "w-12", "h-12", "rounded-xl", "flex", "items-center", "justify-center", "flex-shrink-0", 3, "ngClass"], [1, "w-5", "h-5", 3, "name", "ngClass"], [1, "flex-1", "min-w-0"], [1, "flex", "items-start", "justify-between", "gap-2"], [1, "font-bold", "text-gray-800", "text-base", "truncate"], [1, "text-xs", "font-semibold", "px-2.5", "py-1", "rounded-full", "flex-shrink-0", 3, "ngClass"], [1, "flex", "items-center", "gap-2", "mt-1.5", "text-sm", "text-slate-500"], ["name", "syringe", 1, "w-3.5", "h-3.5", "text-slate-400", "flex-shrink-0"], [1, "flex", "items-center", "gap-2", "mt-1", "text-xs", "text-slate-400"], ["name", "calendar", 1, "w-3.5", "h-3.5", "flex-shrink-0"], [1, "mt-3", "text-xs", "text-slate-500", "bg-slate-50", "rounded-xl", "p-3"], [1, "flex", "items-center", "gap-2", "mt-4"], [1, "flex-1", "py-2", "rounded-xl", "text-xs", "font-semibold", "bg-slate-50", "hover:bg-slate-100", "text-slate-600", "transition-all", "flex", "items-center", "justify-center", "gap-1.5", 3, "click"], ["name", "pencil", 1, "w-3.5", "h-3.5"], [1, "flex-1", "py-2", "rounded-xl", "text-xs", "font-semibold", "bg-red-50", "hover:bg-red-100", "text-red-600", "transition-all", "flex", "items-center", "justify-center", "gap-1.5", 3, "click"], ["name", "trash-2", 1, "w-3.5", "h-3.5"], ["name", "user", 1, "w-3.5", "h-3.5", "flex-shrink-0"], [1, "fixed", "inset-0", "z-50", "flex", "items-center", "justify-center", "p-4", "bg-black/40", "backdrop-blur-sm", 3, "click"], [1, "bg-white", "rounded-3xl", "shadow-2xl", "w-full", "max-w-md", "max-h-[90vh]", "overflow-y-auto", 3, "click"], [1, "px-6", "pt-6", "pb-4", "border-b", "border-gray-100", "flex", "items-center", "justify-between"], [1, "text-xl", "font-extrabold", "text-gray-800"], [1, "p-2", "rounded-xl", "hover:bg-gray-100", "transition-colors", 3, "click"], ["name", "x", 1, "w-5", "h-5", "text-slate-400"], [1, "p-6", "space-y-5"], [1, "block", "text-xs", "font-bold", "text-primary-700", "mb-2", "uppercase", "tracking-wider"], ["type", "text", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "ngModel", "placeholder"], ["type", "text", "placeholder", "P.sh. 250mg ose 5ml", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "ngModel"], [1, "grid", "grid-cols-2", "gap-2"], ["type", "button", 1, "py-2.5", "rounded-xl", "text-xs", "font-semibold", "border-2", "transition-all", "text-center", 3, "ngClass"], ["type", "date", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", 3, "ngModelChange", "ngModel"], [1, "text-slate-400", "normal-case", "font-normal", "text-xs", "ml-1"], [1, "flex", "items-center", "justify-between", "p-4", "bg-slate-50", "rounded-2xl"], [1, "font-semibold", "text-gray-800", "text-sm"], [1, "text-xs", "text-slate-500"], ["type", "button", 1, "relative", "w-12", "h-7", "rounded-full", "transition-colors", 3, "click", "ngClass"], [1, "absolute", "top-1", "left-1", "w-5", "h-5", "bg-white", "rounded-full", "shadow", "transition-transform", 3, "ngClass"], ["rows", "2", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "resize-none", 3, "ngModelChange", "ngModel", "placeholder"], [1, "p-3", "bg-red-50", "border", "border-red-200", "rounded-xl", "text-red-600", "text-sm", "font-semibold"], [1, "px-6", "pb-6", "flex", "gap-3"], [1, "flex-1", "py-3.5", "rounded-2xl", "font-bold", "text-slate-600", "bg-slate-100", "hover:bg-slate-200", "transition-all", "text-sm", 3, "click"], [1, "flex-1", "py-3.5", "rounded-2xl", "font-bold", "text-white", "bg-indigo-500", "hover:bg-indigo-600", "disabled:opacity-50", "disabled:cursor-not-allowed", "transition-all", "text-sm", "flex", "items-center", "justify-center", "gap-2", 3, "click", "disabled"], ["type", "button", 1, "py-2.5", "rounded-xl", "text-xs", "font-semibold", "border-2", "transition-all", "text-center", 3, "click", "ngClass"], ["name", "loader-2", 1, "w-4", "h-4", "animate-spin"], ["name", "check", 1, "w-4", "h-4"], [1, "bg-white", "rounded-3xl", "shadow-2xl", "w-full", "max-w-sm", "p-6", 3, "click"], [1, "w-14", "h-14", "bg-red-100", "rounded-2xl", "flex", "items-center", "justify-center", "mx-auto", "mb-4"], ["name", "trash-2", 1, "text-red-500", "w-6", "h-6"], [1, "text-lg", "font-extrabold", "text-gray-800", "text-center", "mb-2"], [1, "text-slate-500", "text-sm", "text-center", "mb-6"], [1, "flex", "gap-3"], [1, "flex-1", "py-3", "rounded-2xl", "font-bold", "text-slate-600", "bg-slate-100", "hover:bg-slate-200", "transition-all", "text-sm", 3, "click"], [1, "flex-1", "py-3", "rounded-2xl", "font-bold", "text-white", "bg-red-500", "hover:bg-red-600", "transition-all", "text-sm", 3, "click"]], template: function MedicationsComponent_Template(rf, ctx) {
+      if (rf & 1) {
+        \u0275\u0275elementStart(0, "div", 0)(1, "div", 1)(2, "div", 2)(3, "div")(4, "h1", 3);
+        \u0275\u0275text(5);
+        \u0275\u0275elementEnd();
+        \u0275\u0275conditionalCreate(6, MedicationsComponent_Conditional_6_Template, 2, 1, "p", 4);
+        \u0275\u0275elementEnd();
+        \u0275\u0275elementStart(7, "button", 5);
+        \u0275\u0275listener("click", function MedicationsComponent_Template_button_click_7_listener() {
+          return ctx.openAddModal();
+        });
+        \u0275\u0275element(8, "lucide-icon", 6);
+        \u0275\u0275text(9);
+        \u0275\u0275elementEnd()()();
+        \u0275\u0275conditionalCreate(10, MedicationsComponent_Conditional_10_Template, 9, 3, "div", 7);
+        \u0275\u0275conditionalCreate(11, MedicationsComponent_Conditional_11_Template, 3, 1, "div", 8);
+        \u0275\u0275conditionalCreate(12, MedicationsComponent_Conditional_12_Template, 12, 3, "div", 9);
+        \u0275\u0275conditionalCreate(13, MedicationsComponent_Conditional_13_Template, 3, 0, "div", 8);
+        \u0275\u0275elementEnd();
+        \u0275\u0275conditionalCreate(14, MedicationsComponent_Conditional_14_Template, 59, 28, "div", 10);
+        \u0275\u0275conditionalCreate(15, MedicationsComponent_Conditional_15_Template, 13, 4, "div", 10);
+      }
+      if (rf & 2) {
+        \u0275\u0275advance(5);
+        \u0275\u0275textInterpolate(ctx.i18n.t()["medications.title"] || "Medikamentet");
+        \u0275\u0275advance();
+        \u0275\u0275conditional(ctx.activeChild() ? 6 : -1);
+        \u0275\u0275advance(3);
+        \u0275\u0275textInterpolate1(" ", ctx.i18n.t()["medications.add"] || "Shto Medikament", " ");
+        \u0275\u0275advance();
+        \u0275\u0275conditional(ctx.activeMedications().length > 0 ? 10 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275conditional(ctx.loading() ? 11 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275conditional(!ctx.loading() && ctx.medications().length === 0 ? 12 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275conditional(!ctx.loading() && ctx.medications().length > 0 ? 13 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275conditional(ctx.showModal() ? 14 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275conditional(ctx.showDeleteModal() ? 15 : -1);
+      }
+    }, dependencies: [CommonModule, NgClass, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel, LucideAngularModule, LucideAngularComponent], encapsulation: 2 });
+  }
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(MedicationsComponent, [{
+    type: Component,
+    args: [{ selector: "app-medications", imports: [CommonModule, FormsModule, LucideAngularModule], template: `
+    <div class="min-h-screen bg-gray-50 pb-24">
+
+      <!-- Header -->
+      <div class="bg-white border-b border-gray-100 px-4 pt-6 pb-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-3xl font-extrabold text-gray-800">{{ i18n.t()['medications.title'] || 'Medikamentet' }}</h1>
+            @if (activeChild()) {
+              <p class="text-slate-400 text-sm mt-1 font-medium">{{ activeChild()?.name }}</p>
+            }
+          </div>
+          <button (click)="openAddModal()"
+            class="bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-2.5 rounded-2xl font-bold shadow-sm transition-all flex items-center gap-2 text-sm">
+            <lucide-icon name="plus" class="text-inherit"></lucide-icon>
+            {{ i18n.t()['medications.add'] || 'Shto Medikament' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Medications Summary -->
+      @if (activeMedications().length > 0) {
+        <div class="px-4 mt-4">
+          <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-4 flex items-center gap-3">
+            <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <lucide-icon name="pill" class="text-indigo-500 w-5 h-5"></lucide-icon>
+            </div>
+            <div class="flex-1">
+              <p class="font-bold text-indigo-700 text-sm">{{ activeMedications().length }} {{ i18n.t()['medications.activeLabel'] || 'medikamente active' }}</p>
+              <p class="text-xs text-indigo-500">{{ i18n.t()['medications.activeDesc'] || 'N\xEB p\xEBrdorim aktualisht' }}</p>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Loading Skeleton -->
+      @if (loading()) {
+        <div class="px-4 mt-4 space-y-3">
+          @for (i of [1,2,3]; track i) {
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 animate-pulse">
+              <div class="flex gap-4">
+                <div class="w-12 h-12 rounded-xl bg-gray-200"></div>
+                <div class="flex-1 space-y-2">
+                  <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div class="h-3 bg-gray-100 rounded w-1/3"></div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Empty State -->
+      @if (!loading() && medications().length === 0) {
+        <div class="flex flex-col items-center justify-center mt-20 px-4">
+          <svg width="160" height="160" viewBox="0 0 160 160" fill="none" class="mb-6">
+            <circle cx="80" cy="80" r="60" fill="#EEF2FF"/>
+            <path d="M65 75h30M65 85h20" stroke="#6366F1" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="80" cy="80" r="40" stroke="#C7D2FE" stroke-width="3" fill="none"/>
+          </svg>
+          <h3 class="text-xl font-extrabold text-gray-700 mb-2">
+            {{ i18n.t()['medications.empty'] || 'Nuk ka medikamente' }}
+          </h3>
+          <p class="text-slate-400 text-center mb-6 text-sm">
+            {{ i18n.t()['medications.emptyHint'] || 'Shtoni medikamentet e para p\xEBr t\xEB ndjekur trajtimin' }}
+          </p>
+          <button (click)="openAddModal()"
+            class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-sm transition-all text-sm">
+            <lucide-icon name="plus" class="text-inherit inline w-4 h-4 mr-1"></lucide-icon>
+            {{ i18n.t()['medications.addFirst'] || 'Shto medikamentin e par\xEB' }}
+          </button>
+        </div>
+      }
+
+      <!-- Medication List -->
+      @if (!loading() && medications().length > 0) {
+        <div class="px-4 mt-4 space-y-3">
+          @for (med of medications(); track med.id) {
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div class="p-5">
+                <div class="flex items-start gap-4">
+                  <!-- Icon -->
+                  <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                       [ngClass]="med.active ? 'bg-green-100' : 'bg-gray-100'">
+                    <lucide-icon [name]="med.active ? 'pill' : 'pill-off'"
+                      [ngClass]="med.active ? 'text-green-600' : 'text-gray-400'"
+                      class="w-5 h-5"></lucide-icon>
+                  </div>
+
+                  <!-- Info -->
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-2">
+                      <h3 class="font-bold text-gray-800 text-base truncate">{{ med.name }}</h3>
+                      <span class="text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
+                            [ngClass]="med.active
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-gray-100 text-gray-500'">
+                        {{ med.active
+                          ? (i18n.t()['medications.active'] || 'Aktiv')
+                          : (i18n.t()['medications.inactive'] || 'Jo aktiv') }}
+                      </span>
+                    </div>
+
+                    <!-- Dosage & Frequency -->
+                    <div class="flex items-center gap-2 mt-1.5 text-sm text-slate-500">
+                      <lucide-icon name="syringe" class="w-3.5 h-3.5 text-slate-400 flex-shrink-0"></lucide-icon>
+                      <span>{{ med.dosage }} \u2014 {{ frequencyLabel(med.frequency) }}</span>
+                    </div>
+
+                    <!-- Duration -->
+                    <div class="flex items-center gap-2 mt-1 text-xs text-slate-400">
+                      <lucide-icon name="calendar" class="w-3.5 h-3.5 flex-shrink-0"></lucide-icon>
+                      <span>{{ formatDate(med.startDate) }}
+                        @if (med.endDate) {
+                          \u2192 {{ formatDate(med.endDate) }}
+                        } @else {
+                          \u2192 {{ i18n.t()['medications.ongoing'] || 'N\xEB vazhdim' }}
+                        }
+                      </span>
+                    </div>
+
+                    <!-- Prescribed by -->
+                    @if (med.prescribedBy) {
+                      <div class="flex items-center gap-2 mt-1 text-xs text-slate-400">
+                        <lucide-icon name="user" class="w-3.5 h-3.5 flex-shrink-0"></lucide-icon>
+                        <span>{{ med.prescribedBy }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Notes -->
+                @if (med.notes) {
+                  <div class="mt-3 text-xs text-slate-500 bg-slate-50 rounded-xl p-3">
+                    {{ med.notes }}
+                  </div>
+                }
+
+                <!-- Actions -->
+                <div class="flex items-center gap-2 mt-4">
+                  <button (click)="openEditModal(med)"
+                    class="flex-1 py-2 rounded-xl text-xs font-semibold bg-slate-50 hover:bg-slate-100 text-slate-600 transition-all flex items-center justify-center gap-1.5">
+                    <lucide-icon name="pencil" class="w-3.5 h-3.5"></lucide-icon>
+                    {{ i18n.t()['medications.edit'] || 'Redakto' }}
+                  </button>
+                  <button (click)="confirmDelete(med)"
+                    class="flex-1 py-2 rounded-xl text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 transition-all flex items-center justify-center gap-1.5">
+                    <lucide-icon name="trash-2" class="w-3.5 h-3.5"></lucide-icon>
+                    {{ i18n.t()['medications.delete'] || 'Fshi' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Add/Edit Modal -->
+    @if (showModal()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+           (click)="closeModal()">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+             (click)="$event.stopPropagation()">
+
+          <!-- Modal Header -->
+          <div class="px-6 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between">
+            <h2 class="text-xl font-extrabold text-gray-800">
+              {{ editingMed() ? (i18n.t()['medications.editMed'] || 'Redakto Medikamentin')
+                               : (i18n.t()['medications.addMed'] || 'Shto Medikament') }}
+            </h2>
+            <button (click)="closeModal()" class="p-2 rounded-xl hover:bg-gray-100 transition-colors">
+              <lucide-icon name="x" class="w-5 h-5 text-slate-400"></lucide-icon>
+            </button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="p-6 space-y-5">
+            <!-- Name -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['medications.name'] || 'Emri i medikamentit' }} *
+              </label>
+              <input type="text" [(ngModel)]="formName"
+                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm font-medium"
+                [placeholder]="i18n.t()['medications.namePlaceholder'] || 'P.sh. Amoxicillin'">
+            </div>
+
+            <!-- Dosage -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['medications.dosage'] || 'Doza' }} *
+              </label>
+              <input type="text" [(ngModel)]="formDosage"
+                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm font-medium"
+                placeholder="P.sh. 250mg ose 5ml">
+            </div>
+
+            <!-- Frequency -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['medications.frequency'] || 'Frekuenca' }} *
+              </label>
+              <div class="grid grid-cols-2 gap-2">
+                @for (freq of quickFrequencies; track freq.value) {
+                  <button type="button" (click)="formFrequency.set(freq.value)"
+                    class="py-2.5 rounded-xl text-xs font-semibold border-2 transition-all text-center"
+                    [ngClass]="formFrequency() === freq.value
+                      ? 'bg-indigo-500 text-white border-indigo-500'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-indigo-200'">
+                    {{ i18n.isSq() ? freq.labelSq : freq.labelEn }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- Start Date -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['medications.startDate'] || 'Data e fillimit' }} *
+              </label>
+              <input type="date" [(ngModel)]="formStartDate"
+                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm">
+            </div>
+
+            <!-- End Date (optional) -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['medications.endDate'] || 'Data e p\xEBrfundimit' }}
+                <span class="text-slate-400 normal-case font-normal text-xs ml-1">({{ i18n.t()['medications.optional'] || 'opsionale' }})</span>
+              </label>
+              <input type="date" [(ngModel)]="formEndDate"
+                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm">
+            </div>
+
+            <!-- Prescribed By -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['medications.prescribedBy'] || 'P\xEBrshkruar nga' }}
+                <span class="text-slate-400 normal-case font-normal text-xs ml-1">({{ i18n.t()['medications.optional'] || 'opsionale' }})</span>
+              </label>
+              <input type="text" [(ngModel)]="formPrescribedBy"
+                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm font-medium"
+                [placeholder]="i18n.t()['medications.prescribedByPlaceholder'] || 'P.sh. Dr. Elena Hoxha'">
+            </div>
+
+            <!-- Active toggle -->
+            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+              <div>
+                <p class="font-semibold text-gray-800 text-sm">{{ i18n.t()['medications.active'] || 'Aktiv' }}</p>
+                <p class="text-xs text-slate-500">{{ i18n.t()['medications.activeHint'] || 'Medikamenti n\xEB p\xEBrdorim aktualisht' }}</p>
+              </div>
+              <button type="button" (click)="formActive.set(!formActive())"
+                class="relative w-12 h-7 rounded-full transition-colors"
+                [ngClass]="formActive() ? 'bg-indigo-500' : 'bg-slate-300'"
+                (click)="formActive.set(!formActive())">
+                <span class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform"
+                      [ngClass]="formActive() ? 'translate-x-5' : 'translate-x-0'"></span>
+              </button>
+            </div>
+
+            <!-- Notes -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['medications.notes'] || 'Sh\xEBnime' }}
+                <span class="text-slate-400 normal-case font-normal text-xs ml-1">({{ i18n.t()['medications.optional'] || 'opsionale' }})</span>
+              </label>
+              <textarea [(ngModel)]="formNotes" rows="2"
+                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm resize-none"
+                [placeholder]="i18n.t()['medications.notesPlaceholder'] || 'Sh\xEBno detajet shtes\xEB...'"></textarea>
+            </div>
+
+            <!-- Error -->
+            @if (saveError()) {
+              <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-semibold">
+                {{ saveError() }}
+              </div>
+            }
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="px-6 pb-6 flex gap-3">
+            <button (click)="closeModal()"
+              class="flex-1 py-3.5 rounded-2xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all text-sm">
+              {{ i18n.t()['medications.cancel'] || 'Anulo' }}
+            </button>
+            <button (click)="saveMedication()"
+              [disabled]="saving() || !canSave()"
+              class="flex-1 py-3.5 rounded-2xl font-bold text-white bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2">
+              @if (saving()) {
+                <lucide-icon name="loader-2" class="w-4 h-4 animate-spin"></lucide-icon>
+                {{ i18n.t()['medications.saving'] || 'Duke ruajtur...' }}
+              } @else {
+                <lucide-icon name="check" class="w-4 h-4"></lucide-icon>
+                {{ i18n.t()['medications.save'] || 'Ruaj' }}
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Delete Confirmation Modal -->
+    @if (showDeleteModal()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+           (click)="showDeleteModal.set(false)">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6"
+             (click)="$event.stopPropagation()">
+          <div class="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <lucide-icon name="trash-2" class="text-red-500 w-6 h-6"></lucide-icon>
+          </div>
+          <h3 class="text-lg font-extrabold text-gray-800 text-center mb-2">
+            {{ i18n.t()['medications.deleteConfirmTitle'] || 'Fshij Medikamentin?' }}
+          </h3>
+          <p class="text-slate-500 text-sm text-center mb-6">
+            {{ deletingMed()?.name }}
+          </p>
+          <div class="flex gap-3">
+            <button (click)="showDeleteModal.set(false)"
+              class="flex-1 py-3 rounded-2xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all text-sm">
+              {{ i18n.t()['medications.cancel'] || 'Anulo' }}
+            </button>
+            <button (click)="deleteMedication()"
+              class="flex-1 py-3 rounded-2xl font-bold text-white bg-red-500 hover:bg-red-600 transition-all text-sm">
+              {{ i18n.t()['medications.delete'] || 'Fshi' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  ` }]
+  }], null, null);
+})();
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(MedicationsComponent, { className: "MedicationsComponent", filePath: "src/app/components/medications/medications.component.ts", lineNumber: 366 });
+})();
+
+// src/app/components/appointments/appointments.component.ts
+var _c08 = () => [1, 2, 3];
+var _forTrack011 = ($index, $item) => $item.id;
+function AppointmentsComponent_Conditional_6_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 4);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    let tmp_1_0;
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate((tmp_1_0 = ctx_r0.activeChild()) == null ? null : tmp_1_0.name);
+  }
+}
+function AppointmentsComponent_Conditional_10_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 7)(1, "div", 11)(2, "div", 12);
+    \u0275\u0275element(3, "lucide-icon", 13);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "div", 14)(5, "p", 15);
+    \u0275\u0275text(6);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(7, "p", 16);
+    \u0275\u0275text(8);
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(6);
+    \u0275\u0275textInterpolate2("", ctx_r0.upcomingCount(), " ", ctx_r0.i18n.t()["appointments.upcomingLabel"] || "termine t\xEB ardhshme");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["appointments.upcomingDesc"] || "N\xEB 30 dit\xEBt e ardhshme");
+  }
+}
+function AppointmentsComponent_Conditional_11_For_2_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 17)(1, "div", 18);
+    \u0275\u0275element(2, "div", 19);
+    \u0275\u0275elementStart(3, "div", 20);
+    \u0275\u0275element(4, "div", 21)(5, "div", 22);
+    \u0275\u0275elementEnd()()();
+  }
+}
+function AppointmentsComponent_Conditional_11_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 8);
+    \u0275\u0275repeaterCreate(1, AppointmentsComponent_Conditional_11_For_2_Template, 6, 0, "div", 17, \u0275\u0275repeaterTrackByIdentity);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    \u0275\u0275advance();
+    \u0275\u0275repeater(\u0275\u0275pureFunction0(0, _c08));
+  }
+}
+function AppointmentsComponent_Conditional_12_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r2 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 9);
+    \u0275\u0275namespaceSVG();
+    \u0275\u0275elementStart(1, "svg", 23);
+    \u0275\u0275element(2, "circle", 24)(3, "rect", 25)(4, "line", 26)(5, "line", 27)(6, "line", 28)(7, "path", 29);
+    \u0275\u0275elementEnd();
+    \u0275\u0275namespaceHTML();
+    \u0275\u0275elementStart(8, "h3", 30);
+    \u0275\u0275text(9);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(10, "p", 31);
+    \u0275\u0275text(11);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(12, "button", 32);
+    \u0275\u0275listener("click", function AppointmentsComponent_Conditional_12_Template_button_click_12_listener() {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.openAddModal());
+    });
+    \u0275\u0275element(13, "lucide-icon", 33);
+    \u0275\u0275text(14);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(9);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.empty"] || "Nuk ka termine", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.emptyHint"] || "Shtoni terminin e par\xEB p\xEBr ta ndjekur", " ");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.addFirst"] || "Shto terminin e par\xEB", " ");
+  }
+}
+function AppointmentsComponent_Conditional_13_For_2_Conditional_9_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 43);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.upcoming"] || "S\xEB shpejti", " ");
+  }
+}
+function AppointmentsComponent_Conditional_13_For_2_Conditional_14_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 46);
+    \u0275\u0275element(1, "lucide-icon", 53);
+    \u0275\u0275elementStart(2, "span");
+    \u0275\u0275text(3);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const appt_r4 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(appt_r4.doctorName);
+  }
+}
+function AppointmentsComponent_Conditional_13_For_2_Conditional_15_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 46);
+    \u0275\u0275element(1, "lucide-icon", 54);
+    \u0275\u0275elementStart(2, "span");
+    \u0275\u0275text(3);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const appt_r4 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(appt_r4.location);
+  }
+}
+function AppointmentsComponent_Conditional_13_For_2_Conditional_16_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 47);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const appt_r4 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", appt_r4.notes, " ");
+  }
+}
+function AppointmentsComponent_Conditional_13_For_2_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r3 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 35)(1, "div", 36)(2, "div", 37)(3, "div", 38);
+    \u0275\u0275element(4, "lucide-icon", 39);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "div", 40)(6, "div", 41)(7, "h3", 42);
+    \u0275\u0275text(8);
+    \u0275\u0275elementEnd();
+    \u0275\u0275conditionalCreate(9, AppointmentsComponent_Conditional_13_For_2_Conditional_9_Template, 2, 1, "span", 43);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(10, "div", 44);
+    \u0275\u0275element(11, "lucide-icon", 45);
+    \u0275\u0275elementStart(12, "span");
+    \u0275\u0275text(13);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275conditionalCreate(14, AppointmentsComponent_Conditional_13_For_2_Conditional_14_Template, 4, 1, "div", 46);
+    \u0275\u0275conditionalCreate(15, AppointmentsComponent_Conditional_13_For_2_Conditional_15_Template, 4, 1, "div", 46);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275conditionalCreate(16, AppointmentsComponent_Conditional_13_For_2_Conditional_16_Template, 2, 1, "div", 47);
+    \u0275\u0275elementStart(17, "div", 48)(18, "button", 49);
+    \u0275\u0275listener("click", function AppointmentsComponent_Conditional_13_For_2_Template_button_click_18_listener() {
+      const appt_r4 = \u0275\u0275restoreView(_r3).$implicit;
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.openEditModal(appt_r4));
+    });
+    \u0275\u0275element(19, "lucide-icon", 50);
+    \u0275\u0275text(20);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(21, "button", 51);
+    \u0275\u0275listener("click", function AppointmentsComponent_Conditional_13_For_2_Template_button_click_21_listener() {
+      const appt_r4 = \u0275\u0275restoreView(_r3).$implicit;
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.confirmDelete(appt_r4));
+    });
+    \u0275\u0275element(22, "lucide-icon", 52);
+    \u0275\u0275text(23);
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    const appt_r4 = ctx.$implicit;
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275classProp("border-teal-200", ctx_r0.isUpcoming(appt_r4))("bg-teal-50/30", ctx_r0.isUpcoming(appt_r4));
+    \u0275\u0275advance(3);
+    \u0275\u0275property("ngClass", ctx_r0.isPast(appt_r4) ? "bg-slate-100" : "bg-indigo-100");
+    \u0275\u0275advance();
+    \u0275\u0275property("name", ctx_r0.isPast(appt_r4) ? "calendar-check" : "calendar")("ngClass", ctx_r0.isPast(appt_r4) ? "text-slate-400" : "text-indigo-500");
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(appt_r4.title);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.isUpcoming(appt_r4) ? 9 : -1);
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(ctx_r0.formatDateTime(appt_r4.dateTime));
+    \u0275\u0275advance();
+    \u0275\u0275conditional(appt_r4.doctorName ? 14 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(appt_r4.location ? 15 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(appt_r4.notes ? 16 : -1);
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.edit"] || "Redakto", " ");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.delete"] || "Fshi", " ");
+  }
+}
+function AppointmentsComponent_Conditional_13_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 8);
+    \u0275\u0275repeaterCreate(1, AppointmentsComponent_Conditional_13_For_2_Template, 24, 15, "div", 34, _forTrack011);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance();
+    \u0275\u0275repeater(ctx_r0.appointments());
+  }
+}
+function AppointmentsComponent_Conditional_14_Conditional_34_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 67);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r0.saveError(), " ");
+  }
+}
+function AppointmentsComponent_Conditional_14_Conditional_39_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "lucide-icon", 71);
+    \u0275\u0275text(1);
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.saving"] || "Duke ruajtur...", " ");
+  }
+}
+function AppointmentsComponent_Conditional_14_Conditional_40_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "lucide-icon", 72);
+    \u0275\u0275text(1);
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.save"] || "Ruaj", " ");
+  }
+}
+function AppointmentsComponent_Conditional_14_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r5 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 55);
+    \u0275\u0275listener("click", function AppointmentsComponent_Conditional_14_Template_div_click_0_listener() {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.closeModal());
+    });
+    \u0275\u0275elementStart(1, "div", 56);
+    \u0275\u0275listener("click", function AppointmentsComponent_Conditional_14_Template_div_click_1_listener($event) {
+      return $event.stopPropagation();
+    });
+    \u0275\u0275elementStart(2, "div", 57)(3, "h2", 58);
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "button", 59);
+    \u0275\u0275listener("click", function AppointmentsComponent_Conditional_14_Template_button_click_5_listener() {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.closeModal());
+    });
+    \u0275\u0275element(6, "lucide-icon", 60);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(7, "div", 61)(8, "div")(9, "label", 62);
+    \u0275\u0275text(10);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(11, "input", 63);
+    \u0275\u0275twoWayListener("ngModelChange", function AppointmentsComponent_Conditional_14_Template_input_ngModelChange_11_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formTitle, $event) || (ctx_r0.formTitle = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(12, "div")(13, "label", 62);
+    \u0275\u0275text(14);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(15, "input", 64);
+    \u0275\u0275twoWayListener("ngModelChange", function AppointmentsComponent_Conditional_14_Template_input_ngModelChange_15_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formDateTime, $event) || (ctx_r0.formDateTime = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(16, "div")(17, "label", 62);
+    \u0275\u0275text(18);
+    \u0275\u0275elementStart(19, "span", 65);
+    \u0275\u0275text(20);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(21, "input", 63);
+    \u0275\u0275twoWayListener("ngModelChange", function AppointmentsComponent_Conditional_14_Template_input_ngModelChange_21_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formDoctorName, $event) || (ctx_r0.formDoctorName = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(22, "div")(23, "label", 62);
+    \u0275\u0275text(24);
+    \u0275\u0275elementStart(25, "span", 65);
+    \u0275\u0275text(26);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(27, "input", 63);
+    \u0275\u0275twoWayListener("ngModelChange", function AppointmentsComponent_Conditional_14_Template_input_ngModelChange_27_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formLocation, $event) || (ctx_r0.formLocation = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(28, "div")(29, "label", 62);
+    \u0275\u0275text(30);
+    \u0275\u0275elementStart(31, "span", 65);
+    \u0275\u0275text(32);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(33, "textarea", 66);
+    \u0275\u0275twoWayListener("ngModelChange", function AppointmentsComponent_Conditional_14_Template_textarea_ngModelChange_33_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formNotes, $event) || (ctx_r0.formNotes = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275conditionalCreate(34, AppointmentsComponent_Conditional_14_Conditional_34_Template, 2, 1, "div", 67);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(35, "div", 68)(36, "button", 69);
+    \u0275\u0275listener("click", function AppointmentsComponent_Conditional_14_Template_button_click_36_listener() {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.closeModal());
+    });
+    \u0275\u0275text(37);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(38, "button", 70);
+    \u0275\u0275listener("click", function AppointmentsComponent_Conditional_14_Template_button_click_38_listener() {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.saveAppointment());
+    });
+    \u0275\u0275conditionalCreate(39, AppointmentsComponent_Conditional_14_Conditional_39_Template, 2, 1)(40, AppointmentsComponent_Conditional_14_Conditional_40_Template, 2, 1);
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.editingAppt() ? ctx_r0.i18n.t()["appointments.editAppt"] || "Redakto Terminin" : ctx_r0.i18n.t()["appointments.addAppt"] || "Shto Termin", " ");
+    \u0275\u0275advance(6);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.titleLabel"] || "Titulli", " * ");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formTitle);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.t()["appointments.titlePlaceholder"] || "P.sh. Kontroll\xEB e p\xEBrgjithshme");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.dateTime"] || "Data dhe Ora", " * ");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formDateTime);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.doctor"] || "Doktori", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1("(", ctx_r0.i18n.t()["appointments.optional"] || "opsionale", ")");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formDoctorName);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.t()["appointments.doctorPlaceholder"] || "P.sh. Dr. Elena Hoxha");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.location"] || "Vendi", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1("(", ctx_r0.i18n.t()["appointments.optional"] || "opsionale", ")");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formLocation);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.t()["appointments.locationPlaceholder"] || "P.sh. Qendra Sh\xEBndet\xEBsore Nr. 3");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.notes"] || "Sh\xEBnime", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1("(", ctx_r0.i18n.t()["appointments.optional"] || "opsionale", ")");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formNotes);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.t()["appointments.notesPlaceholder"] || "Sh\xEBno detajet shtes\xEB...");
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.saveError() ? 34 : -1);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.cancel"] || "Anulo", " ");
+    \u0275\u0275advance();
+    \u0275\u0275property("disabled", ctx_r0.saving() || !ctx_r0.canSave());
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.saving() ? 39 : 40);
+  }
+}
+function AppointmentsComponent_Conditional_15_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r6 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 55);
+    \u0275\u0275listener("click", function AppointmentsComponent_Conditional_15_Template_div_click_0_listener() {
+      \u0275\u0275restoreView(_r6);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.showDeleteModal.set(false));
+    });
+    \u0275\u0275elementStart(1, "div", 73);
+    \u0275\u0275listener("click", function AppointmentsComponent_Conditional_15_Template_div_click_1_listener($event) {
+      return $event.stopPropagation();
+    });
+    \u0275\u0275elementStart(2, "div", 74);
+    \u0275\u0275element(3, "lucide-icon", 75);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "h3", 76);
+    \u0275\u0275text(5);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(6, "p", 77);
+    \u0275\u0275text(7);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(8, "div", 78)(9, "button", 79);
+    \u0275\u0275listener("click", function AppointmentsComponent_Conditional_15_Template_button_click_9_listener() {
+      \u0275\u0275restoreView(_r6);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.showDeleteModal.set(false));
+    });
+    \u0275\u0275text(10);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(11, "button", 80);
+    \u0275\u0275listener("click", function AppointmentsComponent_Conditional_15_Template_button_click_11_listener() {
+      \u0275\u0275restoreView(_r6);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.deleteAppointment());
+    });
+    \u0275\u0275text(12);
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    let tmp_2_0;
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(5);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.deleteConfirmTitle"] || "Fshij Terminin?", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", (tmp_2_0 = ctx_r0.deletingAppt()) == null ? null : tmp_2_0.title, " ");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.cancel"] || "Anulo", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.delete"] || "Fshi", " ");
+  }
+}
+var AppointmentsComponent = class _AppointmentsComponent {
+  constructor() {
+    this.i18n = inject2(I18nService);
+    this.data = inject2(DataService);
+    this.loading = signal(false, ...ngDevMode ? [{ debugName: "loading" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.saving = signal(false, ...ngDevMode ? [{ debugName: "saving" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.showModal = signal(false, ...ngDevMode ? [{ debugName: "showModal" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.showDeleteModal = signal(false, ...ngDevMode ? [{ debugName: "showDeleteModal" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.editingAppt = signal(null, ...ngDevMode ? [{ debugName: "editingAppt" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.deletingAppt = signal(null, ...ngDevMode ? [{ debugName: "deletingAppt" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.saveError = signal(null, ...ngDevMode ? [{ debugName: "saveError" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formTitle = signal("", ...ngDevMode ? [{ debugName: "formTitle" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formDateTime = signal("", ...ngDevMode ? [{ debugName: "formDateTime" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formDoctorName = signal("", ...ngDevMode ? [{ debugName: "formDoctorName" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formLocation = signal("", ...ngDevMode ? [{ debugName: "formLocation" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formNotes = signal("", ...ngDevMode ? [{ debugName: "formNotes" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.activeChild = computed(() => {
+      const id = this.data.activeChildId();
+      return this.data.children().find((c) => c.id === id) ?? null;
+    }, ...ngDevMode ? [{ debugName: "activeChild" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.appointments = signal([], ...ngDevMode ? [{ debugName: "appointments" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.upcomingCount = computed(() => {
+      const now = /* @__PURE__ */ new Date();
+      const thirtyDaysLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1e3);
+      return this.appointments().filter((a) => {
+        const d = new Date(a.dateTime);
+        return d >= now && d <= thirtyDaysLater;
+      }).length;
+    }, ...ngDevMode ? [{ debugName: "upcomingCount" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.canSave = computed(() => !!(this.formTitle().trim() && this.formDateTime()), ...ngDevMode ? [{ debugName: "canSave" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+  }
+  ngOnInit() {
+    this.loadAppointments();
+  }
+  ngOnDestroy() {
+  }
+  loadAppointments() {
+    return __async(this, null, function* () {
+      const childId = this.data.activeChildId();
+      if (!childId)
+        return;
+      this.loading.set(true);
+      try {
+        const token = localStorage.getItem(this.data.AUTH_KEY);
+        const response = yield fetch(`${this.data.API_URL}/appointments/child/${childId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = yield response.json();
+          this.appointments.set(Array.isArray(data) ? data : []);
+        }
+      } catch (e) {
+      } finally {
+        this.loading.set(false);
+      }
+    });
+  }
+  isUpcoming(appt) {
+    const now = /* @__PURE__ */ new Date();
+    const apptDate = new Date(appt.dateTime);
+    return apptDate >= now;
+  }
+  isPast(appt) {
+    return !this.isUpcoming(appt);
+  }
+  openAddModal() {
+    this.editingAppt.set(null);
+    this.formTitle.set("");
+    this.formDateTime.set("");
+    this.formDoctorName.set("");
+    this.formLocation.set("");
+    this.formNotes.set("");
+    this.saveError.set(null);
+    this.showModal.set(true);
+  }
+  openEditModal(appt) {
+    this.editingAppt.set(appt);
+    this.formTitle.set(appt.title);
+    const dt = new Date(appt.dateTime);
+    const pad = (n) => n.toString().padStart(2, "0");
+    this.formDateTime.set(`${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`);
+    this.formDoctorName.set(appt.doctorName || "");
+    this.formLocation.set(appt.location || "");
+    this.formNotes.set(appt.notes || "");
+    this.saveError.set(null);
+    this.showModal.set(true);
+  }
+  closeModal() {
+    this.showModal.set(false);
+    this.editingAppt.set(null);
+  }
+  saveAppointment() {
+    return __async(this, null, function* () {
+      if (!this.canSave())
+        return;
+      const childId = this.data.activeChildId();
+      if (!childId)
+        return;
+      this.saving.set(true);
+      this.saveError.set(null);
+      const payload = {
+        title: this.formTitle().trim(),
+        dateTime: new Date(this.formDateTime()).toISOString(),
+        doctorName: this.formDoctorName().trim() || void 0,
+        location: this.formLocation().trim() || void 0,
+        notes: this.formNotes().trim() || void 0
+      };
+      try {
+        const token = localStorage.getItem(this.data.AUTH_KEY);
+        const editing = this.editingAppt();
+        const url = editing ? `${this.data.API_URL}/appointments/${editing.id}` : `${this.data.API_URL}/appointments/${childId}`;
+        const method = editing ? "PATCH" : "POST";
+        const response = yield fetch(url, {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+          const err = yield response.json().catch(() => ({}));
+          throw new Error(err.message || "Save failed");
+        }
+        const saved = yield response.json();
+        const list = [...this.appointments()];
+        if (editing) {
+          const idx = list.findIndex((a) => a.id === saved.id);
+          if (idx >= 0)
+            list[idx] = __spreadValues(__spreadValues({}, list[idx]), saved);
+        } else {
+          list.unshift(saved);
+        }
+        list.sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
+        this.appointments.set(list);
+        this.closeModal();
+      } catch (err) {
+        this.saveError.set(err.message || this.i18n.t()["appointments.saveError"] || "Ruajtja d\xEBshtoi.");
+      } finally {
+        this.saving.set(false);
+      }
+    });
+  }
+  confirmDelete(appt) {
+    this.deletingAppt.set(appt);
+    this.showDeleteModal.set(true);
+  }
+  deleteAppointment() {
+    return __async(this, null, function* () {
+      const appt = this.deletingAppt();
+      if (!appt)
+        return;
+      try {
+        const token = localStorage.getItem(this.data.AUTH_KEY);
+        const response = yield fetch(`${this.data.API_URL}/appointments/${appt.id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.ok) {
+          this.appointments.set(this.appointments().filter((a) => a.id !== appt.id));
+        }
+      } catch (e) {
+      } finally {
+        this.showDeleteModal.set(false);
+        this.deletingAppt.set(null);
+      }
+    });
+  }
+  formatDateTime(dateTimeStr) {
+    if (!dateTimeStr)
+      return "";
+    const d = new Date(dateTimeStr);
+    const dateStr = d.toLocaleDateString(this.i18n.isSq() ? "sq-AL" : "en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    const timeStr = d.toLocaleTimeString(this.i18n.isSq() ? "sq-AL" : "en-GB", { hour: "2-digit", minute: "2-digit" });
+    return `${dateStr} ${timeStr}`;
+  }
+  static {
+    this.\u0275fac = function AppointmentsComponent_Factory(__ngFactoryType__) {
+      return new (__ngFactoryType__ || _AppointmentsComponent)();
+    };
+  }
+  static {
+    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AppointmentsComponent, selectors: [["app-appointments"]], decls: 16, vars: 9, consts: [[1, "min-h-screen", "bg-gray-50", "pb-24"], [1, "bg-white", "border-b", "border-gray-100", "px-4", "pt-6", "pb-4"], [1, "flex", "items-center", "justify-between"], [1, "text-3xl", "font-extrabold", "text-gray-800"], [1, "text-slate-400", "text-sm", "mt-1", "font-medium"], [1, "bg-indigo-500", "hover:bg-indigo-600", "text-white", "px-5", "py-2.5", "rounded-2xl", "font-bold", "shadow-sm", "transition-all", "flex", "items-center", "gap-2", "text-sm", 3, "click"], ["name", "plus", 1, "text-inherit"], [1, "px-4", "mt-4"], [1, "px-4", "mt-4", "space-y-3"], [1, "flex", "flex-col", "items-center", "justify-center", "mt-20", "px-4"], [1, "fixed", "inset-0", "z-50", "flex", "items-center", "justify-center", "p-4", "bg-black/40", "backdrop-blur-sm"], [1, "bg-teal-50", "border", "border-teal-200", "rounded-2xl", "p-4", "flex", "items-center", "gap-3"], [1, "w-10", "h-10", "bg-teal-100", "rounded-full", "flex", "items-center", "justify-center", "flex-shrink-0"], ["name", "calendar-check", 1, "text-teal-500", "w-5", "h-5"], [1, "flex-1"], [1, "font-bold", "text-teal-700", "text-sm"], [1, "text-xs", "text-teal-500"], [1, "bg-white", "rounded-2xl", "p-5", "border", "border-gray-100", "animate-pulse"], [1, "flex", "gap-4"], [1, "w-12", "h-12", "rounded-xl", "bg-gray-200"], [1, "flex-1", "space-y-2"], [1, "h-4", "bg-gray-200", "rounded", "w-1/2"], [1, "h-3", "bg-gray-100", "rounded", "w-1/3"], ["width", "160", "height", "160", "viewBox", "0 0 160 160", "fill", "none", 1, "mb-6"], ["cx", "80", "cy", "80", "r", "60", "fill", "#F0FDF4"], ["x", "60", "y", "50", "width", "40", "height", "36", "rx", "4", "stroke", "#10B981", "stroke-width", "3", "fill", "none"], ["x1", "60", "y1", "62", "x2", "100", "y2", "62", "stroke", "#10B981", "stroke-width", "3"], ["x1", "60", "y1", "74", "x2", "100", "y2", "74", "stroke", "#10B981", "stroke-width", "3"], ["x1", "60", "y1", "86", "x2", "80", "y2", "86", "stroke", "#10B981", "stroke-width", "3"], ["d", "M80 95 L80 105 M75 100 L85 100", "stroke", "#10B981", "stroke-width", "3", "stroke-linecap", "round"], [1, "text-xl", "font-extrabold", "text-gray-700", "mb-2"], [1, "text-slate-400", "text-center", "mb-6", "text-sm"], [1, "bg-indigo-500", "hover:bg-indigo-600", "text-white", "px-6", "py-3", "rounded-2xl", "font-bold", "shadow-sm", "transition-all", "text-sm", 3, "click"], ["name", "plus", 1, "text-inherit", "inline", "w-4", "h-4", "mr-1"], [1, "bg-white", "rounded-2xl", "border", "border-gray-100", "shadow-sm", "overflow-hidden", 3, "border-teal-200", "bg-teal-50/30"], [1, "bg-white", "rounded-2xl", "border", "border-gray-100", "shadow-sm", "overflow-hidden"], [1, "p-5"], [1, "flex", "items-start", "gap-4"], [1, "w-12", "h-12", "rounded-xl", "flex", "items-center", "justify-center", "flex-shrink-0", 3, "ngClass"], [1, "w-5", "h-5", 3, "name", "ngClass"], [1, "flex-1", "min-w-0"], [1, "flex", "items-start", "justify-between", "gap-2"], [1, "font-bold", "text-gray-800", "text-base", "truncate"], [1, "text-xs", "font-semibold", "px-2.5", "py-1", "rounded-full", "bg-teal-100", "text-teal-700", "flex-shrink-0"], [1, "flex", "items-center", "gap-2", "mt-1.5", "text-sm", "text-slate-500"], ["name", "clock", 1, "w-3.5", "h-3.5", "text-slate-400", "flex-shrink-0"], [1, "flex", "items-center", "gap-2", "mt-1", "text-xs", "text-slate-400"], [1, "mt-3", "text-xs", "text-slate-500", "bg-slate-50", "rounded-xl", "p-3"], [1, "flex", "items-center", "gap-2", "mt-4"], [1, "flex-1", "py-2", "rounded-xl", "text-xs", "font-semibold", "bg-slate-50", "hover:bg-slate-100", "text-slate-600", "transition-all", "flex", "items-center", "justify-center", "gap-1.5", 3, "click"], ["name", "pencil", 1, "w-3.5", "h-3.5"], [1, "flex-1", "py-2", "rounded-xl", "text-xs", "font-semibold", "bg-red-50", "hover:bg-red-100", "text-red-600", "transition-all", "flex", "items-center", "justify-center", "gap-1.5", 3, "click"], ["name", "trash-2", 1, "w-3.5", "h-3.5"], ["name", "stethoscope", 1, "w-3.5", "h-3.5", "flex-shrink-0"], ["name", "map-pin", 1, "w-3.5", "h-3.5", "flex-shrink-0"], [1, "fixed", "inset-0", "z-50", "flex", "items-center", "justify-center", "p-4", "bg-black/40", "backdrop-blur-sm", 3, "click"], [1, "bg-white", "rounded-3xl", "shadow-2xl", "w-full", "max-w-md", "max-h-[90vh]", "overflow-y-auto", 3, "click"], [1, "px-6", "pt-6", "pb-4", "border-b", "border-gray-100", "flex", "items-center", "justify-between"], [1, "text-xl", "font-extrabold", "text-gray-800"], [1, "p-2", "rounded-xl", "hover:bg-gray-100", "transition-colors", 3, "click"], ["name", "x", 1, "w-5", "h-5", "text-slate-400"], [1, "p-6", "space-y-5"], [1, "block", "text-xs", "font-bold", "text-primary-700", "mb-2", "uppercase", "tracking-wider"], ["type", "text", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "ngModel", "placeholder"], ["type", "datetime-local", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", 3, "ngModelChange", "ngModel"], [1, "text-slate-400", "normal-case", "font-normal", "text-xs", "ml-1"], ["rows", "2", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "resize-none", 3, "ngModelChange", "ngModel", "placeholder"], [1, "p-3", "bg-red-50", "border", "border-red-200", "rounded-xl", "text-red-600", "text-sm", "font-semibold"], [1, "px-6", "pb-6", "flex", "gap-3"], [1, "flex-1", "py-3.5", "rounded-2xl", "font-bold", "text-slate-600", "bg-slate-100", "hover:bg-slate-200", "transition-all", "text-sm", 3, "click"], [1, "flex-1", "py-3.5", "rounded-2xl", "font-bold", "text-white", "bg-indigo-500", "hover:bg-indigo-600", "disabled:opacity-50", "disabled:cursor-not-allowed", "transition-all", "text-sm", "flex", "items-center", "justify-center", "gap-2", 3, "click", "disabled"], ["name", "loader-2", 1, "w-4", "h-4", "animate-spin"], ["name", "check", 1, "w-4", "h-4"], [1, "bg-white", "rounded-3xl", "shadow-2xl", "w-full", "max-w-sm", "p-6", 3, "click"], [1, "w-14", "h-14", "bg-red-100", "rounded-2xl", "flex", "items-center", "justify-center", "mx-auto", "mb-4"], ["name", "trash-2", 1, "text-red-500", "w-6", "h-6"], [1, "text-lg", "font-extrabold", "text-gray-800", "text-center", "mb-2"], [1, "text-slate-500", "text-sm", "text-center", "mb-6"], [1, "flex", "gap-3"], [1, "flex-1", "py-3", "rounded-2xl", "font-bold", "text-slate-600", "bg-slate-100", "hover:bg-slate-200", "transition-all", "text-sm", 3, "click"], [1, "flex-1", "py-3", "rounded-2xl", "font-bold", "text-white", "bg-red-500", "hover:bg-red-600", "transition-all", "text-sm", 3, "click"]], template: function AppointmentsComponent_Template(rf, ctx) {
+      if (rf & 1) {
+        \u0275\u0275elementStart(0, "div", 0)(1, "div", 1)(2, "div", 2)(3, "div")(4, "h1", 3);
+        \u0275\u0275text(5);
+        \u0275\u0275elementEnd();
+        \u0275\u0275conditionalCreate(6, AppointmentsComponent_Conditional_6_Template, 2, 1, "p", 4);
+        \u0275\u0275elementEnd();
+        \u0275\u0275elementStart(7, "button", 5);
+        \u0275\u0275listener("click", function AppointmentsComponent_Template_button_click_7_listener() {
+          return ctx.openAddModal();
+        });
+        \u0275\u0275element(8, "lucide-icon", 6);
+        \u0275\u0275text(9);
+        \u0275\u0275elementEnd()()();
+        \u0275\u0275conditionalCreate(10, AppointmentsComponent_Conditional_10_Template, 9, 3, "div", 7);
+        \u0275\u0275conditionalCreate(11, AppointmentsComponent_Conditional_11_Template, 3, 1, "div", 8);
+        \u0275\u0275conditionalCreate(12, AppointmentsComponent_Conditional_12_Template, 15, 3, "div", 9);
+        \u0275\u0275conditionalCreate(13, AppointmentsComponent_Conditional_13_Template, 3, 0, "div", 8);
+        \u0275\u0275elementEnd();
+        \u0275\u0275conditionalCreate(14, AppointmentsComponent_Conditional_14_Template, 41, 22, "div", 10);
+        \u0275\u0275conditionalCreate(15, AppointmentsComponent_Conditional_15_Template, 13, 4, "div", 10);
+      }
+      if (rf & 2) {
+        \u0275\u0275advance(5);
+        \u0275\u0275textInterpolate(ctx.i18n.t()["appointments.title"] || "Terminet");
+        \u0275\u0275advance();
+        \u0275\u0275conditional(ctx.activeChild() ? 6 : -1);
+        \u0275\u0275advance(3);
+        \u0275\u0275textInterpolate1(" ", ctx.i18n.t()["appointments.add"] || "Shto Termin", " ");
+        \u0275\u0275advance();
+        \u0275\u0275conditional(ctx.upcomingCount() > 0 ? 10 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275conditional(ctx.loading() ? 11 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275conditional(!ctx.loading() && ctx.appointments().length === 0 ? 12 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275conditional(!ctx.loading() && ctx.appointments().length > 0 ? 13 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275conditional(ctx.showModal() ? 14 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275conditional(ctx.showDeleteModal() ? 15 : -1);
+      }
+    }, dependencies: [CommonModule, NgClass, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel, LucideAngularModule, LucideAngularComponent], encapsulation: 2 });
+  }
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AppointmentsComponent, [{
+    type: Component,
+    args: [{ selector: "app-appointments", imports: [CommonModule, FormsModule, LucideAngularModule], template: `
+    <div class="min-h-screen bg-gray-50 pb-24">
+
+      <!-- Header -->
+      <div class="bg-white border-b border-gray-100 px-4 pt-6 pb-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-3xl font-extrabold text-gray-800">{{ i18n.t()['appointments.title'] || 'Terminet' }}</h1>
+            @if (activeChild()) {
+              <p class="text-slate-400 text-sm mt-1 font-medium">{{ activeChild()?.name }}</p>
+            }
+          </div>
+          <button (click)="openAddModal()"
+            class="bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-2.5 rounded-2xl font-bold shadow-sm transition-all flex items-center gap-2 text-sm">
+            <lucide-icon name="plus" class="text-inherit"></lucide-icon>
+            {{ i18n.t()['appointments.add'] || 'Shto Termin' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Upcoming Summary -->
+      @if (upcomingCount() > 0) {
+        <div class="px-4 mt-4">
+          <div class="bg-teal-50 border border-teal-200 rounded-2xl p-4 flex items-center gap-3">
+            <div class="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <lucide-icon name="calendar-check" class="text-teal-500 w-5 h-5"></lucide-icon>
+            </div>
+            <div class="flex-1">
+              <p class="font-bold text-teal-700 text-sm">{{ upcomingCount() }} {{ i18n.t()['appointments.upcomingLabel'] || 'termine t\xEB ardhshme' }}</p>
+              <p class="text-xs text-teal-500">{{ i18n.t()['appointments.upcomingDesc'] || 'N\xEB 30 dit\xEBt e ardhshme' }}</p>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Loading Skeleton -->
+      @if (loading()) {
+        <div class="px-4 mt-4 space-y-3">
+          @for (i of [1,2,3]; track i) {
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 animate-pulse">
+              <div class="flex gap-4">
+                <div class="w-12 h-12 rounded-xl bg-gray-200"></div>
+                <div class="flex-1 space-y-2">
+                  <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div class="h-3 bg-gray-100 rounded w-1/3"></div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Empty State -->
+      @if (!loading() && appointments().length === 0) {
+        <div class="flex flex-col items-center justify-center mt-20 px-4">
+          <svg width="160" height="160" viewBox="0 0 160 160" fill="none" class="mb-6">
+            <circle cx="80" cy="80" r="60" fill="#F0FDF4"/>
+            <rect x="60" y="50" width="40" height="36" rx="4" stroke="#10B981" stroke-width="3" fill="none"/>
+            <line x1="60" y1="62" x2="100" y2="62" stroke="#10B981" stroke-width="3"/>
+            <line x1="60" y1="74" x2="100" y2="74" stroke="#10B981" stroke-width="3"/>
+            <line x1="60" y1="86" x2="80" y2="86" stroke="#10B981" stroke-width="3"/>
+            <path d="M80 95 L80 105 M75 100 L85 100" stroke="#10B981" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+          <h3 class="text-xl font-extrabold text-gray-700 mb-2">
+            {{ i18n.t()['appointments.empty'] || 'Nuk ka termine' }}
+          </h3>
+          <p class="text-slate-400 text-center mb-6 text-sm">
+            {{ i18n.t()['appointments.emptyHint'] || 'Shtoni terminin e par\xEB p\xEBr ta ndjekur' }}
+          </p>
+          <button (click)="openAddModal()"
+            class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-sm transition-all text-sm">
+            <lucide-icon name="plus" class="text-inherit inline w-4 h-4 mr-1"></lucide-icon>
+            {{ i18n.t()['appointments.addFirst'] || 'Shto terminin e par\xEB' }}
+          </button>
+        </div>
+      }
+
+      <!-- Appointment List -->
+      @if (!loading() && appointments().length > 0) {
+        <div class="px-4 mt-4 space-y-3">
+          @for (appt of appointments(); track appt.id) {
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+                 [class.border-teal-200]="isUpcoming(appt)"
+                 [class.bg-teal-50/30]="isUpcoming(appt)">
+              <div class="p-5">
+                <div class="flex items-start gap-4">
+                  <!-- Icon -->
+                  <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                       [ngClass]="isPast(appt) ? 'bg-slate-100' : 'bg-indigo-100'">
+                    <lucide-icon [name]="isPast(appt) ? 'calendar-check' : 'calendar'"
+                      [ngClass]="isPast(appt) ? 'text-slate-400' : 'text-indigo-500'"
+                      class="w-5 h-5"></lucide-icon>
+                  </div>
+
+                  <!-- Info -->
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-2">
+                      <h3 class="font-bold text-gray-800 text-base truncate">{{ appt.title }}</h3>
+                      @if (isUpcoming(appt)) {
+                        <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-teal-100 text-teal-700 flex-shrink-0">
+                          {{ i18n.t()['appointments.upcoming'] || 'S\xEB shpejti' }}
+                        </span>
+                      }
+                    </div>
+
+                    <!-- Date & Time -->
+                    <div class="flex items-center gap-2 mt-1.5 text-sm text-slate-500">
+                      <lucide-icon name="clock" class="w-3.5 h-3.5 text-slate-400 flex-shrink-0"></lucide-icon>
+                      <span>{{ formatDateTime(appt.dateTime) }}</span>
+                    </div>
+
+                    <!-- Doctor & Location -->
+                    @if (appt.doctorName) {
+                      <div class="flex items-center gap-2 mt-1 text-xs text-slate-400">
+                        <lucide-icon name="stethoscope" class="w-3.5 h-3.5 flex-shrink-0"></lucide-icon>
+                        <span>{{ appt.doctorName }}</span>
+                      </div>
+                    }
+                    @if (appt.location) {
+                      <div class="flex items-center gap-2 mt-1 text-xs text-slate-400">
+                        <lucide-icon name="map-pin" class="w-3.5 h-3.5 flex-shrink-0"></lucide-icon>
+                        <span>{{ appt.location }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Notes -->
+                @if (appt.notes) {
+                  <div class="mt-3 text-xs text-slate-500 bg-slate-50 rounded-xl p-3">
+                    {{ appt.notes }}
+                  </div>
+                }
+
+                <!-- Actions -->
+                <div class="flex items-center gap-2 mt-4">
+                  <button (click)="openEditModal(appt)"
+                    class="flex-1 py-2 rounded-xl text-xs font-semibold bg-slate-50 hover:bg-slate-100 text-slate-600 transition-all flex items-center justify-center gap-1.5">
+                    <lucide-icon name="pencil" class="w-3.5 h-3.5"></lucide-icon>
+                    {{ i18n.t()['appointments.edit'] || 'Redakto' }}
+                  </button>
+                  <button (click)="confirmDelete(appt)"
+                    class="flex-1 py-2 rounded-xl text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 transition-all flex items-center justify-center gap-1.5">
+                    <lucide-icon name="trash-2" class="w-3.5 h-3.5"></lucide-icon>
+                    {{ i18n.t()['appointments.delete'] || 'Fshi' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Add/Edit Modal -->
+    @if (showModal()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+           (click)="closeModal()">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+             (click)="$event.stopPropagation()">
+
+          <!-- Modal Header -->
+          <div class="px-6 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between">
+            <h2 class="text-xl font-extrabold text-gray-800">
+              {{ editingAppt() ? (i18n.t()['appointments.editAppt'] || 'Redakto Terminin')
+                               : (i18n.t()['appointments.addAppt'] || 'Shto Termin') }}
+            </h2>
+            <button (click)="closeModal()" class="p-2 rounded-xl hover:bg-gray-100 transition-colors">
+              <lucide-icon name="x" class="w-5 h-5 text-slate-400"></lucide-icon>
+            </button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="p-6 space-y-5">
+            <!-- Title -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['appointments.titleLabel'] || 'Titulli' }} *
+              </label>
+              <input type="text" [(ngModel)]="formTitle"
+                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm font-medium"
+                [placeholder]="i18n.t()['appointments.titlePlaceholder'] || 'P.sh. Kontroll\xEB e p\xEBrgjithshme'">
+            </div>
+
+            <!-- Date & Time -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['appointments.dateTime'] || 'Data dhe Ora' }} *
+              </label>
+              <input type="datetime-local" [(ngModel)]="formDateTime"
+                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm">
+            </div>
+
+            <!-- Doctor Name -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['appointments.doctor'] || 'Doktori' }}
+                <span class="text-slate-400 normal-case font-normal text-xs ml-1">({{ i18n.t()['appointments.optional'] || 'opsionale' }})</span>
+              </label>
+              <input type="text" [(ngModel)]="formDoctorName"
+                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm font-medium"
+                [placeholder]="i18n.t()['appointments.doctorPlaceholder'] || 'P.sh. Dr. Elena Hoxha'">
+            </div>
+
+            <!-- Location -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['appointments.location'] || 'Vendi' }}
+                <span class="text-slate-400 normal-case font-normal text-xs ml-1">({{ i18n.t()['appointments.optional'] || 'opsionale' }})</span>
+              </label>
+              <input type="text" [(ngModel)]="formLocation"
+                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm font-medium"
+                [placeholder]="i18n.t()['appointments.locationPlaceholder'] || 'P.sh. Qendra Sh\xEBndet\xEBsore Nr. 3'">
+            </div>
+
+            <!-- Notes -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['appointments.notes'] || 'Sh\xEBnime' }}
+                <span class="text-slate-400 normal-case font-normal text-xs ml-1">({{ i18n.t()['appointments.optional'] || 'opsionale' }})</span>
+              </label>
+              <textarea [(ngModel)]="formNotes" rows="2"
+                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm resize-none"
+                [placeholder]="i18n.t()['appointments.notesPlaceholder'] || 'Sh\xEBno detajet shtes\xEB...'"></textarea>
+            </div>
+
+            <!-- Error -->
+            @if (saveError()) {
+              <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-semibold">
+                {{ saveError() }}
+              </div>
+            }
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="px-6 pb-6 flex gap-3">
+            <button (click)="closeModal()"
+              class="flex-1 py-3.5 rounded-2xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all text-sm">
+              {{ i18n.t()['appointments.cancel'] || 'Anulo' }}
+            </button>
+            <button (click)="saveAppointment()"
+              [disabled]="saving() || !canSave()"
+              class="flex-1 py-3.5 rounded-2xl font-bold text-white bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2">
+              @if (saving()) {
+                <lucide-icon name="loader-2" class="w-4 h-4 animate-spin"></lucide-icon>
+                {{ i18n.t()['appointments.saving'] || 'Duke ruajtur...' }}
+              } @else {
+                <lucide-icon name="check" class="w-4 h-4"></lucide-icon>
+                {{ i18n.t()['appointments.save'] || 'Ruaj' }}
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Delete Confirmation Modal -->
+    @if (showDeleteModal()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+           (click)="showDeleteModal.set(false)">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6"
+             (click)="$event.stopPropagation()">
+          <div class="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <lucide-icon name="trash-2" class="text-red-500 w-6 h-6"></lucide-icon>
+          </div>
+          <h3 class="text-lg font-extrabold text-gray-800 text-center mb-2">
+            {{ i18n.t()['appointments.deleteConfirmTitle'] || 'Fshij Terminin?' }}
+          </h3>
+          <p class="text-slate-500 text-sm text-center mb-6">
+            {{ deletingAppt()?.title }}
+          </p>
+          <div class="flex gap-3">
+            <button (click)="showDeleteModal.set(false)"
+              class="flex-1 py-3 rounded-2xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all text-sm">
+              {{ i18n.t()['appointments.cancel'] || 'Anulo' }}
+            </button>
+            <button (click)="deleteAppointment()"
+              class="flex-1 py-3 rounded-2xl font-bold text-white bg-red-500 hover:bg-red-600 transition-all text-sm">
+              {{ i18n.t()['appointments.delete'] || 'Fshi' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  ` }]
+  }], null, null);
+})();
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AppointmentsComponent, { className: "AppointmentsComponent", filePath: "src/app/components/appointments/appointments.component.ts", lineNumber: 309 });
+})();
+
+// src/app/components/lab-results/lab-results.component.ts
+var _c09 = () => [1, 2, 3];
+var _forTrack012 = ($index, $item) => $item.id;
+function LabResultsComponent_Conditional_6_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 4);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    let tmp_1_0;
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate((tmp_1_0 = ctx_r0.activeChild()) == null ? null : tmp_1_0.name);
+  }
+}
+function LabResultsComponent_Conditional_10_For_2_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 10)(1, "div", 11);
+    \u0275\u0275element(2, "div", 12);
+    \u0275\u0275elementStart(3, "div", 13);
+    \u0275\u0275element(4, "div", 14)(5, "div", 15);
+    \u0275\u0275elementEnd()()();
+  }
+}
+function LabResultsComponent_Conditional_10_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 7);
+    \u0275\u0275repeaterCreate(1, LabResultsComponent_Conditional_10_For_2_Template, 6, 0, "div", 10, \u0275\u0275repeaterTrackByIdentity);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    \u0275\u0275advance();
+    \u0275\u0275repeater(\u0275\u0275pureFunction0(0, _c09));
+  }
+}
+function LabResultsComponent_Conditional_11_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r2 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 8);
+    \u0275\u0275namespaceSVG();
+    \u0275\u0275elementStart(1, "svg", 16);
+    \u0275\u0275element(2, "circle", 17)(3, "path", 18)(4, "circle", 19);
+    \u0275\u0275elementEnd();
+    \u0275\u0275namespaceHTML();
+    \u0275\u0275elementStart(5, "h3", 20);
+    \u0275\u0275text(6);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(7, "p", 21);
+    \u0275\u0275text(8);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(9, "button", 22);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_11_Template_button_click_9_listener() {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.openAddModal());
+    });
+    \u0275\u0275element(10, "lucide-icon", 23);
+    \u0275\u0275text(11);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(6);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.empty"] || "Nuk ka rezultate laboratorike", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.emptyHint"] || "Shtoni rezultatet e testimit p\xEBr t\xEB ndjekur sh\xEBndetin", " ");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.addFirst"] || "Shto rezultatin e par\xEB", " ");
+  }
+}
+function LabResultsComponent_Conditional_12_For_2_Conditional_14_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 35);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const lr_r4 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(lr_r4.unit);
+  }
+}
+function LabResultsComponent_Conditional_12_For_2_Conditional_15_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 36);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const lr_r4 = \u0275\u0275nextContext().$implicit;
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate2(" ", ctx_r0.i18n.t()["labResults.refRange"] || "Ref", ": ", lr_r4.referenceRange, " ");
+  }
+}
+function LabResultsComponent_Conditional_12_For_2_Conditional_16_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 37);
+    \u0275\u0275element(1, "lucide-icon", 44);
+    \u0275\u0275elementStart(2, "span");
+    \u0275\u0275text(3);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const lr_r4 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(lr_r4.doctor);
+  }
+}
+function LabResultsComponent_Conditional_12_For_2_Conditional_17_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 38);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const lr_r4 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", lr_r4.notes, " ");
+  }
+}
+function LabResultsComponent_Conditional_12_For_2_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r3 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 24)(1, "div", 25)(2, "div", 26)(3, "div", 27);
+    \u0275\u0275element(4, "lucide-icon", 28);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "div", 29)(6, "div", 30)(7, "h3", 31);
+    \u0275\u0275text(8);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(9, "span", 32);
+    \u0275\u0275text(10);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(11, "div", 33)(12, "span", 34);
+    \u0275\u0275text(13);
+    \u0275\u0275elementEnd();
+    \u0275\u0275conditionalCreate(14, LabResultsComponent_Conditional_12_For_2_Conditional_14_Template, 2, 1, "span", 35);
+    \u0275\u0275conditionalCreate(15, LabResultsComponent_Conditional_12_For_2_Conditional_15_Template, 2, 2, "span", 36);
+    \u0275\u0275elementEnd();
+    \u0275\u0275conditionalCreate(16, LabResultsComponent_Conditional_12_For_2_Conditional_16_Template, 4, 1, "div", 37);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275conditionalCreate(17, LabResultsComponent_Conditional_12_For_2_Conditional_17_Template, 2, 1, "div", 38);
+    \u0275\u0275elementStart(18, "div", 39)(19, "button", 40);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_12_For_2_Template_button_click_19_listener() {
+      const lr_r4 = \u0275\u0275restoreView(_r3).$implicit;
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.openViewModal(lr_r4));
+    });
+    \u0275\u0275element(20, "lucide-icon", 41);
+    \u0275\u0275text(21);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(22, "button", 42);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_12_For_2_Template_button_click_22_listener() {
+      const lr_r4 = \u0275\u0275restoreView(_r3).$implicit;
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.confirmDelete(lr_r4));
+    });
+    \u0275\u0275element(23, "lucide-icon", 43);
+    \u0275\u0275text(24);
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    const lr_r4 = ctx.$implicit;
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(8);
+    \u0275\u0275textInterpolate(lr_r4.testName);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.formatDate(lr_r4.date), " ");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(lr_r4.result);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(lr_r4.unit ? 14 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(lr_r4.referenceRange ? 15 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(lr_r4.doctor ? 16 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(lr_r4.notes ? 17 : -1);
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.view"] || "Shiko Detajet", " ");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.delete"] || "Fshi", " ");
+  }
+}
+function LabResultsComponent_Conditional_12_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 7);
+    \u0275\u0275repeaterCreate(1, LabResultsComponent_Conditional_12_For_2_Template, 25, 9, "div", 24, _forTrack012);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance();
+    \u0275\u0275repeater(ctx_r0.labResults());
+  }
+}
+function LabResultsComponent_Conditional_13_Conditional_43_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 61);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r0.saveError(), " ");
+  }
+}
+function LabResultsComponent_Conditional_13_Conditional_48_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "lucide-icon", 65);
+    \u0275\u0275text(1);
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.saving"] || "Duke ruajtur...", " ");
+  }
+}
+function LabResultsComponent_Conditional_13_Conditional_49_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "lucide-icon", 66);
+    \u0275\u0275text(1);
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.save"] || "Ruaj", " ");
+  }
+}
+function LabResultsComponent_Conditional_13_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r5 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 45);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_13_Template_div_click_0_listener() {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.closeModal());
+    });
+    \u0275\u0275elementStart(1, "div", 46);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_13_Template_div_click_1_listener($event) {
+      return $event.stopPropagation();
+    });
+    \u0275\u0275elementStart(2, "div", 47)(3, "h2", 48);
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "button", 49);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_13_Template_button_click_5_listener() {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.closeModal());
+    });
+    \u0275\u0275element(6, "lucide-icon", 50);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(7, "div", 51)(8, "div")(9, "label", 52);
+    \u0275\u0275text(10);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(11, "input", 53);
+    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_input_ngModelChange_11_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formTestName, $event) || (ctx_r0.formTestName = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(12, "div", 54)(13, "div")(14, "label", 52);
+    \u0275\u0275text(15);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(16, "input", 55);
+    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_input_ngModelChange_16_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formResult, $event) || (ctx_r0.formResult = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(17, "div")(18, "label", 52);
+    \u0275\u0275text(19);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(20, "input", 56);
+    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_input_ngModelChange_20_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formUnit, $event) || (ctx_r0.formUnit = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()()();
+    \u0275\u0275elementStart(21, "div")(22, "label", 52);
+    \u0275\u0275text(23);
+    \u0275\u0275elementStart(24, "span", 57);
+    \u0275\u0275text(25);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(26, "input", 58);
+    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_input_ngModelChange_26_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formReferenceRange, $event) || (ctx_r0.formReferenceRange = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(27, "div")(28, "label", 52);
+    \u0275\u0275text(29);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(30, "input", 59);
+    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_input_ngModelChange_30_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formDate, $event) || (ctx_r0.formDate = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(31, "div")(32, "label", 52);
+    \u0275\u0275text(33);
+    \u0275\u0275elementStart(34, "span", 57);
+    \u0275\u0275text(35);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(36, "input", 53);
+    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_input_ngModelChange_36_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formDoctor, $event) || (ctx_r0.formDoctor = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(37, "div")(38, "label", 52);
+    \u0275\u0275text(39);
+    \u0275\u0275elementStart(40, "span", 57);
+    \u0275\u0275text(41);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(42, "textarea", 60);
+    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_textarea_ngModelChange_42_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formNotes, $event) || (ctx_r0.formNotes = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275conditionalCreate(43, LabResultsComponent_Conditional_13_Conditional_43_Template, 2, 1, "div", 61);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(44, "div", 62)(45, "button", 63);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_13_Template_button_click_45_listener() {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.closeModal());
+    });
+    \u0275\u0275text(46);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(47, "button", 64);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_13_Template_button_click_47_listener() {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.saveLabResult());
+    });
+    \u0275\u0275conditionalCreate(48, LabResultsComponent_Conditional_13_Conditional_48_Template, 2, 1)(49, LabResultsComponent_Conditional_13_Conditional_49_Template, 2, 1);
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.addResult"] || "Shto Rezultat Laboratori", " ");
+    \u0275\u0275advance(6);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.testName"] || "Emri i Testit", " * ");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formTestName);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.t()["labResults.testNamePlaceholder"] || "P.sh. Gjak i plot\xEB");
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.result"] || "Rezultati", " * ");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formResult);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.unit"] || "Nj\xEBsia", " ");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formUnit);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.referenceRange"] || "Vlera Referente", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1("(", ctx_r0.i18n.t()["labResults.optional"] || "opsionale", ")");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formReferenceRange);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.date"] || "Data e Testit", " * ");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formDate);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.doctor"] || "Doktori", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1("(", ctx_r0.i18n.t()["labResults.optional"] || "opsionale", ")");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formDoctor);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.t()["labResults.doctorPlaceholder"] || "P.sh. Dr. Arben Basha");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.notes"] || "Sh\xEBnime", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1("(", ctx_r0.i18n.t()["labResults.optional"] || "opsionale", ")");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formNotes);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.t()["labResults.notesPlaceholder"] || "Sh\xEBno detajet shtes\xEB...");
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.saveError() ? 43 : -1);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.cancel"] || "Anulo", " ");
+    \u0275\u0275advance();
+    \u0275\u0275property("disabled", ctx_r0.saving() || !ctx_r0.canSave());
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.saving() ? 48 : 49);
+  }
+}
+function LabResultsComponent_Conditional_14_Conditional_14_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 72);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(ctx_r0.viewingResult().unit);
+  }
+}
+function LabResultsComponent_Conditional_14_Conditional_20_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 73)(1, "p", 77);
+    \u0275\u0275text(2);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "p", 78);
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["labResults.referenceRange"] || "Vlera Referente");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.viewingResult().referenceRange);
+  }
+}
+function LabResultsComponent_Conditional_14_Conditional_21_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 74);
+    \u0275\u0275element(1, "lucide-icon", 79);
+    \u0275\u0275elementStart(2, "span");
+    \u0275\u0275text(3);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(ctx_r0.viewingResult().doctor);
+  }
+}
+function LabResultsComponent_Conditional_14_Conditional_22_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 70)(1, "p", 71);
+    \u0275\u0275text(2);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "p", 80);
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["labResults.notes"] || "Sh\xEBnime");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.viewingResult().notes);
+  }
+}
+function LabResultsComponent_Conditional_14_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r6 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 45);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_14_Template_div_click_0_listener() {
+      \u0275\u0275restoreView(_r6);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.viewingResult.set(null));
+    });
+    \u0275\u0275elementStart(1, "div", 67);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_14_Template_div_click_1_listener($event) {
+      return $event.stopPropagation();
+    });
+    \u0275\u0275elementStart(2, "div", 47)(3, "h2", 48);
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "button", 49);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_14_Template_button_click_5_listener() {
+      \u0275\u0275restoreView(_r6);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.viewingResult.set(null));
+    });
+    \u0275\u0275element(6, "lucide-icon", 50);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(7, "div", 68)(8, "div", 69)(9, "div", 70)(10, "p", 71);
+    \u0275\u0275text(11);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(12, "p", 34);
+    \u0275\u0275text(13);
+    \u0275\u0275conditionalCreate(14, LabResultsComponent_Conditional_14_Conditional_14_Template, 2, 1, "span", 72);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(15, "div", 70)(16, "p", 71);
+    \u0275\u0275text(17);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(18, "p", 34);
+    \u0275\u0275text(19);
+    \u0275\u0275elementEnd()()();
+    \u0275\u0275conditionalCreate(20, LabResultsComponent_Conditional_14_Conditional_20_Template, 5, 2, "div", 73);
+    \u0275\u0275conditionalCreate(21, LabResultsComponent_Conditional_14_Conditional_21_Template, 4, 1, "div", 74);
+    \u0275\u0275conditionalCreate(22, LabResultsComponent_Conditional_14_Conditional_22_Template, 5, 2, "div", 70);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(23, "div", 75)(24, "button", 76);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_14_Template_button_click_24_listener() {
+      \u0275\u0275restoreView(_r6);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.viewingResult.set(null));
+    });
+    \u0275\u0275text(25);
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.viewingResult().testName, " ");
+    \u0275\u0275advance(7);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["labResults.result"] || "Rezultati");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1("", ctx_r0.viewingResult().result, " ");
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.viewingResult().unit ? 14 : -1);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["labResults.date"] || "Data");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.formatDate(ctx_r0.viewingResult().date));
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.viewingResult().referenceRange ? 20 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.viewingResult().doctor ? 21 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.viewingResult().notes ? 22 : -1);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.close"] || "Mbyll", " ");
+  }
+}
+function LabResultsComponent_Conditional_15_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r7 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 45);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_15_Template_div_click_0_listener() {
+      \u0275\u0275restoreView(_r7);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.showDeleteModal.set(false));
+    });
+    \u0275\u0275elementStart(1, "div", 81);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_15_Template_div_click_1_listener($event) {
+      return $event.stopPropagation();
+    });
+    \u0275\u0275elementStart(2, "div", 82);
+    \u0275\u0275element(3, "lucide-icon", 83);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "h3", 84);
+    \u0275\u0275text(5);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(6, "p", 85);
+    \u0275\u0275text(7);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(8, "div", 86)(9, "button", 87);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_15_Template_button_click_9_listener() {
+      \u0275\u0275restoreView(_r7);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.showDeleteModal.set(false));
+    });
+    \u0275\u0275text(10);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(11, "button", 88);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_15_Template_button_click_11_listener() {
+      \u0275\u0275restoreView(_r7);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.deleteLabResult());
+    });
+    \u0275\u0275text(12);
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    let tmp_2_0;
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(5);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.deleteConfirmTitle"] || "Fshij Rezultatin?", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", (tmp_2_0 = ctx_r0.deletingResult()) == null ? null : tmp_2_0.testName, " ");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.cancel"] || "Anulo", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.delete"] || "Fshi", " ");
+  }
+}
+var LabResultsComponent = class _LabResultsComponent {
+  constructor() {
+    this.i18n = inject2(I18nService);
+    this.data = inject2(DataService);
+    this.loading = signal(false, ...ngDevMode ? [{ debugName: "loading" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.saving = signal(false, ...ngDevMode ? [{ debugName: "saving" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.showModal = signal(false, ...ngDevMode ? [{ debugName: "showModal" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.showDeleteModal = signal(false, ...ngDevMode ? [{ debugName: "showDeleteModal" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.viewingResult = signal(null, ...ngDevMode ? [{ debugName: "viewingResult" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.deletingResult = signal(null, ...ngDevMode ? [{ debugName: "deletingResult" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.saveError = signal(null, ...ngDevMode ? [{ debugName: "saveError" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formTestName = signal("", ...ngDevMode ? [{ debugName: "formTestName" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formResult = signal("", ...ngDevMode ? [{ debugName: "formResult" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formUnit = signal("", ...ngDevMode ? [{ debugName: "formUnit" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formReferenceRange = signal("", ...ngDevMode ? [{ debugName: "formReferenceRange" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formDate = signal("", ...ngDevMode ? [{ debugName: "formDate" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formDoctor = signal("", ...ngDevMode ? [{ debugName: "formDoctor" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.formNotes = signal("", ...ngDevMode ? [{ debugName: "formNotes" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.activeChild = computed(() => {
+      const id = this.data.activeChildId();
+      return this.data.children().find((c) => c.id === id) ?? null;
+    }, ...ngDevMode ? [{ debugName: "activeChild" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.labResults = signal([], ...ngDevMode ? [{ debugName: "labResults" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.canSave = computed(() => !!(this.formTestName().trim() && this.formResult().trim() && this.formDate()), ...ngDevMode ? [{ debugName: "canSave" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+  }
+  ngOnInit() {
+    this.loadLabResults();
+  }
+  ngOnDestroy() {
+  }
+  loadLabResults() {
+    return __async(this, null, function* () {
+      const childId = this.data.activeChildId();
+      if (!childId)
+        return;
+      this.loading.set(true);
+      try {
+        const token = localStorage.getItem(this.data.AUTH_KEY);
+        const response = yield fetch(`${this.data.API_URL}/lab-results/child/${childId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = yield response.json();
+          this.labResults.set(Array.isArray(data) ? data : []);
+        }
+      } catch (e) {
+      } finally {
+        this.loading.set(false);
+      }
+    });
+  }
+  openAddModal() {
+    this.formTestName.set("");
+    this.formResult.set("");
+    this.formUnit.set("");
+    this.formReferenceRange.set("");
+    this.formDate.set((/* @__PURE__ */ new Date()).toISOString().split("T")[0]);
+    this.formDoctor.set("");
+    this.formNotes.set("");
+    this.saveError.set(null);
+    this.showModal.set(true);
+  }
+  openViewModal(lr) {
+    this.viewingResult.set(lr);
+  }
+  closeModal() {
+    this.showModal.set(false);
+  }
+  saveLabResult() {
+    return __async(this, null, function* () {
+      if (!this.canSave())
+        return;
+      const childId = this.data.activeChildId();
+      if (!childId)
+        return;
+      this.saving.set(true);
+      this.saveError.set(null);
+      const payload = {
+        testName: this.formTestName().trim(),
+        result: this.formResult().trim(),
+        unit: this.formUnit().trim() || void 0,
+        referenceRange: this.formReferenceRange().trim() || void 0,
+        date: new Date(this.formDate()).toISOString(),
+        doctor: this.formDoctor().trim() || void 0,
+        notes: this.formNotes().trim() || void 0
+      };
+      try {
+        const token = localStorage.getItem(this.data.AUTH_KEY);
+        const response = yield fetch(`${this.data.API_URL}/lab-results/${childId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+          const err = yield response.json().catch(() => ({}));
+          throw new Error(err.message || "Save failed");
+        }
+        const saved = yield response.json();
+        const list = [saved, ...this.labResults()];
+        list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        this.labResults.set(list);
+        this.closeModal();
+      } catch (err) {
+        this.saveError.set(err.message || this.i18n.t()["labResults.saveError"] || "Ruajtja d\xEBshtoi.");
+      } finally {
+        this.saving.set(false);
+      }
+    });
+  }
+  confirmDelete(lr) {
+    this.deletingResult.set(lr);
+    this.showDeleteModal.set(true);
+  }
+  deleteLabResult() {
+    return __async(this, null, function* () {
+      const lr = this.deletingResult();
+      if (!lr)
+        return;
+      try {
+        const token = localStorage.getItem(this.data.AUTH_KEY);
+        const response = yield fetch(`${this.data.API_URL}/lab-results/${lr.id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.ok) {
+          this.labResults.set(this.labResults().filter((r) => r.id !== lr.id));
+        }
+      } catch (e) {
+      } finally {
+        this.showDeleteModal.set(false);
+        this.deletingResult.set(null);
+      }
+    });
+  }
+  formatDate(dateStr) {
+    if (!dateStr)
+      return "";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString(this.i18n.isSq() ? "sq-AL" : "en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
+  static {
+    this.\u0275fac = function LabResultsComponent_Factory(__ngFactoryType__) {
+      return new (__ngFactoryType__ || _LabResultsComponent)();
+    };
+  }
+  static {
+    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _LabResultsComponent, selectors: [["app-lab-results"]], decls: 16, vars: 9, consts: [[1, "min-h-screen", "bg-gray-50", "pb-24"], [1, "bg-white", "border-b", "border-gray-100", "px-4", "pt-6", "pb-4"], [1, "flex", "items-center", "justify-between"], [1, "text-3xl", "font-extrabold", "text-gray-800"], [1, "text-slate-400", "text-sm", "mt-1", "font-medium"], [1, "bg-indigo-500", "hover:bg-indigo-600", "text-white", "px-5", "py-2.5", "rounded-2xl", "font-bold", "shadow-sm", "transition-all", "flex", "items-center", "gap-2", "text-sm", 3, "click"], ["name", "plus", 1, "text-inherit"], [1, "px-4", "mt-4", "space-y-3"], [1, "flex", "flex-col", "items-center", "justify-center", "mt-20", "px-4"], [1, "fixed", "inset-0", "z-50", "flex", "items-center", "justify-center", "p-4", "bg-black/40", "backdrop-blur-sm"], [1, "bg-white", "rounded-2xl", "p-5", "border", "border-gray-100", "animate-pulse"], [1, "flex", "gap-4"], [1, "w-12", "h-12", "rounded-xl", "bg-gray-200"], [1, "flex-1", "space-y-2"], [1, "h-4", "bg-gray-200", "rounded", "w-1/2"], [1, "h-3", "bg-gray-100", "rounded", "w-1/3"], ["width", "160", "height", "160", "viewBox", "0 0 160 160", "fill", "none", 1, "mb-6"], ["cx", "80", "cy", "80", "r", "60", "fill", "#EEF2FF"], ["d", "M55 90 L70 90 M70 90 L70 65 M70 65 L90 65 L90 90 L110 90", "stroke", "#6366F1", "stroke-width", "4", "stroke-linecap", "round", "stroke-linejoin", "round", "fill", "none"], ["cx", "80", "cy", "50", "r", "10", "stroke", "#C7D2FE", "stroke-width", "3", "fill", "none"], [1, "text-xl", "font-extrabold", "text-gray-700", "mb-2"], [1, "text-slate-400", "text-center", "mb-6", "text-sm"], [1, "bg-indigo-500", "hover:bg-indigo-600", "text-white", "px-6", "py-3", "rounded-2xl", "font-bold", "shadow-sm", "transition-all", "text-sm", 3, "click"], ["name", "plus", 1, "text-inherit", "inline", "w-4", "h-4", "mr-1"], [1, "bg-white", "rounded-2xl", "border", "border-gray-100", "shadow-sm", "overflow-hidden"], [1, "p-5"], [1, "flex", "items-start", "gap-4"], [1, "w-12", "h-12", "rounded-xl", "bg-violet-100", "flex", "items-center", "justify-center", "flex-shrink-0"], ["name", "flask-conical", 1, "text-violet-500", "w-5", "h-5"], [1, "flex-1", "min-w-0"], [1, "flex", "items-start", "justify-between", "gap-2"], [1, "font-bold", "text-gray-800", "text-base", "truncate"], [1, "text-xs", "font-semibold", "text-slate-400", "flex-shrink-0"], [1, "flex", "items-center", "gap-2", "mt-1.5"], [1, "text-lg", "font-extrabold", "text-gray-800"], [1, "text-sm", "text-slate-400"], [1, "text-xs", "text-slate-400", "bg-slate-100", "px-2", "py-0.5", "rounded-full"], [1, "flex", "items-center", "gap-2", "mt-1", "text-xs", "text-slate-400"], [1, "mt-3", "text-xs", "text-slate-500", "bg-slate-50", "rounded-xl", "p-3"], [1, "flex", "items-center", "gap-2", "mt-4"], [1, "flex-1", "py-2", "rounded-xl", "text-xs", "font-semibold", "bg-indigo-50", "hover:bg-indigo-100", "text-indigo-600", "transition-all", "flex", "items-center", "justify-center", "gap-1.5", 3, "click"], ["name", "eye", 1, "w-3.5", "h-3.5"], [1, "flex-1", "py-2", "rounded-xl", "text-xs", "font-semibold", "bg-red-50", "hover:bg-red-100", "text-red-600", "transition-all", "flex", "items-center", "justify-center", "gap-1.5", 3, "click"], ["name", "trash-2", 1, "w-3.5", "h-3.5"], ["name", "stethoscope", 1, "w-3.5", "h-3.5", "flex-shrink-0"], [1, "fixed", "inset-0", "z-50", "flex", "items-center", "justify-center", "p-4", "bg-black/40", "backdrop-blur-sm", 3, "click"], [1, "bg-white", "rounded-3xl", "shadow-2xl", "w-full", "max-w-md", "max-h-[90vh]", "overflow-y-auto", 3, "click"], [1, "px-6", "pt-6", "pb-4", "border-b", "border-gray-100", "flex", "items-center", "justify-between"], [1, "text-xl", "font-extrabold", "text-gray-800"], [1, "p-2", "rounded-xl", "hover:bg-gray-100", "transition-colors", 3, "click"], ["name", "x", 1, "w-5", "h-5", "text-slate-400"], [1, "p-6", "space-y-5"], [1, "block", "text-xs", "font-bold", "text-primary-700", "mb-2", "uppercase", "tracking-wider"], ["type", "text", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "ngModel", "placeholder"], [1, "grid", "grid-cols-2", "gap-3"], ["type", "text", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "ngModel"], ["type", "text", "placeholder", "g/dL", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "ngModel"], [1, "text-slate-400", "normal-case", "font-normal", "text-xs", "ml-1"], ["type", "text", "placeholder", "P.sh. 12.0 - 16.0", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "ngModel"], ["type", "date", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", 3, "ngModelChange", "ngModel"], ["rows", "2", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "resize-none", 3, "ngModelChange", "ngModel", "placeholder"], [1, "p-3", "bg-red-50", "border", "border-red-200", "rounded-xl", "text-red-600", "text-sm", "font-semibold"], [1, "px-6", "pb-6", "flex", "gap-3"], [1, "flex-1", "py-3.5", "rounded-2xl", "font-bold", "text-slate-600", "bg-slate-100", "hover:bg-slate-200", "transition-all", "text-sm", 3, "click"], [1, "flex-1", "py-3.5", "rounded-2xl", "font-bold", "text-white", "bg-indigo-500", "hover:bg-indigo-600", "disabled:opacity-50", "disabled:cursor-not-allowed", "transition-all", "text-sm", "flex", "items-center", "justify-center", "gap-2", 3, "click", "disabled"], ["name", "loader-2", 1, "w-4", "h-4", "animate-spin"], ["name", "check", 1, "w-4", "h-4"], [1, "bg-white", "rounded-3xl", "shadow-2xl", "w-full", "max-w-md", 3, "click"], [1, "p-6", "space-y-4"], [1, "grid", "grid-cols-2", "gap-4"], [1, "bg-slate-50", "rounded-2xl", "p-4"], [1, "text-xs", "text-slate-400", "font-semibold", "uppercase", "tracking-wider", "mb-1"], [1, "text-sm", "font-normal", "text-slate-400"], [1, "bg-violet-50", "rounded-2xl", "p-4"], [1, "flex", "items-center", "gap-2", "text-sm", "text-slate-500"], [1, "px-6", "pb-6"], [1, "w-full", "py-3.5", "rounded-2xl", "font-bold", "text-slate-600", "bg-slate-100", "hover:bg-slate-200", "transition-all", "text-sm", 3, "click"], [1, "text-xs", "text-violet-500", "font-semibold", "uppercase", "tracking-wider", "mb-1"], [1, "text-base", "font-bold", "text-violet-700"], ["name", "stethoscope", 1, "w-4", "h-4", "text-slate-400"], [1, "text-sm", "text-slate-600"], [1, "bg-white", "rounded-3xl", "shadow-2xl", "w-full", "max-w-sm", "p-6", 3, "click"], [1, "w-14", "h-14", "bg-red-100", "rounded-2xl", "flex", "items-center", "justify-center", "mx-auto", "mb-4"], ["name", "trash-2", 1, "text-red-500", "w-6", "h-6"], [1, "text-lg", "font-extrabold", "text-gray-800", "text-center", "mb-2"], [1, "text-slate-500", "text-sm", "text-center", "mb-6"], [1, "flex", "gap-3"], [1, "flex-1", "py-3", "rounded-2xl", "font-bold", "text-slate-600", "bg-slate-100", "hover:bg-slate-200", "transition-all", "text-sm", 3, "click"], [1, "flex-1", "py-3", "rounded-2xl", "font-bold", "text-white", "bg-red-500", "hover:bg-red-600", "transition-all", "text-sm", 3, "click"]], template: function LabResultsComponent_Template(rf, ctx) {
+      if (rf & 1) {
+        \u0275\u0275elementStart(0, "div", 0)(1, "div", 1)(2, "div", 2)(3, "div")(4, "h1", 3);
+        \u0275\u0275text(5);
+        \u0275\u0275elementEnd();
+        \u0275\u0275conditionalCreate(6, LabResultsComponent_Conditional_6_Template, 2, 1, "p", 4);
+        \u0275\u0275elementEnd();
+        \u0275\u0275elementStart(7, "button", 5);
+        \u0275\u0275listener("click", function LabResultsComponent_Template_button_click_7_listener() {
+          return ctx.openAddModal();
+        });
+        \u0275\u0275element(8, "lucide-icon", 6);
+        \u0275\u0275text(9);
+        \u0275\u0275elementEnd()()();
+        \u0275\u0275conditionalCreate(10, LabResultsComponent_Conditional_10_Template, 3, 1, "div", 7);
+        \u0275\u0275conditionalCreate(11, LabResultsComponent_Conditional_11_Template, 12, 3, "div", 8);
+        \u0275\u0275conditionalCreate(12, LabResultsComponent_Conditional_12_Template, 3, 0, "div", 7);
+        \u0275\u0275elementEnd();
+        \u0275\u0275conditionalCreate(13, LabResultsComponent_Conditional_13_Template, 50, 25, "div", 9);
+        \u0275\u0275conditionalCreate(14, LabResultsComponent_Conditional_14_Template, 26, 10, "div", 9);
+        \u0275\u0275conditionalCreate(15, LabResultsComponent_Conditional_15_Template, 13, 4, "div", 9);
+      }
+      if (rf & 2) {
+        \u0275\u0275advance(5);
+        \u0275\u0275textInterpolate(ctx.i18n.t()["labResults.title"] || "Rezultatet e Laboratorit");
+        \u0275\u0275advance();
+        \u0275\u0275conditional(ctx.activeChild() ? 6 : -1);
+        \u0275\u0275advance(3);
+        \u0275\u0275textInterpolate1(" ", ctx.i18n.t()["labResults.add"] || "Shto Rezultat", " ");
+        \u0275\u0275advance();
+        \u0275\u0275conditional(ctx.loading() ? 10 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275conditional(!ctx.loading() && ctx.labResults().length === 0 ? 11 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275conditional(!ctx.loading() && ctx.labResults().length > 0 ? 12 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275conditional(ctx.showModal() ? 13 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275conditional(ctx.viewingResult() ? 14 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275conditional(ctx.showDeleteModal() ? 15 : -1);
+      }
+    }, dependencies: [CommonModule, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel, LucideAngularModule, LucideAngularComponent], encapsulation: 2 });
+  }
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(LabResultsComponent, [{
+    type: Component,
+    args: [{ selector: "app-lab-results", imports: [CommonModule, FormsModule, LucideAngularModule], template: `
+    <div class="min-h-screen bg-gray-50 pb-24">
+
+      <!-- Header -->
+      <div class="bg-white border-b border-gray-100 px-4 pt-6 pb-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-3xl font-extrabold text-gray-800">{{ i18n.t()['labResults.title'] || 'Rezultatet e Laboratorit' }}</h1>
+            @if (activeChild()) {
+              <p class="text-slate-400 text-sm mt-1 font-medium">{{ activeChild()?.name }}</p>
+            }
+          </div>
+          <button (click)="openAddModal()"
+            class="bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-2.5 rounded-2xl font-bold shadow-sm transition-all flex items-center gap-2 text-sm">
+            <lucide-icon name="plus" class="text-inherit"></lucide-icon>
+            {{ i18n.t()['labResults.add'] || 'Shto Rezultat' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading Skeleton -->
+      @if (loading()) {
+        <div class="px-4 mt-4 space-y-3">
+          @for (i of [1,2,3]; track i) {
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 animate-pulse">
+              <div class="flex gap-4">
+                <div class="w-12 h-12 rounded-xl bg-gray-200"></div>
+                <div class="flex-1 space-y-2">
+                  <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div class="h-3 bg-gray-100 rounded w-1/3"></div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Empty State -->
+      @if (!loading() && labResults().length === 0) {
+        <div class="flex flex-col items-center justify-center mt-20 px-4">
+          <svg width="160" height="160" viewBox="0 0 160 160" fill="none" class="mb-6">
+            <circle cx="80" cy="80" r="60" fill="#EEF2FF"/>
+            <path d="M55 90 L70 90 M70 90 L70 65 M70 65 L90 65 L90 90 L110 90" stroke="#6366F1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <circle cx="80" cy="50" r="10" stroke="#C7D2FE" stroke-width="3" fill="none"/>
+          </svg>
+          <h3 class="text-xl font-extrabold text-gray-700 mb-2">
+            {{ i18n.t()['labResults.empty'] || 'Nuk ka rezultate laboratorike' }}
+          </h3>
+          <p class="text-slate-400 text-center mb-6 text-sm">
+            {{ i18n.t()['labResults.emptyHint'] || 'Shtoni rezultatet e testimit p\xEBr t\xEB ndjekur sh\xEBndetin' }}
+          </p>
+          <button (click)="openAddModal()"
+            class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-sm transition-all text-sm">
+            <lucide-icon name="plus" class="text-inherit inline w-4 h-4 mr-1"></lucide-icon>
+            {{ i18n.t()['labResults.addFirst'] || 'Shto rezultatin e par\xEB' }}
+          </button>
+        </div>
+      }
+
+      <!-- Lab Results List -->
+      @if (!loading() && labResults().length > 0) {
+        <div class="px-4 mt-4 space-y-3">
+          @for (lr of labResults(); track lr.id) {
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div class="p-5">
+                <div class="flex items-start gap-4">
+                  <!-- Icon -->
+                  <div class="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center flex-shrink-0">
+                    <lucide-icon name="flask-conical" class="text-violet-500 w-5 h-5"></lucide-icon>
+                  </div>
+
+                  <!-- Info -->
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-2">
+                      <h3 class="font-bold text-gray-800 text-base truncate">{{ lr.testName }}</h3>
+                      <span class="text-xs font-semibold text-slate-400 flex-shrink-0">
+                        {{ formatDate(lr.date) }}
+                      </span>
+                    </div>
+
+                    <!-- Result Value -->
+                    <div class="flex items-center gap-2 mt-1.5">
+                      <span class="text-lg font-extrabold text-gray-800">{{ lr.result }}</span>
+                      @if (lr.unit) {
+                        <span class="text-sm text-slate-400">{{ lr.unit }}</span>
+                      }
+                      @if (lr.referenceRange) {
+                        <span class="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                          {{ i18n.t()['labResults.refRange'] || 'Ref' }}: {{ lr.referenceRange }}
+                        </span>
+                      }
+                    </div>
+
+                    <!-- Doctor & Date -->
+                    @if (lr.doctor) {
+                      <div class="flex items-center gap-2 mt-1 text-xs text-slate-400">
+                        <lucide-icon name="stethoscope" class="w-3.5 h-3.5 flex-shrink-0"></lucide-icon>
+                        <span>{{ lr.doctor }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Notes -->
+                @if (lr.notes) {
+                  <div class="mt-3 text-xs text-slate-500 bg-slate-50 rounded-xl p-3">
+                    {{ lr.notes }}
+                  </div>
+                }
+
+                <!-- Actions -->
+                <div class="flex items-center gap-2 mt-4">
+                  <button (click)="openViewModal(lr)"
+                    class="flex-1 py-2 rounded-xl text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-all flex items-center justify-center gap-1.5">
+                    <lucide-icon name="eye" class="w-3.5 h-3.5"></lucide-icon>
+                    {{ i18n.t()['labResults.view'] || 'Shiko Detajet' }}
+                  </button>
+                  <button (click)="confirmDelete(lr)"
+                    class="flex-1 py-2 rounded-xl text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 transition-all flex items-center justify-center gap-1.5">
+                    <lucide-icon name="trash-2" class="w-3.5 h-3.5"></lucide-icon>
+                    {{ i18n.t()['labResults.delete'] || 'Fshi' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Add Modal -->
+    @if (showModal()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+           (click)="closeModal()">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+             (click)="$event.stopPropagation()">
+
+          <!-- Modal Header -->
+          <div class="px-6 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between">
+            <h2 class="text-xl font-extrabold text-gray-800">
+              {{ i18n.t()['labResults.addResult'] || 'Shto Rezultat Laboratori' }}
+            </h2>
+            <button (click)="closeModal()" class="p-2 rounded-xl hover:bg-gray-100 transition-colors">
+              <lucide-icon name="x" class="w-5 h-5 text-slate-400"></lucide-icon>
+            </button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="p-6 space-y-5">
+            <!-- Test Name -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['labResults.testName'] || 'Emri i Testit' }} *
+              </label>
+              <input type="text" [(ngModel)]="formTestName"
+                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm font-medium"
+                [placeholder]="i18n.t()['labResults.testNamePlaceholder'] || 'P.sh. Gjak i plot\xEB'">
+            </div>
+
+            <!-- Result -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                  {{ i18n.t()['labResults.result'] || 'Rezultati' }} *
+                </label>
+                <input type="text" [(ngModel)]="formResult"
+                  class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm font-medium">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                  {{ i18n.t()['labResults.unit'] || 'Nj\xEBsia' }}
+                </label>
+                <input type="text" [(ngModel)]="formUnit"
+                  class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm font-medium"
+                  placeholder="g/dL">
+              </div>
+            </div>
+
+            <!-- Reference Range -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['labResults.referenceRange'] || 'Vlera Referente' }}
+                <span class="text-slate-400 normal-case font-normal text-xs ml-1">({{ i18n.t()['labResults.optional'] || 'opsionale' }})</span>
+              </label>
+              <input type="text" [(ngModel)]="formReferenceRange"
+                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm font-medium"
+                placeholder="P.sh. 12.0 - 16.0">
+            </div>
+
+            <!-- Date -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['labResults.date'] || 'Data e Testit' }} *
+              </label>
+              <input type="date" [(ngModel)]="formDate"
+                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm">
+            </div>
+
+            <!-- Doctor -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['labResults.doctor'] || 'Doktori' }}
+                <span class="text-slate-400 normal-case font-normal text-xs ml-1">({{ i18n.t()['labResults.optional'] || 'opsionale' }})</span>
+              </label>
+              <input type="text" [(ngModel)]="formDoctor"
+                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm font-medium"
+                [placeholder]="i18n.t()['labResults.doctorPlaceholder'] || 'P.sh. Dr. Arben Basha'">
+            </div>
+
+            <!-- Notes -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['labResults.notes'] || 'Sh\xEBnime' }}
+                <span class="text-slate-400 normal-case font-normal text-xs ml-1">({{ i18n.t()['labResults.optional'] || 'opsionale' }})</span>
+              </label>
+              <textarea [(ngModel)]="formNotes" rows="2"
+                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm resize-none"
+                [placeholder]="i18n.t()['labResults.notesPlaceholder'] || 'Sh\xEBno detajet shtes\xEB...'"></textarea>
+            </div>
+
+            <!-- Error -->
+            @if (saveError()) {
+              <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-semibold">
+                {{ saveError() }}
+              </div>
+            }
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="px-6 pb-6 flex gap-3">
+            <button (click)="closeModal()"
+              class="flex-1 py-3.5 rounded-2xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all text-sm">
+              {{ i18n.t()['labResults.cancel'] || 'Anulo' }}
+            </button>
+            <button (click)="saveLabResult()"
+              [disabled]="saving() || !canSave()"
+              class="flex-1 py-3.5 rounded-2xl font-bold text-white bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2">
+              @if (saving()) {
+                <lucide-icon name="loader-2" class="w-4 h-4 animate-spin"></lucide-icon>
+                {{ i18n.t()['labResults.saving'] || 'Duke ruajtur...' }}
+              } @else {
+                <lucide-icon name="check" class="w-4 h-4"></lucide-icon>
+                {{ i18n.t()['labResults.save'] || 'Ruaj' }}
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- View Modal -->
+    @if (viewingResult()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+           (click)="viewingResult.set(null)">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md"
+             (click)="$event.stopPropagation()">
+
+          <!-- Modal Header -->
+          <div class="px-6 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between">
+            <h2 class="text-xl font-extrabold text-gray-800">
+              {{ viewingResult()!.testName }}
+            </h2>
+            <button (click)="viewingResult.set(null)" class="p-2 rounded-xl hover:bg-gray-100 transition-colors">
+              <lucide-icon name="x" class="w-5 h-5 text-slate-400"></lucide-icon>
+            </button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="p-6 space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-slate-50 rounded-2xl p-4">
+                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">{{ i18n.t()['labResults.result'] || 'Rezultati' }}</p>
+                <p class="text-lg font-extrabold text-gray-800">{{ viewingResult()!.result }}
+                  @if (viewingResult()!.unit) {
+                    <span class="text-sm font-normal text-slate-400">{{ viewingResult()!.unit }}</span>
+                  }
+                </p>
+              </div>
+              <div class="bg-slate-50 rounded-2xl p-4">
+                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">{{ i18n.t()['labResults.date'] || 'Data' }}</p>
+                <p class="text-lg font-extrabold text-gray-800">{{ formatDate(viewingResult()!.date) }}</p>
+              </div>
+            </div>
+
+            @if (viewingResult()!.referenceRange) {
+              <div class="bg-violet-50 rounded-2xl p-4">
+                <p class="text-xs text-violet-500 font-semibold uppercase tracking-wider mb-1">{{ i18n.t()['labResults.referenceRange'] || 'Vlera Referente' }}</p>
+                <p class="text-base font-bold text-violet-700">{{ viewingResult()!.referenceRange }}</p>
+              </div>
+            }
+
+            @if (viewingResult()!.doctor) {
+              <div class="flex items-center gap-2 text-sm text-slate-500">
+                <lucide-icon name="stethoscope" class="w-4 h-4 text-slate-400"></lucide-icon>
+                <span>{{ viewingResult()!.doctor }}</span>
+              </div>
+            }
+
+            @if (viewingResult()!.notes) {
+              <div class="bg-slate-50 rounded-2xl p-4">
+                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">{{ i18n.t()['labResults.notes'] || 'Sh\xEBnime' }}</p>
+                <p class="text-sm text-slate-600">{{ viewingResult()!.notes }}</p>
+              </div>
+            }
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="px-6 pb-6">
+            <button (click)="viewingResult.set(null)"
+              class="w-full py-3.5 rounded-2xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all text-sm">
+              {{ i18n.t()['labResults.close'] || 'Mbyll' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Delete Confirmation Modal -->
+    @if (showDeleteModal()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+           (click)="showDeleteModal.set(false)">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6"
+             (click)="$event.stopPropagation()">
+          <div class="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <lucide-icon name="trash-2" class="text-red-500 w-6 h-6"></lucide-icon>
+          </div>
+          <h3 class="text-lg font-extrabold text-gray-800 text-center mb-2">
+            {{ i18n.t()['labResults.deleteConfirmTitle'] || 'Fshij Rezultatin?' }}
+          </h3>
+          <p class="text-slate-500 text-sm text-center mb-6">
+            {{ deletingResult()?.testName }}
+          </p>
+          <div class="flex gap-3">
+            <button (click)="showDeleteModal.set(false)"
+              class="flex-1 py-3 rounded-2xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all text-sm">
+              {{ i18n.t()['labResults.cancel'] || 'Anulo' }}
+            </button>
+            <button (click)="deleteLabResult()"
+              class="flex-1 py-3 rounded-2xl font-bold text-white bg-red-500 hover:bg-red-600 transition-all text-sm">
+              {{ i18n.t()['labResults.delete'] || 'Fshi' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  ` }]
+  }], null, null);
+})();
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(LabResultsComponent, { className: "LabResultsComponent", filePath: "src/app/components/lab-results/lab-results.component.ts", lineNumber: 372 });
+})();
+
+// src/app/components/sidebar.component.ts
+var _forTrack013 = ($index, $item) => $item.id;
 function SidebarComponent_Conditional_7_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "img", 13);
@@ -51911,6 +56093,7 @@ function SidebarComponent_For_11_Template(rf, ctx) {
     const item_r4 = ctx.$implicit;
     const ctx_r1 = \u0275\u0275nextContext();
     \u0275\u0275classProp("sidebar__nav-item--active", ctx_r1.currentTab() === item_r4.id);
+    \u0275\u0275attribute("aria-current", ctx_r1.currentTab() === item_r4.id ? "page" : null);
     \u0275\u0275advance();
     \u0275\u0275property("name", item_r4.icon);
     \u0275\u0275advance(2);
@@ -51928,7 +56111,10 @@ var SidebarComponent = class _SidebarComponent {
       { id: "temperature", icon: "thermometer", labelKey: "sidebar.nav.temperature" },
       { id: "growth", icon: "trending-up", labelKey: "sidebar.nav.growth" },
       { id: "diary", icon: "book-open", labelKey: "sidebar.nav.diary" },
-      { id: "vaccines", icon: "syringe", labelKey: "sidebar.nav.vaccines" }
+      { id: "vaccines", icon: "syringe", labelKey: "sidebar.nav.vaccines" },
+      { id: "medications", icon: "pill", labelKey: "sidebar.nav.medications" },
+      { id: "appointments", icon: "calendar-check", labelKey: "sidebar.nav.appointments" },
+      { id: "lab-results", icon: "flask-conical", labelKey: "sidebar.nav.labResults" }
     ];
     this.activeChild = computed(() => {
       const activeId = this.dataService.activeChildId();
@@ -51962,7 +56148,7 @@ var SidebarComponent = class _SidebarComponent {
     };
   }
   static {
-    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _SidebarComponent, selectors: [["app-sidebar"]], decls: 21, vars: 7, consts: [[1, "sidebar"], [1, "sidebar__brand"], [1, "sidebar__logo"], [1, "locale-toggle", 3, "click"], [1, "sidebar__child-card"], [1, "sidebar__child-placeholder"], [1, "sidebar__nav"], [1, "sidebar__nav-item", 3, "sidebar__nav-item--active"], [1, "sidebar__footer"], [1, "sidebar__footer-item", 3, "click"], ["name", "settings", 1, "sidebar__nav-icon"], [1, "sidebar__footer-item", "sidebar__footer-item--logout", 3, "click"], ["name", "log-out", 1, "sidebar__nav-icon"], [1, "sidebar__avatar", 3, "src", "alt"], [1, "sidebar__child-info"], [1, "sidebar__child-name"], [1, "sidebar__age-badge"], ["name", "user", 1, "sidebar__placeholder-icon"], [1, "sidebar__placeholder-text"], [1, "sidebar__nav-item", 3, "click"], [1, "sidebar__nav-icon", 3, "name"]], template: function SidebarComponent_Template(rf, ctx) {
+    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _SidebarComponent, selectors: [["app-sidebar"]], decls: 21, vars: 7, consts: [["aria-label", "Sidebar navigation", 1, "sidebar"], [1, "sidebar__brand"], [1, "sidebar__logo"], ["type", "button", 1, "locale-toggle", 3, "click"], [1, "sidebar__child-card"], [1, "sidebar__child-placeholder"], ["aria-label", "Main navigation", 1, "sidebar__nav"], ["type", "button", 1, "sidebar__nav-item", 3, "sidebar__nav-item--active"], [1, "sidebar__footer"], ["type", "button", 1, "sidebar__footer-item", 3, "click"], ["name", "settings", "aria-hidden", "true", 1, "sidebar__nav-icon"], ["type", "button", 1, "sidebar__footer-item", "sidebar__footer-item--logout", 3, "click"], ["name", "log-out", "aria-hidden", "true", 1, "sidebar__nav-icon"], [1, "sidebar__avatar", 3, "src", "alt"], [1, "sidebar__child-info"], [1, "sidebar__child-name"], [1, "sidebar__age-badge"], ["name", "user", "aria-hidden", "true", 1, "sidebar__placeholder-icon"], [1, "sidebar__placeholder-text"], ["type", "button", 1, "sidebar__nav-item", 3, "click"], ["aria-hidden", "true", 1, "sidebar__nav-icon", 3, "name"]], template: function SidebarComponent_Template(rf, ctx) {
       if (rf & 1) {
         \u0275\u0275elementStart(0, "aside", 0)(1, "div", 1)(2, "span", 2);
         \u0275\u0275text(3, "KidDok");
@@ -51977,7 +56163,7 @@ var SidebarComponent = class _SidebarComponent {
         \u0275\u0275conditionalCreate(7, SidebarComponent_Conditional_7_Template, 6, 4)(8, SidebarComponent_Conditional_8_Template, 4, 1, "div", 5);
         \u0275\u0275elementEnd();
         \u0275\u0275elementStart(9, "nav", 6);
-        \u0275\u0275repeaterCreate(10, SidebarComponent_For_11_Template, 4, 4, "button", 7, _forTrack010);
+        \u0275\u0275repeaterCreate(10, SidebarComponent_For_11_Template, 4, 5, "button", 7, _forTrack013);
         \u0275\u0275elementEnd();
         \u0275\u0275elementStart(12, "div", 8)(13, "button", 9);
         \u0275\u0275listener("click", function SidebarComponent_Template_button_click_13_listener() {
@@ -52013,18 +56199,18 @@ var SidebarComponent = class _SidebarComponent {
         \u0275\u0275advance(4);
         \u0275\u0275textInterpolate(ctx.t()["sidebar.footer.logout"]);
       }
-    }, dependencies: [CommonModule, LucideAngularModule, LucideAngularComponent], styles: ['\n.sidebar[_ngcontent-%COMP%] {\n  width: 280px;\n  height: 100dvh;\n  background: #ffffff;\n  display: flex;\n  flex-direction: column;\n  position: relative;\n  border-left: 4px solid;\n  border-image:\n    linear-gradient(\n      to bottom,\n      #6366F1,\n      #14B8A6) 1;\n  flex-shrink: 0;\n}\n.sidebar__brand[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 20px 20px 16px;\n}\n.sidebar__logo[_ngcontent-%COMP%] {\n  font-family: "Inter", sans-serif;\n  font-size: 28px;\n  font-weight: 800;\n  color: #6366F1;\n  letter-spacing: -0.5px;\n}\n.locale-toggle[_ngcontent-%COMP%] {\n  font-family: "Inter", sans-serif;\n  font-size: 11px;\n  font-weight: 700;\n  padding: 4px 10px;\n  border-radius: 9999px;\n  background: #f5f5f4;\n  color: #78716C;\n  border: none;\n  cursor: pointer;\n  transition: background 0.2s ease, color 0.2s ease;\n}\n.locale-toggle[_ngcontent-%COMP%]:hover {\n  background: #e7e5e4;\n  color: #44403c;\n}\n.sidebar__child-card[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin: 0 16px 8px;\n  padding: 12px 16px;\n  border-radius: 16px;\n  background: #ffffff;\n  border: 2px solid #c7d2fe;\n}\n.sidebar__child-card--empty[_ngcontent-%COMP%] {\n  border: 2px dashed #e7e5e4;\n  background: #fafaf9;\n}\n.sidebar__avatar[_ngcontent-%COMP%] {\n  width: 36px;\n  height: 36px;\n  border-radius: 9999px;\n  border: 2px solid #c7d2fe;\n  flex-shrink: 0;\n}\n.sidebar__child-info[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n  min-width: 0;\n}\n.sidebar__child-name[_ngcontent-%COMP%] {\n  font-family: "Inter", sans-serif;\n  font-size: 15px;\n  font-weight: 700;\n  color: #1c1917;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.sidebar__age-badge[_ngcontent-%COMP%] {\n  font-family: "Inter", sans-serif;\n  font-size: 11px;\n  font-weight: 700;\n  padding: 2px 8px;\n  border-radius: 9999px;\n  background: #eef2ff;\n  color: #4338ca;\n  width: fit-content;\n}\n.sidebar__child-placeholder[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 2px 0;\n}\n.sidebar__placeholder-icon[_ngcontent-%COMP%] {\n  font-size: 20px;\n  color: #a8a29e;\n}\n.sidebar__placeholder-text[_ngcontent-%COMP%] {\n  font-family: "Inter", sans-serif;\n  font-size: 13px;\n  font-weight: 500;\n  color: #a8a29e;\n}\n.sidebar__nav[_ngcontent-%COMP%] {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n  padding: 8px 12px 16px;\n  overflow-y: auto;\n}\n.sidebar__nav-item[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  transition: background 0.2s ease;\n  width: 100%;\n  text-align: left;\n  font-family: "Inter", sans-serif;\n  font-size: 15px;\n  font-weight: 600;\n  color: #78716c;\n}\n.sidebar__nav-item[_ngcontent-%COMP%]:hover {\n  background: #f5f5f4;\n}\n.sidebar__nav-item--active[_ngcontent-%COMP%] {\n  background: #eef2ff;\n  color: #6366F1;\n  box-shadow: inset 4px 0 0 #6366F1;\n}\n.sidebar__nav-icon[_ngcontent-%COMP%] {\n  font-size: 22px;\n  font-variation-settings:\n    "FILL" 0,\n    "wght" 300,\n    "GRAD" 0,\n    "opsz" 24;\n  flex-shrink: 0;\n}\n.sidebar__footer[_ngcontent-%COMP%] {\n  padding: 12px 12px 24px;\n  border-top: 1px solid #f5f5f4;\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.sidebar__footer-item[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 8px 16px;\n  border-radius: 12px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  transition: background 0.2s ease, color 0.2s ease;\n  width: 100%;\n  text-align: left;\n  font-family: "Inter", sans-serif;\n  font-size: 13px;\n  font-weight: 500;\n  color: #78716c;\n}\n.sidebar__footer-item[_ngcontent-%COMP%]:hover {\n  background: #f5f5f4;\n  color: #44403c;\n}\n.sidebar__footer-item--logout[_ngcontent-%COMP%] {\n  color: #f43f5e;\n}\n.sidebar__footer-item--logout[_ngcontent-%COMP%]:hover {\n  background: #fff1f2;\n  color: #e11d48;\n}\n/*# sourceMappingURL=sidebar.component.css.map */'] });
+    }, dependencies: [CommonModule, LucideAngularModule, LucideAngularComponent], styles: ['\n.sidebar[_ngcontent-%COMP%] {\n  width: 280px;\n  height: 100dvh;\n  background: #ffffff;\n  display: flex;\n  flex-direction: column;\n  position: relative;\n  border-left: 4px solid;\n  border-image:\n    linear-gradient(\n      to bottom,\n      #6366F1,\n      #14B8A6) 1;\n  flex-shrink: 0;\n}\n.sidebar__brand[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 20px 20px 16px;\n}\n.sidebar__logo[_ngcontent-%COMP%] {\n  font-family: "Inter", sans-serif;\n  font-size: 28px;\n  font-weight: 800;\n  color: #6366F1;\n  letter-spacing: -0.5px;\n}\n.locale-toggle[_ngcontent-%COMP%] {\n  font-family: "Inter", sans-serif;\n  font-size: 11px;\n  font-weight: 700;\n  padding: 4px 10px;\n  border-radius: 9999px;\n  background: #f5f5f4;\n  color: #78716C;\n  border: none;\n  cursor: pointer;\n  transition: background 0.2s ease, color 0.2s ease;\n}\n.locale-toggle[_ngcontent-%COMP%]:hover {\n  background: #e7e5e4;\n  color: #44403c;\n}\n.sidebar__child-card[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin: 0 16px 8px;\n  padding: 12px 16px;\n  border-radius: 16px;\n  background: #ffffff;\n  border: 2px solid #c7d2fe;\n}\n.sidebar__child-card--empty[_ngcontent-%COMP%] {\n  border: 2px dashed #e7e5e4;\n  background: #fafaf9;\n}\n.sidebar__avatar[_ngcontent-%COMP%] {\n  width: 36px;\n  height: 36px;\n  border-radius: 9999px;\n  border: 2px solid #c7d2fe;\n  flex-shrink: 0;\n}\n.sidebar__child-info[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n  min-width: 0;\n}\n.sidebar__child-name[_ngcontent-%COMP%] {\n  font-family: "Inter", sans-serif;\n  font-size: 15px;\n  font-weight: 700;\n  color: #1c1917;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.sidebar__age-badge[_ngcontent-%COMP%] {\n  font-family: "Inter", sans-serif;\n  font-size: 11px;\n  font-weight: 700;\n  padding: 2px 8px;\n  border-radius: 9999px;\n  background: #eef2ff;\n  color: #4338ca;\n  width: fit-content;\n}\n.sidebar__child-placeholder[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 2px 0;\n}\n.sidebar__placeholder-icon[_ngcontent-%COMP%] {\n  font-size: 20px;\n  color: #a8a29e;\n}\n.sidebar__placeholder-text[_ngcontent-%COMP%] {\n  font-family: "Inter", sans-serif;\n  font-size: 13px;\n  font-weight: 500;\n  color: #a8a29e;\n}\n.sidebar__nav[_ngcontent-%COMP%] {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n  padding: 8px 12px 16px;\n  overflow-y: auto;\n}\n.sidebar__nav-item[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  transition: background 0.2s ease;\n  width: 100%;\n  text-align: left;\n  font-family: "Inter", sans-serif;\n  font-size: 15px;\n  font-weight: 600;\n  color: #78716c;\n}\n.sidebar__nav-item[_ngcontent-%COMP%]:hover {\n  background: #f5f5f4;\n}\n.sidebar__nav-item--active[_ngcontent-%COMP%] {\n  background: #eef2ff;\n  color: #6366F1;\n  box-shadow: inset 4px 0 0 #6366F1;\n}\n.sidebar__nav-icon[_ngcontent-%COMP%] {\n  flex-shrink: 0;\n}\n.sidebar__footer[_ngcontent-%COMP%] {\n  padding: 12px 12px 24px;\n  border-top: 1px solid #f5f5f4;\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.sidebar__footer-item[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 8px 16px;\n  border-radius: 12px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  transition: background 0.2s ease, color 0.2s ease;\n  width: 100%;\n  text-align: left;\n  font-family: "Inter", sans-serif;\n  font-size: 13px;\n  font-weight: 500;\n  color: #78716c;\n}\n.sidebar__footer-item[_ngcontent-%COMP%]:hover {\n  background: #f5f5f4;\n  color: #44403c;\n}\n.sidebar__footer-item--logout[_ngcontent-%COMP%] {\n  color: #f43f5e;\n}\n.sidebar__footer-item--logout[_ngcontent-%COMP%]:hover {\n  background: #fff1f2;\n  color: #e11d48;\n}\n/*# sourceMappingURL=sidebar.component.css.map */'] });
   }
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SidebarComponent, [{
     type: Component,
     args: [{ selector: "app-sidebar", standalone: true, imports: [CommonModule, LucideAngularModule], template: `
-    <aside class="sidebar">
+    <aside class="sidebar" aria-label="Sidebar navigation">
       <!-- Brand row -->
       <div class="sidebar__brand">
         <span class="sidebar__logo">KidDok</span>
-        <button class="locale-toggle" (click)="i18n.toggleLocale()" [attr.aria-label]="'Switch to ' + (i18n.locale() === 'sq' ? 'English' : 'Albanian')">
+        <button type="button" class="locale-toggle" (click)="i18n.toggleLocale()" [attr.aria-label]="'Switch to ' + (i18n.locale() === 'sq' ? 'English' : 'Albanian')">
           {{ i18n.locale() === 'sq' ? 'EN' : 'SQ' }}
         </button>
       </div>
@@ -52039,21 +56225,23 @@ var SidebarComponent = class _SidebarComponent {
           </div>
         } @else {
           <div class="sidebar__child-placeholder">
-            <lucide-icon name="user" class="sidebar__placeholder-icon"></lucide-icon>
+            <lucide-icon name="user" class="sidebar__placeholder-icon" aria-hidden="true"></lucide-icon>
             <span class="sidebar__placeholder-text">{{ t()['sidebar.noChildSelected'] }}</span>
           </div>
         }
       </div>
 
       <!-- Navigation list -->
-      <nav class="sidebar__nav">
+      <nav class="sidebar__nav" aria-label="Main navigation">
         @for (item of navItems; track item.id) {
           <button
+            type="button"
             class="sidebar__nav-item"
             [class.sidebar__nav-item--active]="currentTab() === item.id"
             (click)="navigateTo(item.id)"
+            [attr.aria-current]="currentTab() === item.id ? 'page' : null"
           >
-            <lucide-icon [name]="item.icon" class="sidebar__nav-icon"></lucide-icon>
+            <lucide-icon [name]="item.icon" class="sidebar__nav-icon" aria-hidden="true"></lucide-icon>
             <span>{{ t()[item.labelKey] }}</span>
           </button>
         }
@@ -52061,17 +56249,17 @@ var SidebarComponent = class _SidebarComponent {
 
       <!-- Footer -->
       <div class="sidebar__footer">
-        <button class="sidebar__footer-item" (click)="navigateTo('settings')">
-          <lucide-icon name="settings" class="sidebar__nav-icon"></lucide-icon>
+        <button type="button" class="sidebar__footer-item" (click)="navigateTo('settings')">
+          <lucide-icon name="settings" class="sidebar__nav-icon" aria-hidden="true"></lucide-icon>
           <span>{{ t()['sidebar.footer.settings'] }}</span>
         </button>
-        <button class="sidebar__footer-item sidebar__footer-item--logout" (click)="logout()">
-          <lucide-icon name="log-out" class="sidebar__nav-icon"></lucide-icon>
+        <button type="button" class="sidebar__footer-item sidebar__footer-item--logout" (click)="logout()">
+          <lucide-icon name="log-out" class="sidebar__nav-icon" aria-hidden="true"></lucide-icon>
           <span>{{ t()['sidebar.footer.logout'] }}</span>
         </button>
       </div>
     </aside>
-  `, styles: ['/* angular:styles/component:css;f9b924bf85ecb6b410506f1bf15b69a5164bd5a88d298c53286e3de6452288f5;C:/Users/g_gus/Desktop/jona/kiddok/src/app/components/sidebar.component.ts */\n.sidebar {\n  width: 280px;\n  height: 100dvh;\n  background: #ffffff;\n  display: flex;\n  flex-direction: column;\n  position: relative;\n  border-left: 4px solid;\n  border-image:\n    linear-gradient(\n      to bottom,\n      #6366F1,\n      #14B8A6) 1;\n  flex-shrink: 0;\n}\n.sidebar__brand {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 20px 20px 16px;\n}\n.sidebar__logo {\n  font-family: "Inter", sans-serif;\n  font-size: 28px;\n  font-weight: 800;\n  color: #6366F1;\n  letter-spacing: -0.5px;\n}\n.locale-toggle {\n  font-family: "Inter", sans-serif;\n  font-size: 11px;\n  font-weight: 700;\n  padding: 4px 10px;\n  border-radius: 9999px;\n  background: #f5f5f4;\n  color: #78716C;\n  border: none;\n  cursor: pointer;\n  transition: background 0.2s ease, color 0.2s ease;\n}\n.locale-toggle:hover {\n  background: #e7e5e4;\n  color: #44403c;\n}\n.sidebar__child-card {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin: 0 16px 8px;\n  padding: 12px 16px;\n  border-radius: 16px;\n  background: #ffffff;\n  border: 2px solid #c7d2fe;\n}\n.sidebar__child-card--empty {\n  border: 2px dashed #e7e5e4;\n  background: #fafaf9;\n}\n.sidebar__avatar {\n  width: 36px;\n  height: 36px;\n  border-radius: 9999px;\n  border: 2px solid #c7d2fe;\n  flex-shrink: 0;\n}\n.sidebar__child-info {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n  min-width: 0;\n}\n.sidebar__child-name {\n  font-family: "Inter", sans-serif;\n  font-size: 15px;\n  font-weight: 700;\n  color: #1c1917;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.sidebar__age-badge {\n  font-family: "Inter", sans-serif;\n  font-size: 11px;\n  font-weight: 700;\n  padding: 2px 8px;\n  border-radius: 9999px;\n  background: #eef2ff;\n  color: #4338ca;\n  width: fit-content;\n}\n.sidebar__child-placeholder {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 2px 0;\n}\n.sidebar__placeholder-icon {\n  font-size: 20px;\n  color: #a8a29e;\n}\n.sidebar__placeholder-text {\n  font-family: "Inter", sans-serif;\n  font-size: 13px;\n  font-weight: 500;\n  color: #a8a29e;\n}\n.sidebar__nav {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n  padding: 8px 12px 16px;\n  overflow-y: auto;\n}\n.sidebar__nav-item {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  transition: background 0.2s ease;\n  width: 100%;\n  text-align: left;\n  font-family: "Inter", sans-serif;\n  font-size: 15px;\n  font-weight: 600;\n  color: #78716c;\n}\n.sidebar__nav-item:hover {\n  background: #f5f5f4;\n}\n.sidebar__nav-item--active {\n  background: #eef2ff;\n  color: #6366F1;\n  box-shadow: inset 4px 0 0 #6366F1;\n}\n.sidebar__nav-icon {\n  font-size: 22px;\n  font-variation-settings:\n    "FILL" 0,\n    "wght" 300,\n    "GRAD" 0,\n    "opsz" 24;\n  flex-shrink: 0;\n}\n.sidebar__footer {\n  padding: 12px 12px 24px;\n  border-top: 1px solid #f5f5f4;\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.sidebar__footer-item {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 8px 16px;\n  border-radius: 12px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  transition: background 0.2s ease, color 0.2s ease;\n  width: 100%;\n  text-align: left;\n  font-family: "Inter", sans-serif;\n  font-size: 13px;\n  font-weight: 500;\n  color: #78716c;\n}\n.sidebar__footer-item:hover {\n  background: #f5f5f4;\n  color: #44403c;\n}\n.sidebar__footer-item--logout {\n  color: #f43f5e;\n}\n.sidebar__footer-item--logout:hover {\n  background: #fff1f2;\n  color: #e11d48;\n}\n/*# sourceMappingURL=sidebar.component.css.map */\n'] }]
+  `, styles: ['/* angular:styles/component:css;3382309d3642fb37fa356dba7a82861678f4997bb4220f90b02978d293d78a8b;C:/Users/g_gus/Desktop/jona/kiddok/src/app/components/sidebar.component.ts */\n.sidebar {\n  width: 280px;\n  height: 100dvh;\n  background: #ffffff;\n  display: flex;\n  flex-direction: column;\n  position: relative;\n  border-left: 4px solid;\n  border-image:\n    linear-gradient(\n      to bottom,\n      #6366F1,\n      #14B8A6) 1;\n  flex-shrink: 0;\n}\n.sidebar__brand {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 20px 20px 16px;\n}\n.sidebar__logo {\n  font-family: "Inter", sans-serif;\n  font-size: 28px;\n  font-weight: 800;\n  color: #6366F1;\n  letter-spacing: -0.5px;\n}\n.locale-toggle {\n  font-family: "Inter", sans-serif;\n  font-size: 11px;\n  font-weight: 700;\n  padding: 4px 10px;\n  border-radius: 9999px;\n  background: #f5f5f4;\n  color: #78716C;\n  border: none;\n  cursor: pointer;\n  transition: background 0.2s ease, color 0.2s ease;\n}\n.locale-toggle:hover {\n  background: #e7e5e4;\n  color: #44403c;\n}\n.sidebar__child-card {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin: 0 16px 8px;\n  padding: 12px 16px;\n  border-radius: 16px;\n  background: #ffffff;\n  border: 2px solid #c7d2fe;\n}\n.sidebar__child-card--empty {\n  border: 2px dashed #e7e5e4;\n  background: #fafaf9;\n}\n.sidebar__avatar {\n  width: 36px;\n  height: 36px;\n  border-radius: 9999px;\n  border: 2px solid #c7d2fe;\n  flex-shrink: 0;\n}\n.sidebar__child-info {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n  min-width: 0;\n}\n.sidebar__child-name {\n  font-family: "Inter", sans-serif;\n  font-size: 15px;\n  font-weight: 700;\n  color: #1c1917;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.sidebar__age-badge {\n  font-family: "Inter", sans-serif;\n  font-size: 11px;\n  font-weight: 700;\n  padding: 2px 8px;\n  border-radius: 9999px;\n  background: #eef2ff;\n  color: #4338ca;\n  width: fit-content;\n}\n.sidebar__child-placeholder {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 2px 0;\n}\n.sidebar__placeholder-icon {\n  font-size: 20px;\n  color: #a8a29e;\n}\n.sidebar__placeholder-text {\n  font-family: "Inter", sans-serif;\n  font-size: 13px;\n  font-weight: 500;\n  color: #a8a29e;\n}\n.sidebar__nav {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n  padding: 8px 12px 16px;\n  overflow-y: auto;\n}\n.sidebar__nav-item {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  transition: background 0.2s ease;\n  width: 100%;\n  text-align: left;\n  font-family: "Inter", sans-serif;\n  font-size: 15px;\n  font-weight: 600;\n  color: #78716c;\n}\n.sidebar__nav-item:hover {\n  background: #f5f5f4;\n}\n.sidebar__nav-item--active {\n  background: #eef2ff;\n  color: #6366F1;\n  box-shadow: inset 4px 0 0 #6366F1;\n}\n.sidebar__nav-icon {\n  flex-shrink: 0;\n}\n.sidebar__footer {\n  padding: 12px 12px 24px;\n  border-top: 1px solid #f5f5f4;\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.sidebar__footer-item {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 8px 16px;\n  border-radius: 12px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  transition: background 0.2s ease, color 0.2s ease;\n  width: 100%;\n  text-align: left;\n  font-family: "Inter", sans-serif;\n  font-size: 13px;\n  font-weight: 500;\n  color: #78716c;\n}\n.sidebar__footer-item:hover {\n  background: #f5f5f4;\n  color: #44403c;\n}\n.sidebar__footer-item--logout {\n  color: #f43f5e;\n}\n.sidebar__footer-item--logout:hover {\n  background: #fff1f2;\n  color: #e11d48;\n}\n/*# sourceMappingURL=sidebar.component.css.map */\n'] }]
   }], null, null);
 })();
 (() => {
@@ -52079,7 +56267,7 @@ var SidebarComponent = class _SidebarComponent {
 })();
 
 // src/app/components/header.component.ts
-var _forTrack011 = ($index, $item) => $item.id;
+var _forTrack014 = ($index, $item) => $item.id;
 function HeaderComponent_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
     const _r1 = \u0275\u0275getCurrentView();
@@ -52096,6 +56284,7 @@ function HeaderComponent_Conditional_2_Template(rf, ctx) {
   }
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275attribute("aria-label", ctx_r1.i18n.t()["nav.back"]);
     \u0275\u0275advance(3);
     \u0275\u0275textInterpolate(ctx_r1.i18n.t()["nav.back"]);
   }
@@ -52122,7 +56311,7 @@ function HeaderComponent_Conditional_14_Template(rf, ctx) {
   }
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext();
-    \u0275\u0275property("src", ctx_r1.activeChild().avatarUrl, \u0275\u0275sanitizeUrl);
+    \u0275\u0275property("src", ctx_r1.activeChild().avatarUrl, \u0275\u0275sanitizeUrl)("alt", ctx_r1.activeChild().name);
     \u0275\u0275advance(2);
     \u0275\u0275textInterpolate(ctx_r1.activeChild().name);
     \u0275\u0275advance();
@@ -52184,8 +56373,9 @@ function HeaderComponent_Conditional_17_For_7_Template(rf, ctx) {
     const child_r5 = ctx.$implicit;
     const ctx_r1 = \u0275\u0275nextContext(2);
     \u0275\u0275classProp("bg-indigo-50", child_r5.id === ctx_r1.activeChildId());
+    \u0275\u0275attribute("aria-selected", child_r5.id === ctx_r1.activeChildId());
     \u0275\u0275advance();
-    \u0275\u0275property("src", child_r5.avatarUrl, \u0275\u0275sanitizeUrl);
+    \u0275\u0275property("src", child_r5.avatarUrl, \u0275\u0275sanitizeUrl)("alt", child_r5.name);
     \u0275\u0275advance(3);
     \u0275\u0275textInterpolate(child_r5.name);
     \u0275\u0275advance(2);
@@ -52222,7 +56412,7 @@ function HeaderComponent_Conditional_17_Template(rf, ctx) {
     \u0275\u0275text(4);
     \u0275\u0275elementEnd()();
     \u0275\u0275conditionalCreate(5, HeaderComponent_Conditional_17_Conditional_5_Template, 3, 1, "div", 30);
-    \u0275\u0275repeaterCreate(6, HeaderComponent_Conditional_17_For_7_Template, 8, 7, "div", 31, _forTrack011);
+    \u0275\u0275repeaterCreate(6, HeaderComponent_Conditional_17_For_7_Template, 8, 9, "div", 31, _forTrack014);
     \u0275\u0275conditionalCreate(8, HeaderComponent_Conditional_17_Conditional_8_Template, 4, 1, "div", 32);
     \u0275\u0275elementStart(9, "div", 33)(10, "button", 34);
     \u0275\u0275listener("click", function HeaderComponent_Conditional_17_Template_button_click_10_listener() {
@@ -52380,10 +56570,10 @@ var HeaderComponent = class _HeaderComponent {
           return ctx.onDocumentClick($event);
         }, \u0275\u0275resolveDocument);
       }
-    }, inputs: { currentTab: "currentTab", viewState: "viewState" }, outputs: { childSwitchRequested: "childSwitchRequested", addChildRequested: "addChildRequested", switchProfileRequested: "switchProfileRequested", backRequested: "backRequested", localeToggleRequested: "localeToggleRequested" }, decls: 22, vars: 12, consts: [["dropdownRef", ""], [1, "px-6", "py-5", "lg:px-10", "lg:py-7", "flex", "items-center", "justify-between", "lg:justify-end", "border-b", "border-gray-200/50", "bg-white/60", "backdrop-blur-xl", "z-30", "shadow-sm"], [1, "flex", "items-center", "gap-3"], [1, "flex", "items-center", "gap-2", "px-3", "py-2", "rounded-xl", "bg-white", "shadow-soft", "border", "border-gray-100", "hover:border-primary-300", "hover:shadow-md", "transition-all", "text-gray-600", "hover:text-primary-600"], [1, "lg:hidden", "p-2", "rounded-xl", "bg-white", "shadow-soft", "border", "border-gray-100"], ["name", "menu", 1, "text-inherit"], [1, "text-base", "lg:text-lg", "font-extrabold", "text-gray-800", "hidden", "sm:block", "ml-2"], [1, "flex", "items-center", "gap-4", "lg:gap-8"], ["aria-label", "Switch to English/Albanian", 1, "lg:hidden", "flex", "items-center", "gap-2", "px-3", "py-1.5", "bg-slate-100", "hover:bg-slate-200", "rounded-full", "text-xs", "font-bold", "text-gray-600", "transition-all", 3, "click"], ["name", "globe", 1, "text-inherit"], [1, "relative"], [1, "flex", "items-center", "gap-3", "bg-white", "px-4", "py-2", "lg:py-2.5", "rounded-2xl", "shadow-soft", "border", "border-gray-100", "hover:border-primary-300", "hover:shadow-md", "transition-all", 3, "click"], ["name", "chevron-down", 1, "text-gray-500", "text-sm", "transition-transform", "duration-200"], [1, "absolute", "right-0", "top-full", "mt-2", "w-80", "bg-white", "rounded-3xl", "shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)]", "border", "border-gray-100", "py-3", "animate-slide-up", "z-50", "overflow-hidden", "max-h-[80vh]", "overflow-y-auto"], [1, "hidden", "lg:flex", "items-center", "gap-2", "text-sm", "text-gray-500", "font-medium"], [1, "w-10", "h-10", "lg:w-12", "lg:h-12", "rounded-full", "bg-gradient-to-tr", "from-primary-500", "to-teal-400", "p-[2px]", "shadow-soft", "cursor-pointer", "hover:shadow-lg", "transition-shadow"], [1, "w-full", "h-full", "bg-white", "rounded-full", "flex", "items-center", "justify-center", "border-2", "border-white"], ["name", "settings", 1, "text-inherit"], [1, "flex", "items-center", "gap-2", "px-3", "py-2", "rounded-xl", "bg-white", "shadow-soft", "border", "border-gray-100", "hover:border-primary-300", "hover:shadow-md", "transition-all", "text-gray-600", "hover:text-primary-600", 3, "click"], ["name", "arrow-left", 1, "text-inherit"], [1, "text-sm", "font-bold", "hidden", "sm:block"], [1, "w-8", "h-8", "lg:w-10", "lg:h-10", "rounded-full", "border-2", "border-primary-100", "object-cover", 3, "src"], [1, "font-bold", "text-gray-800", "hidden", "sm:block", "text-sm", "lg:text-base"], [1, "bg-primary-50", "text-primary-600", "text-xs", "font-bold", "px-2", "py-0.5", "rounded-full"], [1, "w-8", "h-8", "lg:w-10", "lg:h-10", "rounded-full", "bg-slate-100", "flex", "items-center", "justify-center", "border-2", "border-dashed", "border-slate-300"], ["name", "user", 1, "text-inherit"], [1, "font-bold", "text-gray-500", "hidden", "sm:block"], [1, "px-5", "pb-3", "pt-1", "mb-2", "border-b", "border-gray-50", "flex", "items-center", "gap-2"], ["name", "users", 1, "text-inherit"], [1, "text-xs", "font-bold", "text-gray-500", "uppercase", "tracking-wider"], [1, "px-5", "py-8", "text-center"], [1, "flex", "items-center", "gap-4", "px-5", "py-3", "hover:bg-primary-50", "cursor-pointer", "transition-colors", "mx-2", "mt-0", "rounded-2xl", "border", "border-transparent", "hover:border-primary-100", "group", 3, "bg-indigo-50"], [1, "px-4", "pt-2", "pb-1", "mt-2", "border-t", "border-gray-100"], [1, "px-4", "pt-2", "mt-1"], [1, "w-full", "flex", "items-center", "justify-center", "gap-2", "py-3.5", "rounded-2xl", "bg-slate-50", "hover:bg-slate-100", "text-slate-700", "font-bold", "transition-colors", "border", "border-slate-200", "hover:border-slate-300", 3, "click"], ["name", "circle-plus", 1, "text-inherit"], [1, "text-gray-500", "text-sm", "font-medium"], [1, "flex", "items-center", "gap-4", "px-5", "py-3", "hover:bg-primary-50", "cursor-pointer", "transition-colors", "mx-2", "mt-0", "rounded-2xl", "border", "border-transparent", "hover:border-primary-100", "group", 3, "click"], [1, "w-12", "h-12", "rounded-full", "border", "border-gray-200", "shadow-sm", 3, "src"], [1, "flex", "flex-col", "flex-1", "min-w-0"], [1, "font-extrabold", "text-gray-800", "group-hover:text-primary-700", "transition-colors", "truncate"], [1, "text-xs", "text-gray-500", "font-medium"], ["name", "check", 1, "text-inherit"], [1, "w-full", "flex", "items-center", "gap-3", "px-4", "py-3", "rounded-2xl", "bg-primary-50", "hover:bg-primary-100", "text-primary-700", "font-bold", "transition-colors", "border", "border-primary-200", 3, "click"], ["name", "arrow-left-right", 1, "text-inherit"], ["name", "hand", 1, "text-inherit"], [1, "font-bold", "text-gray-700"]], template: function HeaderComponent_Template(rf, ctx) {
+    }, inputs: { currentTab: "currentTab", viewState: "viewState" }, outputs: { childSwitchRequested: "childSwitchRequested", addChildRequested: "addChildRequested", switchProfileRequested: "switchProfileRequested", backRequested: "backRequested", localeToggleRequested: "localeToggleRequested" }, decls: 22, vars: 16, consts: [["dropdownRef", ""], [1, "px-6", "py-5", "lg:px-10", "lg:py-7", "flex", "items-center", "justify-between", "lg:justify-end", "border-b", "border-gray-200/50", "bg-white/60", "backdrop-blur-xl", "z-30", "shadow-sm"], [1, "flex", "items-center", "gap-3"], ["type", "button", 1, "flex", "items-center", "gap-2", "px-3", "py-2", "rounded-xl", "bg-white", "shadow-soft", "border", "border-gray-100", "hover:border-primary-300", "hover:shadow-md", "transition-all", "text-gray-600", "hover:text-primary-600"], ["type", "button", "aria-label", "Open menu", 1, "lg:hidden", "p-2", "rounded-xl", "bg-white", "shadow-soft", "border", "border-gray-100"], ["name", "menu", "aria-hidden", "true", 1, "text-inherit"], [1, "text-base", "lg:text-lg", "font-extrabold", "text-gray-800", "hidden", "sm:block", "ml-2"], [1, "flex", "items-center", "gap-4", "lg:gap-8"], ["type", "button", 1, "lg:hidden", "flex", "items-center", "gap-2", "px-3", "py-1.5", "bg-slate-100", "hover:bg-slate-200", "rounded-full", "text-xs", "font-bold", "text-gray-600", "transition-all", 3, "click"], ["name", "globe", "aria-hidden", "true", 1, "text-inherit"], [1, "relative"], ["type", "button", "aria-haspopup", "listbox", 1, "flex", "items-center", "gap-3", "bg-white", "px-4", "py-2", "lg:py-2.5", "rounded-2xl", "shadow-soft", "border", "border-gray-100", "hover:border-primary-300", "hover:shadow-md", "transition-all", 3, "click"], ["name", "chevron-down", "aria-hidden", "true", 1, "text-gray-500", "text-sm", "transition-transform", "duration-200"], ["role", "listbox", "aria-label", "Child selector", 1, "absolute", "right-0", "top-full", "mt-2", "w-80", "bg-white", "rounded-3xl", "shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)]", "border", "border-gray-100", "py-3", "animate-slide-up", "z-50", "overflow-hidden", "max-h-[80vh]", "overflow-y-auto"], [1, "hidden", "lg:flex", "items-center", "gap-2", "text-sm", "text-gray-500", "font-medium"], ["role", "button", "tabindex", "0", 1, "w-10", "h-10", "lg:w-12", "lg:h-12", "rounded-full", "bg-gradient-to-tr", "from-primary-500", "to-teal-400", "p-[2px]", "shadow-soft", "cursor-pointer", "hover:shadow-lg", "transition-shadow", 3, "aria-label"], [1, "w-full", "h-full", "bg-white", "rounded-full", "flex", "items-center", "justify-center", "border-2", "border-white"], ["name", "settings", "aria-hidden", "true", 1, "text-inherit"], ["type", "button", 1, "flex", "items-center", "gap-2", "px-3", "py-2", "rounded-xl", "bg-white", "shadow-soft", "border", "border-gray-100", "hover:border-primary-300", "hover:shadow-md", "transition-all", "text-gray-600", "hover:text-primary-600", 3, "click"], ["name", "arrow-left", "aria-hidden", "true", 1, "text-inherit"], [1, "text-sm", "font-bold", "hidden", "sm:block"], [1, "w-8", "h-8", "lg:w-10", "lg:h-10", "rounded-full", "border-2", "border-primary-100", "object-cover", 3, "src", "alt"], [1, "font-bold", "text-gray-800", "hidden", "sm:block", "text-sm", "lg:text-base"], [1, "bg-primary-50", "text-primary-600", "text-xs", "font-bold", "px-2", "py-0.5", "rounded-full"], [1, "w-8", "h-8", "lg:w-10", "lg:h-10", "rounded-full", "bg-slate-100", "flex", "items-center", "justify-center", "border-2", "border-dashed", "border-slate-300"], ["name", "user", "aria-hidden", "true", 1, "text-inherit"], [1, "font-bold", "text-gray-500", "hidden", "sm:block"], [1, "px-5", "pb-3", "pt-1", "mb-2", "border-b", "border-gray-50", "flex", "items-center", "gap-2"], ["name", "users", "aria-hidden", "true", 1, "text-inherit"], [1, "text-xs", "font-bold", "text-gray-500", "uppercase", "tracking-wider"], [1, "px-5", "py-8", "text-center"], ["role", "option", 1, "flex", "items-center", "gap-4", "px-5", "py-3", "hover:bg-primary-50", "cursor-pointer", "transition-colors", "mx-2", "mt-0", "rounded-2xl", "border", "border-transparent", "hover:border-primary-100", "group", 3, "bg-indigo-50"], [1, "px-4", "pt-2", "pb-1", "mt-2", "border-t", "border-gray-100"], [1, "px-4", "pt-2", "mt-1"], ["type", "button", 1, "w-full", "flex", "items-center", "justify-center", "gap-2", "py-3.5", "rounded-2xl", "bg-slate-50", "hover:bg-slate-100", "text-slate-700", "font-bold", "transition-colors", "border", "border-slate-200", "hover:border-slate-300", 3, "click"], ["name", "circle-plus", "aria-hidden", "true", 1, "text-inherit"], [1, "text-gray-500", "text-sm", "font-medium"], ["role", "option", 1, "flex", "items-center", "gap-4", "px-5", "py-3", "hover:bg-primary-50", "cursor-pointer", "transition-colors", "mx-2", "mt-0", "rounded-2xl", "border", "border-transparent", "hover:border-primary-100", "group", 3, "click"], [1, "w-12", "h-12", "rounded-full", "border", "border-gray-200", "shadow-sm", 3, "src", "alt"], [1, "flex", "flex-col", "flex-1", "min-w-0"], [1, "font-extrabold", "text-gray-800", "group-hover:text-primary-700", "transition-colors", "truncate"], [1, "text-xs", "text-gray-500", "font-medium"], ["name", "check", "aria-hidden", "true", 1, "text-inherit"], ["type", "button", 1, "w-full", "flex", "items-center", "gap-3", "px-4", "py-3", "rounded-2xl", "bg-primary-50", "hover:bg-primary-100", "text-primary-700", "font-bold", "transition-colors", "border", "border-primary-200", 3, "click"], ["name", "arrow-left-right", "aria-hidden", "true", 1, "text-inherit"], ["name", "hand", "aria-hidden", "true", 1, "text-inherit"], [1, "font-bold", "text-gray-700"]], template: function HeaderComponent_Template(rf, ctx) {
       if (rf & 1) {
         \u0275\u0275elementStart(0, "header", 1)(1, "div", 2);
-        \u0275\u0275conditionalCreate(2, HeaderComponent_Conditional_2_Template, 4, 1, "button", 3);
+        \u0275\u0275conditionalCreate(2, HeaderComponent_Conditional_2_Template, 4, 2, "button", 3);
         \u0275\u0275elementStart(3, "button", 4);
         \u0275\u0275element(4, "lucide-icon", 5);
         \u0275\u0275elementEnd();
@@ -52401,7 +56591,7 @@ var HeaderComponent = class _HeaderComponent {
         \u0275\u0275listener("click", function HeaderComponent_Template_button_click_13_listener() {
           return ctx.toggleDropdown();
         });
-        \u0275\u0275conditionalCreate(14, HeaderComponent_Conditional_14_Template, 4, 3)(15, HeaderComponent_Conditional_15_Template, 4, 1);
+        \u0275\u0275conditionalCreate(14, HeaderComponent_Conditional_14_Template, 4, 4)(15, HeaderComponent_Conditional_15_Template, 4, 1);
         \u0275\u0275element(16, "lucide-icon", 12);
         \u0275\u0275elementEnd();
         \u0275\u0275conditionalCreate(17, HeaderComponent_Conditional_17_Template, 13, 4, "div", 13);
@@ -52416,10 +56606,13 @@ var HeaderComponent = class _HeaderComponent {
         \u0275\u0275conditional(ctx.viewState === "app" ? 2 : -1);
         \u0275\u0275advance(4);
         \u0275\u0275textInterpolate1(" ", ctx.pageTitle(), " ");
-        \u0275\u0275advance(4);
+        \u0275\u0275advance(2);
+        \u0275\u0275attribute("aria-label", ctx.i18n.locale() === "sq" ? "Switch to English" : "Kalo n\xEB shqip");
+        \u0275\u0275advance(2);
         \u0275\u0275textInterpolate1(" ", ctx.i18n.locale() === "sq" ? ctx.i18n.t()["header.sq"] : ctx.i18n.t()["header.en"], " ");
         \u0275\u0275advance(3);
         \u0275\u0275classProp("border-primary-300", ctx.showDropdown())("shadow-md", ctx.showDropdown());
+        \u0275\u0275attribute("aria-expanded", ctx.showDropdown());
         \u0275\u0275advance();
         \u0275\u0275conditional(ctx.activeChild() ? 14 : 15);
         \u0275\u0275advance(2);
@@ -52428,6 +56621,8 @@ var HeaderComponent = class _HeaderComponent {
         \u0275\u0275conditional(ctx.showDropdown() ? 17 : -1);
         \u0275\u0275advance();
         \u0275\u0275conditional(ctx.viewState === "app" && ctx.dataService.getParentName() ? 18 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275ariaProperty("aria-label", \u0275\u0275interpolate(ctx.i18n.t()["nav.settings"]));
       }
     }, dependencies: [CommonModule, LucideAngularModule, LucideAngularComponent], styles: ["\n.animate-slide-up[_ngcontent-%COMP%] {\n  animation: _ngcontent-%COMP%_slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);\n}\n@keyframes _ngcontent-%COMP%_slideUp {\n  from {\n    opacity: 0;\n    transform: translateY(16px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\nbutton[_ngcontent-%COMP%]:not(:disabled):active {\n  transform: scale(0.98);\n}\n/*# sourceMappingURL=header.component.css.map */"] });
   }
@@ -52441,14 +56636,15 @@ var HeaderComponent = class _HeaderComponent {
       <!-- LEFT: Back button + Page title -->
       <div class="flex items-center gap-3">
         @if (viewState === 'app') {
-          <button (click)="backRequested.emit()"
-                  class="flex items-center gap-2 px-3 py-2 rounded-xl bg-white shadow-soft border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all text-gray-600 hover:text-primary-600">
-            <lucide-icon name="arrow-left" class="text-inherit"></lucide-icon>
+          <button type="button" (click)="backRequested.emit()"
+                  class="flex items-center gap-2 px-3 py-2 rounded-xl bg-white shadow-soft border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all text-gray-600 hover:text-primary-600"
+                  [attr.aria-label]="i18n.t()['nav.back']">
+            <lucide-icon name="arrow-left" class="text-inherit" aria-hidden="true"></lucide-icon>
             <span class="text-sm font-bold hidden sm:block">{{ i18n.t()['nav.back'] }}</span>
           </button>
         }
-        <button class="lg:hidden p-2 rounded-xl bg-white shadow-soft border border-gray-100">
-          <lucide-icon name="menu" class="text-inherit"></lucide-icon>
+        <button type="button" class="lg:hidden p-2 rounded-xl bg-white shadow-soft border border-gray-100" aria-label="Open menu">
+          <lucide-icon name="menu" class="text-inherit" aria-hidden="true"></lucide-icon>
         </button>
         <!-- Page title -->
         <h1 class="text-base lg:text-lg font-extrabold text-gray-800 hidden sm:block ml-2">
@@ -52460,21 +56656,24 @@ var HeaderComponent = class _HeaderComponent {
       <div class="flex items-center gap-4 lg:gap-8">
 
         <!-- Language toggle (mobile only) -->
-        <button (click)="localeToggleRequested.emit()"
+        <button type="button" (click)="localeToggleRequested.emit()"
                 class="lg:hidden flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-full text-xs font-bold text-gray-600 transition-all"
-                aria-label="Switch to English/Albanian">
-          <lucide-icon name="globe" class="text-inherit"></lucide-icon>
+                [attr.aria-label]="i18n.locale() === 'sq' ? 'Switch to English' : 'Kalo n\xEB shqip'">
+          <lucide-icon name="globe" class="text-inherit" aria-hidden="true"></lucide-icon>
           {{ i18n.locale() === 'sq' ? i18n.t()['header.sq'] : i18n.t()['header.en'] }}
         </button>
 
         <!-- Child Switcher Pill -->
         <div class="relative" #dropdownRef>
-          <button (click)="toggleDropdown()"
+          <button type="button" (click)="toggleDropdown()"
                   class="flex items-center gap-3 bg-white px-4 py-2 lg:py-2.5 rounded-2xl shadow-soft border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all"
                   [class.border-primary-300]="showDropdown()"
-                  [class.shadow-md]="showDropdown()">
+                  [class.shadow-md]="showDropdown()"
+                  [attr.aria-expanded]="showDropdown()"
+                  aria-haspopup="listbox">
             @if (activeChild()) {
               <img [src]="activeChild()!.avatarUrl"
+                   [alt]="activeChild()!.name"
                    class="w-8 h-8 lg:w-10 lg:h-10 rounded-full border-2 border-primary-100 object-cover" />
               <span class="font-bold text-gray-800 hidden sm:block text-sm lg:text-base">{{ activeChild()!.name }}</span>
               @if (activeChildAge()) {
@@ -52484,20 +56683,20 @@ var HeaderComponent = class _HeaderComponent {
               }
             } @else {
               <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-slate-100 flex items-center justify-center border-2 border-dashed border-slate-300">
-                <lucide-icon name="user" class="text-inherit"></lucide-icon>
+                <lucide-icon name="user" class="text-inherit" aria-hidden="true"></lucide-icon>
               </div>
               <span class="font-bold text-gray-500 hidden sm:block">{{ i18n.t()['child.addNewBtn'] }}</span>
             }
-            <lucide-icon name="chevron-down" class="text-gray-500 text-sm transition-transform duration-200" [class.rotate-180]="showDropdown()"></lucide-icon>
+            <lucide-icon name="chevron-down" class="text-gray-500 text-sm transition-transform duration-200" [class.rotate-180]="showDropdown()" aria-hidden="true"></lucide-icon>
           </button>
 
           <!-- Dropdown Panel -->
           @if (showDropdown()) {
-            <div class="absolute right-0 top-full mt-2 w-80 bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-gray-100 py-3 animate-slide-up z-50 overflow-hidden max-h-[80vh] overflow-y-auto">
+            <div role="listbox" aria-label="Child selector" class="absolute right-0 top-full mt-2 w-80 bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-gray-100 py-3 animate-slide-up z-50 overflow-hidden max-h-[80vh] overflow-y-auto">
 
               <!-- Section label -->
               <div class="px-5 pb-3 pt-1 mb-2 border-b border-gray-50 flex items-center gap-2">
-                <lucide-icon name="users" class="text-inherit"></lucide-icon>
+                <lucide-icon name="users" class="text-inherit" aria-hidden="true"></lucide-icon>
                 <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">
                   {{ i18n.t()['header.profileLabel'] }}
                 </span>
@@ -52514,10 +56713,12 @@ var HeaderComponent = class _HeaderComponent {
 
               <!-- Child list -->
               @for (child of allChildren(); track child.id) {
-                <div (click)="onChildSelected(child)"
+                <div role="option" (click)="onChildSelected(child)"
                      class="flex items-center gap-4 px-5 py-3 hover:bg-primary-50 cursor-pointer transition-colors mx-2 mt-0 rounded-2xl border border-transparent hover:border-primary-100 group"
-                     [class.bg-indigo-50]="child.id === activeChildId()">
+                     [class.bg-indigo-50]="child.id === activeChildId()"
+                     [attr.aria-selected]="child.id === activeChildId()">
                   <img [src]="child.avatarUrl"
+                       [alt]="child.name"
                        class="w-12 h-12 rounded-full border border-gray-200 shadow-sm" />
                   <div class="flex flex-col flex-1 min-w-0">
                     <span class="font-extrabold text-gray-800 group-hover:text-primary-700 transition-colors truncate">{{ child.name }}</span>
@@ -52526,7 +56727,7 @@ var HeaderComponent = class _HeaderComponent {
                     </span>
                   </div>
                   @if (child.id === activeChildId()) {
-                    <lucide-icon name="check" class="text-inherit"></lucide-icon>
+                    <lucide-icon name="check" class="text-inherit" aria-hidden="true"></lucide-icon>
                   }
                 </div>
               }
@@ -52534,17 +56735,17 @@ var HeaderComponent = class _HeaderComponent {
               <!-- Action buttons -->
               @if (hasChildren()) {
                 <div class="px-4 pt-2 pb-1 mt-2 border-t border-gray-100">
-                  <button (click)="onSwitchChild()"
+                  <button type="button" (click)="onSwitchChild()"
                           class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-primary-50 hover:bg-primary-100 text-primary-700 font-bold transition-colors border border-primary-200">
-                    <lucide-icon name="arrow-left-right" class="text-inherit"></lucide-icon>
+                    <lucide-icon name="arrow-left-right" class="text-inherit" aria-hidden="true"></lucide-icon>
                     {{ i18n.t()['header.switchChild'] }}
                   </button>
                 </div>
               }
               <div class="px-4 pt-2 mt-1">
-                <button (click)="onAddNewMember()"
+                <button type="button" (click)="onAddNewMember()"
                         class="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-colors border border-slate-200 hover:border-slate-300">
-                  <lucide-icon name="circle-plus" class="text-inherit"></lucide-icon>
+                  <lucide-icon name="circle-plus" class="text-inherit" aria-hidden="true"></lucide-icon>
                   {{ i18n.t()['header.addNewMember'] }}
                 </button>
               </div>
@@ -52555,16 +56756,17 @@ var HeaderComponent = class _HeaderComponent {
         <!-- Parent welcome block (desktop only, app view) -->
         @if (viewState === 'app' && dataService.getParentName()) {
           <div class="hidden lg:flex items-center gap-2 text-sm text-gray-500 font-medium">
-            <lucide-icon name="hand" class="text-inherit"></lucide-icon>
+            <lucide-icon name="hand" class="text-inherit" aria-hidden="true"></lucide-icon>
             <span>{{ i18n.t()['welcome.loggedIn'] }}, </span>
             <span class="font-bold text-gray-700">{{ dataService.getParentName() }}</span>
           </div>
         }
 
         <!-- Parent avatar -->
-        <div class="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-gradient-to-tr from-primary-500 to-teal-400 p-[2px] shadow-soft cursor-pointer hover:shadow-lg transition-shadow">
+        <div role="button" tabindex="0" class="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-gradient-to-tr from-primary-500 to-teal-400 p-[2px] shadow-soft cursor-pointer hover:shadow-lg transition-shadow"
+             aria-label="{{ i18n.t()['nav.settings'] }}">
           <div class="w-full h-full bg-white rounded-full flex items-center justify-center border-2 border-white">
-            <lucide-icon name="settings" class="text-inherit"></lucide-icon>
+            <lucide-icon name="settings" class="text-inherit" aria-hidden="true"></lucide-icon>
           </div>
         </div>
       </div>
@@ -52590,11 +56792,11 @@ var HeaderComponent = class _HeaderComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HeaderComponent, { className: "HeaderComponent", filePath: "src/app/components/header.component.ts", lineNumber: 171 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HeaderComponent, { className: "HeaderComponent", filePath: "src/app/components/header.component.ts", lineNumber: 178 });
 })();
 
 // src/app/components/bottom-nav.component.ts
-var _forTrack012 = ($index, $item) => $item.id;
+var _forTrack015 = ($index, $item) => $item.id;
 function BottomNavComponent_For_3_Template(rf, ctx) {
   if (rf & 1) {
     const _r1 = \u0275\u0275getCurrentView();
@@ -52613,7 +56815,7 @@ function BottomNavComponent_For_3_Template(rf, ctx) {
     const tab_r2 = ctx.$implicit;
     const ctx_r2 = \u0275\u0275nextContext();
     \u0275\u0275classProp("text-indigo-600", ctx_r2.currentTab() === tab_r2.id)("text-stone-500", ctx_r2.currentTab() !== tab_r2.id);
-    \u0275\u0275ariaProperty("aria-label", \u0275\u0275interpolate(ctx_r2.label(tab_r2.labelKey)));
+    \u0275\u0275attribute("aria-label", ctx_r2.label(tab_r2.labelKey))("aria-current", ctx_r2.currentTab() === tab_r2.id ? "page" : null);
     \u0275\u0275advance();
     \u0275\u0275property("name", tab_r2.icon);
     \u0275\u0275advance(2);
@@ -52645,10 +56847,10 @@ var BottomNavComponent = class _BottomNavComponent {
     };
   }
   static {
-    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _BottomNavComponent, selectors: [["app-bottom-nav"]], decls: 4, vars: 0, consts: [[1, "lg:hidden", "fixed", "bottom-0", "w-full", "bg-white", "border-t", "border-stone-200", "z-50", "h-16", 2, "padding-bottom", "env(safe-area-inset-bottom)"], [1, "flex", "flex-row", "h-full"], [1, "flex", "flex-col", "items-center", "justify-center", "gap-1", "flex-1", "h-full", "py-2", "px-1", "transition-colors", "duration-200", "appearance-none", "bg-transparent", "border-none", "cursor-pointer", 3, "text-indigo-600", "text-stone-500", "aria-label"], [1, "flex", "flex-col", "items-center", "justify-center", "gap-1", "flex-1", "h-full", "py-2", "px-1", "transition-colors", "duration-200", "appearance-none", "bg-transparent", "border-none", "cursor-pointer", 3, "click", "aria-label"], [1, "text-2xl", 3, "name"], [1, "text-xs", "font-semibold", "leading-none"]], template: function BottomNavComponent_Template(rf, ctx) {
+    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _BottomNavComponent, selectors: [["app-bottom-nav"]], decls: 4, vars: 0, consts: [["aria-label", "Main navigation", 1, "lg:hidden", "fixed", "bottom-0", "w-full", "bg-white", "border-t", "border-stone-200", "z-50", "h-16", 2, "padding-bottom", "env(safe-area-inset-bottom)"], [1, "flex", "flex-row", "h-full"], ["type", "button", 1, "flex", "flex-col", "items-center", "justify-center", "gap-1", "flex-1", "h-full", "py-2", "px-1", "transition-colors", "duration-200", "appearance-none", "bg-transparent", "border-none", "cursor-pointer", 3, "text-indigo-600", "text-stone-500"], ["type", "button", 1, "flex", "flex-col", "items-center", "justify-center", "gap-1", "flex-1", "h-full", "py-2", "px-1", "transition-colors", "duration-200", "appearance-none", "bg-transparent", "border-none", "cursor-pointer", 3, "click"], ["aria-hidden", "true", 1, "text-2xl", 3, "name"], [1, "text-xs", "font-semibold", "leading-none"]], template: function BottomNavComponent_Template(rf, ctx) {
       if (rf & 1) {
         \u0275\u0275elementStart(0, "nav", 0)(1, "div", 1);
-        \u0275\u0275repeaterCreate(2, BottomNavComponent_For_3_Template, 4, 8, "button", 2, _forTrack012);
+        \u0275\u0275repeaterCreate(2, BottomNavComponent_For_3_Template, 4, 8, "button", 2, _forTrack015);
         \u0275\u0275elementEnd()();
       }
       if (rf & 2) {
@@ -52663,15 +56865,19 @@ var BottomNavComponent = class _BottomNavComponent {
     type: Component,
     args: [{ selector: "app-bottom-nav", standalone: true, imports: [CommonModule, LucideAngularModule], template: `
     <nav class="lg:hidden fixed bottom-0 w-full bg-white border-t border-stone-200 z-50 h-16"
-         style="padding-bottom: env(safe-area-inset-bottom);">
+         style="padding-bottom: env(safe-area-inset-bottom);"
+         aria-label="Main navigation">
       <div class="flex flex-row h-full">
         @for (tab of tabs; track tab.id) {
           <button
+            type="button"
             class="flex flex-col items-center justify-center gap-1 flex-1 h-full py-2 px-1 transition-colors duration-200 appearance-none bg-transparent border-none cursor-pointer"
             [class.text-indigo-600]="currentTab() === tab.id"
             [class.text-stone-500]="currentTab() !== tab.id"
-            (click)="navigate(tab.id)" aria-label="{{ label(tab.labelKey) }}">
-            <lucide-icon [name]="tab.icon" class="text-2xl"></lucide-icon>
+            (click)="navigate(tab.id)"
+            [attr.aria-label]="label(tab.labelKey)"
+            [attr.aria-current]="currentTab() === tab.id ? 'page' : null">
+            <lucide-icon [name]="tab.icon" class="text-2xl" aria-hidden="true"></lucide-icon>
             <span class="text-xs font-semibold leading-none">{{ label(tab.labelKey) }}</span>
           </button>
         }
@@ -52681,13 +56887,13 @@ var BottomNavComponent = class _BottomNavComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(BottomNavComponent, { className: "BottomNavComponent", filePath: "src/app/components/bottom-nav.component.ts", lineNumber: 41 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(BottomNavComponent, { className: "BottomNavComponent", filePath: "src/app/components/bottom-nav.component.ts", lineNumber: 45 });
 })();
 
 // src/app/features/child/add-edit-child-modal/add-edit-child-modal.component.ts
-var _c07 = () => [1, 2, 3];
-var _forTrack013 = ($index, $item) => $item.value;
-var _forTrack13 = ($index, $item) => $item.name;
+var _c010 = () => [1, 2, 3];
+var _forTrack016 = ($index, $item) => $item.value;
+var _forTrack14 = ($index, $item) => $item.name;
 function AddEditChildModalComponent_For_12_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "lucide-icon", 22);
@@ -52861,7 +57067,7 @@ function AddEditChildModalComponent_Conditional_14_Template(rf, ctx) {
     \u0275\u0275text(14);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(15, "div", 35);
-    \u0275\u0275repeaterCreate(16, AddEditChildModalComponent_Conditional_14_For_17_Template, 2, 3, "button", 36, _forTrack013);
+    \u0275\u0275repeaterCreate(16, AddEditChildModalComponent_Conditional_14_For_17_Template, 2, 3, "button", 36, _forTrack016);
     \u0275\u0275elementEnd();
     \u0275\u0275conditionalCreate(18, AddEditChildModalComponent_Conditional_14_Conditional_18_Template, 3, 1, "p", 31);
     \u0275\u0275elementEnd()();
@@ -53035,7 +57241,7 @@ function AddEditChildModalComponent_Conditional_16_Conditional_14_For_2_Template
 function AddEditChildModalComponent_Conditional_16_Conditional_14_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 60);
-    \u0275\u0275repeaterCreate(1, AddEditChildModalComponent_Conditional_16_Conditional_14_For_2_Template, 9, 2, "div", 62, _forTrack13);
+    \u0275\u0275repeaterCreate(1, AddEditChildModalComponent_Conditional_16_Conditional_14_For_2_Template, 9, 2, "div", 62, _forTrack14);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -53487,7 +57693,7 @@ var AddEditChildModalComponent = class _AddEditChildModalComponent {
         \u0275\u0275advance(7);
         \u0275\u0275textInterpolate1(" ", ctx.mode === "edit" ? ctx.i18n.t()["childForm.titleEdit"] : ctx.i18n.t()["childForm.titleAdd"], " ");
         \u0275\u0275advance(4);
-        \u0275\u0275repeater(\u0275\u0275pureFunction0(8, _c07));
+        \u0275\u0275repeater(\u0275\u0275pureFunction0(8, _c010));
         \u0275\u0275advance(2);
         \u0275\u0275conditional(ctx.saveError() ? 13 : -1);
         \u0275\u0275advance();
@@ -53808,12 +58014,13 @@ var AddEditChildModalComponent = class _AddEditChildModalComponent {
 })();
 
 // src/app/components/settings/settings-page.component.ts
-var _forTrack014 = ($index, $item) => $item.id;
+var _forTrack017 = ($index, $item) => $item.value;
+var _forTrack15 = ($index, $item) => $item.id;
 function SettingsPageComponent_Conditional_7_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 6);
-    \u0275\u0275element(1, "lucide-icon", 42);
-    \u0275\u0275elementStart(2, "p", 43);
+    \u0275\u0275element(1, "lucide-icon", 45);
+    \u0275\u0275elementStart(2, "p", 46);
     \u0275\u0275text(3);
     \u0275\u0275elementEnd()();
   }
@@ -53852,27 +58059,215 @@ function SettingsPageComponent_Conditional_44_Template(rf, ctx) {
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
     \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.locale() === "sq" ? "Shfletuesi juaj nuk mb\xEBshtet njoftimet." : "Your browser does not support notifications.", " ");
+  }
+}
+function SettingsPageComponent_Conditional_45_Conditional_8_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 52);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["settings.notifications.browserDenied"], " ");
+  }
+}
+function SettingsPageComponent_Conditional_45_Conditional_9_For_27_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "option", 60);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const h_r4 = ctx.$implicit;
+    \u0275\u0275property("value", h_r4.value);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(h_r4.label);
+  }
+}
+function SettingsPageComponent_Conditional_45_Conditional_9_For_35_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "option", 60);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const h_r5 = ctx.$implicit;
+    \u0275\u0275property("value", h_r5.value);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(h_r5.label);
+  }
+}
+function SettingsPageComponent_Conditional_45_Conditional_9_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r3 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 47)(1, "div")(2, "p", 48);
+    \u0275\u0275text(3);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "p", 49);
+    \u0275\u0275text(5);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(6, "button", 50);
+    \u0275\u0275listener("click", function SettingsPageComponent_Conditional_45_Conditional_9_Template_button_click_6_listener() {
+      \u0275\u0275restoreView(_r3);
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.notifSvc.updatePrefs({ feverAlerts: !ctx_r0.notifSvc.feverAlerts() }));
+    });
+    \u0275\u0275element(7, "span", 51);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(8, "div", 47)(9, "div")(10, "p", 48);
+    \u0275\u0275text(11);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(12, "p", 49);
+    \u0275\u0275text(13);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(14, "button", 50);
+    \u0275\u0275listener("click", function SettingsPageComponent_Conditional_45_Conditional_9_Template_button_click_14_listener() {
+      \u0275\u0275restoreView(_r3);
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.notifSvc.updatePrefs({ vaccineAlerts: !ctx_r0.notifSvc.vaccineAlerts() }));
+    });
+    \u0275\u0275element(15, "span", 51);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(16, "div", 53)(17, "p", 54);
+    \u0275\u0275text(18);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(19, "p", 55);
+    \u0275\u0275text(20);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(21, "div", 56)(22, "div", 57)(23, "label", 58);
+    \u0275\u0275text(24);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(25, "select", 59);
+    \u0275\u0275listener("change", function SettingsPageComponent_Conditional_45_Conditional_9_Template_select_change_25_listener($event) {
+      \u0275\u0275restoreView(_r3);
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.notifSvc.updatePrefs({ dndStart: +$event.target.value }));
+    });
+    \u0275\u0275repeaterCreate(26, SettingsPageComponent_Conditional_45_Conditional_9_For_27_Template, 2, 2, "option", 60, _forTrack017);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(28, "span", 61);
+    \u0275\u0275text(29, "\u2014");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(30, "div", 57)(31, "label", 58);
+    \u0275\u0275text(32);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(33, "select", 59);
+    \u0275\u0275listener("change", function SettingsPageComponent_Conditional_45_Conditional_9_Template_select_change_33_listener($event) {
+      \u0275\u0275restoreView(_r3);
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.notifSvc.updatePrefs({ dndEnd: +$event.target.value }));
+    });
+    \u0275\u0275repeaterCreate(34, SettingsPageComponent_Conditional_45_Conditional_9_For_35_Template, 2, 2, "option", 60, _forTrack017);
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["settings.notifications.feverAlerts"]);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["settings.notifications.feverAlertsDesc"]);
+    \u0275\u0275advance();
+    \u0275\u0275classMap(ctx_r0.notifSvc.feverAlerts() ? "bg-rose-500" : "bg-slate-200");
+    \u0275\u0275attribute("aria-checked", ctx_r0.notifSvc.feverAlerts());
+    \u0275\u0275advance();
+    \u0275\u0275classMap(ctx_r0.notifSvc.feverAlerts() ? "translate-x-6" : "translate-x-1");
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["settings.notifications.vaccineAlerts"]);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["settings.notifications.vaccineAlertsDesc"]);
+    \u0275\u0275advance();
+    \u0275\u0275classMap(ctx_r0.notifSvc.vaccineAlerts() ? "bg-teal-500" : "bg-slate-200");
+    \u0275\u0275attribute("aria-checked", ctx_r0.notifSvc.vaccineAlerts());
+    \u0275\u0275advance();
+    \u0275\u0275classMap(ctx_r0.notifSvc.vaccineAlerts() ? "translate-x-6" : "translate-x-1");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["settings.notifications.dnd"]);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["settings.notifications.dndDesc"]);
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["settings.notifications.dndFrom"]);
+    \u0275\u0275advance();
+    \u0275\u0275property("value", ctx_r0.notifSvc.dndStart());
+    \u0275\u0275advance();
+    \u0275\u0275repeater(ctx_r0.hours);
+    \u0275\u0275advance(6);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["settings.notifications.dndTo"]);
+    \u0275\u0275advance();
+    \u0275\u0275property("value", ctx_r0.notifSvc.dndEnd());
+    \u0275\u0275advance();
+    \u0275\u0275repeater(ctx_r0.hours);
+  }
+}
+function SettingsPageComponent_Conditional_45_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r2 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 47)(1, "div")(2, "p", 48);
+    \u0275\u0275text(3);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "p", 49);
+    \u0275\u0275text(5);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(6, "button", 50);
+    \u0275\u0275listener("click", function SettingsPageComponent_Conditional_45_Template_button_click_6_listener() {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.toggleNotifications());
+    });
+    \u0275\u0275element(7, "span", 51);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275conditionalCreate(8, SettingsPageComponent_Conditional_45_Conditional_8_Template, 2, 1, "div", 52);
+    \u0275\u0275conditionalCreate(9, SettingsPageComponent_Conditional_45_Conditional_9_Template, 36, 20);
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["settings.notifications.enable"]);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["settings.notifications.enableDesc"]);
+    \u0275\u0275advance();
+    \u0275\u0275classMap(ctx_r0.notifSvc.enabled() ? "bg-indigo-500" : "bg-slate-200");
+    \u0275\u0275attribute("aria-checked", ctx_r0.notifSvc.enabled());
+    \u0275\u0275advance();
+    \u0275\u0275classMap(ctx_r0.notifSvc.enabled() ? "translate-x-6" : "translate-x-1");
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.notifSvc.permissionLevel === "denied" && !ctx_r0.notifSvc.enabled() ? 8 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.notifSvc.enabled() ? 9 : -1);
+  }
+}
+function SettingsPageComponent_Conditional_52_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 28);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance();
     \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["settings.noChildren"], " ");
   }
 }
-function SettingsPageComponent_Conditional_45_For_2_Conditional_7_Template(rf, ctx) {
+function SettingsPageComponent_Conditional_53_For_2_Conditional_7_Template(rf, ctx) {
   if (rf & 1) {
-    const _r2 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 49)(1, "span", 48);
+    const _r6 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 67)(1, "span", 66);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "button", 51);
-    \u0275\u0275listener("click", function SettingsPageComponent_Conditional_45_For_2_Conditional_7_Template_button_click_3_listener() {
-      \u0275\u0275restoreView(_r2);
-      const child_r3 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275elementStart(3, "button", 68);
+    \u0275\u0275listener("click", function SettingsPageComponent_Conditional_53_For_2_Conditional_7_Template_button_click_3_listener() {
+      \u0275\u0275restoreView(_r6);
+      const child_r7 = \u0275\u0275nextContext().$implicit;
       const ctx_r0 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r0.confirmDeleteChild(child_r3.id));
+      return \u0275\u0275resetView(ctx_r0.confirmDeleteChild(child_r7.id));
     });
     \u0275\u0275text(4);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "button", 52);
-    \u0275\u0275listener("click", function SettingsPageComponent_Conditional_45_For_2_Conditional_7_Template_button_click_5_listener() {
-      \u0275\u0275restoreView(_r2);
+    \u0275\u0275elementStart(5, "button", 69);
+    \u0275\u0275listener("click", function SettingsPageComponent_Conditional_53_For_2_Conditional_7_Template_button_click_5_listener() {
+      \u0275\u0275restoreView(_r6);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.cancelDelete());
     });
@@ -53889,27 +58284,27 @@ function SettingsPageComponent_Conditional_45_For_2_Conditional_7_Template(rf, c
     \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["settings.cancel"], " ");
   }
 }
-function SettingsPageComponent_Conditional_45_For_2_Conditional_8_Template(rf, ctx) {
+function SettingsPageComponent_Conditional_53_For_2_Conditional_8_Template(rf, ctx) {
   if (rf & 1) {
-    const _r4 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 50)(1, "button", 53);
-    \u0275\u0275listener("click", function SettingsPageComponent_Conditional_45_For_2_Conditional_8_Template_button_click_1_listener() {
-      \u0275\u0275restoreView(_r4);
-      const child_r3 = \u0275\u0275nextContext().$implicit;
+    const _r8 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 57)(1, "button", 70);
+    \u0275\u0275listener("click", function SettingsPageComponent_Conditional_53_For_2_Conditional_8_Template_button_click_1_listener() {
+      \u0275\u0275restoreView(_r8);
+      const child_r7 = \u0275\u0275nextContext().$implicit;
       const ctx_r0 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r0.openEditChild.emit(child_r3));
+      return \u0275\u0275resetView(ctx_r0.openEditChild.emit(child_r7));
     });
-    \u0275\u0275element(2, "lucide-icon", 54);
+    \u0275\u0275element(2, "lucide-icon", 71);
     \u0275\u0275text(3);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(4, "button", 55);
-    \u0275\u0275listener("click", function SettingsPageComponent_Conditional_45_For_2_Conditional_8_Template_button_click_4_listener() {
-      \u0275\u0275restoreView(_r4);
-      const child_r3 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275elementStart(4, "button", 72);
+    \u0275\u0275listener("click", function SettingsPageComponent_Conditional_53_For_2_Conditional_8_Template_button_click_4_listener() {
+      \u0275\u0275restoreView(_r8);
+      const child_r7 = \u0275\u0275nextContext().$implicit;
       const ctx_r0 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r0.requestDelete(child_r3.id));
+      return \u0275\u0275resetView(ctx_r0.requestDelete(child_r7.id));
     });
-    \u0275\u0275element(5, "lucide-icon", 56);
+    \u0275\u0275element(5, "lucide-icon", 73);
     \u0275\u0275text(6);
     \u0275\u0275elementEnd()();
   }
@@ -53921,36 +58316,36 @@ function SettingsPageComponent_Conditional_45_For_2_Conditional_8_Template(rf, c
     \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["settings.children.delete"], " ");
   }
 }
-function SettingsPageComponent_Conditional_45_For_2_Template(rf, ctx) {
+function SettingsPageComponent_Conditional_53_For_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 44);
-    \u0275\u0275element(1, "img", 45);
-    \u0275\u0275elementStart(2, "div", 46)(3, "p", 47);
+    \u0275\u0275elementStart(0, "div", 62);
+    \u0275\u0275element(1, "img", 63);
+    \u0275\u0275elementStart(2, "div", 64)(3, "p", 65);
     \u0275\u0275text(4);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "p", 48);
+    \u0275\u0275elementStart(5, "p", 66);
     \u0275\u0275text(6);
     \u0275\u0275elementEnd()();
-    \u0275\u0275conditionalCreate(7, SettingsPageComponent_Conditional_45_For_2_Conditional_7_Template, 7, 3, "div", 49)(8, SettingsPageComponent_Conditional_45_For_2_Conditional_8_Template, 7, 2, "div", 50);
+    \u0275\u0275conditionalCreate(7, SettingsPageComponent_Conditional_53_For_2_Conditional_7_Template, 7, 3, "div", 67)(8, SettingsPageComponent_Conditional_53_For_2_Conditional_8_Template, 7, 2, "div", 57);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const child_r3 = ctx.$implicit;
+    const child_r7 = ctx.$implicit;
     const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance();
-    \u0275\u0275property("src", child_r3.avatarUrl, \u0275\u0275sanitizeUrl);
+    \u0275\u0275property("src", child_r7.avatarUrl, \u0275\u0275sanitizeUrl);
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(child_r3.name);
+    \u0275\u0275textInterpolate(child_r7.name);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(ctx_r0.formatDate(child_r3.dateOfBirth));
+    \u0275\u0275textInterpolate(ctx_r0.formatDate(child_r7.dateOfBirth));
     \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r0.deleteConfirmId() === child_r3.id ? 7 : 8);
+    \u0275\u0275conditional(ctx_r0.deleteConfirmId() === child_r7.id ? 7 : 8);
   }
 }
-function SettingsPageComponent_Conditional_45_Template(rf, ctx) {
+function SettingsPageComponent_Conditional_53_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 26);
-    \u0275\u0275repeaterCreate(1, SettingsPageComponent_Conditional_45_For_2_Template, 9, 4, "div", 44, _forTrack014);
+    \u0275\u0275elementStart(0, "div", 29);
+    \u0275\u0275repeaterCreate(1, SettingsPageComponent_Conditional_53_For_2_Template, 9, 4, "div", 62, _forTrack15);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -53959,25 +58354,25 @@ function SettingsPageComponent_Conditional_45_Template(rf, ctx) {
     \u0275\u0275repeater(ctx_r0.dataService.children());
   }
 }
-function SettingsPageComponent_Conditional_53_Template(rf, ctx) {
+function SettingsPageComponent_Conditional_61_Template(rf, ctx) {
   if (rf & 1) {
-    const _r5 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 31)(1, "p", 57);
-    \u0275\u0275element(2, "lucide-icon", 58);
+    const _r9 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 34)(1, "p", 74);
+    \u0275\u0275element(2, "lucide-icon", 75);
     \u0275\u0275text(3);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(4, "div", 59)(5, "button", 60);
-    \u0275\u0275listener("click", function SettingsPageComponent_Conditional_53_Template_button_click_5_listener() {
-      \u0275\u0275restoreView(_r5);
+    \u0275\u0275elementStart(4, "div", 76)(5, "button", 77);
+    \u0275\u0275listener("click", function SettingsPageComponent_Conditional_61_Template_button_click_5_listener() {
+      \u0275\u0275restoreView(_r9);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.confirmClearAllData());
     });
-    \u0275\u0275element(6, "lucide-icon", 61);
+    \u0275\u0275element(6, "lucide-icon", 78);
     \u0275\u0275text(7);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(8, "button", 62);
-    \u0275\u0275listener("click", function SettingsPageComponent_Conditional_53_Template_button_click_8_listener() {
-      \u0275\u0275restoreView(_r5);
+    \u0275\u0275elementStart(8, "button", 79);
+    \u0275\u0275listener("click", function SettingsPageComponent_Conditional_61_Template_button_click_8_listener() {
+      \u0275\u0275restoreView(_r9);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.cancelClearAllData());
     });
@@ -53994,16 +58389,16 @@ function SettingsPageComponent_Conditional_53_Template(rf, ctx) {
     \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["settings.cancel"], " ");
   }
 }
-function SettingsPageComponent_Conditional_58_Template(rf, ctx) {
+function SettingsPageComponent_Conditional_66_Template(rf, ctx) {
   if (rf & 1) {
-    const _r6 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "button", 63);
-    \u0275\u0275listener("click", function SettingsPageComponent_Conditional_58_Template_button_click_0_listener() {
-      \u0275\u0275restoreView(_r6);
+    const _r10 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 80);
+    \u0275\u0275listener("click", function SettingsPageComponent_Conditional_66_Template_button_click_0_listener() {
+      \u0275\u0275restoreView(_r10);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.requestClearAllData());
     });
-    \u0275\u0275element(1, "lucide-icon", 56);
+    \u0275\u0275element(1, "lucide-icon", 73);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
   }
@@ -54017,6 +58412,7 @@ var SettingsPageComponent = class _SettingsPageComponent {
   constructor() {
     this.dataService = inject2(DataService);
     this.i18n = inject2(I18nService);
+    this.notifSvc = inject2(NotificationService);
     this.openEditChild = new EventEmitter();
     this.openAddChild = new EventEmitter();
     this.parentForm = signal({ name: "", surname: "", phone: "" }, ...ngDevMode ? [{ debugName: "parentForm" }] : (
@@ -54039,6 +58435,10 @@ var SettingsPageComponent = class _SettingsPageComponent {
       /* istanbul ignore next */
       []
     ));
+    this.hours = Array.from({ length: 24 }, (_, i) => ({
+      value: i,
+      label: `${i.toString().padStart(2, "0")}:00`
+    }));
   }
   ngOnInit() {
     this.loadParentProfile();
@@ -54061,6 +58461,11 @@ var SettingsPageComponent = class _SettingsPageComponent {
   }
   setLocale(locale) {
     this.i18n.setLocale(locale);
+  }
+  toggleNotifications() {
+    return __async(this, null, function* () {
+      yield this.notifSvc.toggleEnabled();
+    });
   }
   activeClass(locale) {
     const isActive2 = this.i18n.locale() === locale;
@@ -54123,7 +58528,7 @@ var SettingsPageComponent = class _SettingsPageComponent {
     };
   }
   static {
-    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _SettingsPageComponent, selectors: [["app-settings-page"]], outputs: { openEditChild: "openEditChild", openAddChild: "openAddChild" }, decls: 68, vars: 29, consts: [[1, "max-w-2xl", "mx-auto", "px-4", "py-6", "space-y-6"], [1, "bg-white", "rounded-2xl", "shadow-sm", "border", "border-slate-100", "overflow-hidden"], [1, "h-1", "bg-gradient-to-r", "from-indigo-500", "to-indigo-400"], [1, "p-6"], [1, "text-lg", "font-extrabold", "text-gray-800", "mb-6", "flex", "items-center", "gap-3"], ["name", "user", 1, "text-inherit"], [1, "mb-5", "p-4", "bg-teal-50", "border", "border-teal-100", "rounded-2xl", "flex", "items-center", "gap-3", "animate-fade-in"], [1, "space-y-4"], [1, "grid", "grid-cols-1", "sm:grid-cols-2", "gap-4"], [1, "block", "text-xs", "font-bold", "text-indigo-700", "mb-2", "ml-1", "uppercase", "tracking-wider"], ["type", "text", 1, "w-full", "px-4", "py-3.5", "rounded-xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-indigo-500/10", "focus:border-indigo-500", "outline-none", "transition-all", "text-gray-800", "text-sm", 3, "ngModelChange", "ngModel"], ["type", "tel", 1, "w-full", "px-4", "py-3.5", "rounded-xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-indigo-500/10", "focus:border-indigo-500", "outline-none", "transition-all", "text-gray-800", "text-sm", 3, "ngModelChange", "ngModel"], [1, "w-full", "bg-gradient-to-r", "from-indigo-600", "to-indigo-500", "hover:from-indigo-500", "hover:to-indigo-400", "disabled:opacity-50", "disabled:cursor-not-allowed", "text-white", "py-4", "rounded-xl", "font-bold", "shadow-md", "hover:shadow-lg", "hover:-translate-y-0.5", "transition-all", "flex", "items-center", "justify-center", "gap-2", "text-base", 3, "click", "disabled"], ["name", "loader", 1, "text-inherit"], ["name", "save", 1, "text-inherit"], [1, "bg-white", "rounded-2xl", "shadow-sm", "border", "border-slate-100", "p-6"], [1, "text-lg", "font-extrabold", "text-gray-800", "mb-5", "flex", "items-center", "gap-3"], ["name", "globe", 1, "text-inherit"], [1, "flex", "items-center", "justify-center"], [1, "flex", "items-center", "gap-0", "rounded-full", "bg-slate-100", "p-1.5"], ["aria-label", "Switch to Albanian", 3, "click"], ["name", "check", 1, "text-inherit"], ["aria-label", "Switch to English", 3, "click"], [1, "h-1", "bg-gradient-to-r", "from-teal-500", "to-teal-400"], ["name", "baby", 1, "text-inherit"], [1, "text-gray-500", "text-sm", "text-center", "py-6"], [1, "space-y-3", "mb-6"], [1, "w-full", "border-2", "border-dashed", "border-slate-300", "text-slate-500", "hover:border-indigo-400", "hover:text-indigo-600", "hover:bg-indigo-50", "py-4", "rounded-xl", "font-bold", "transition-all", "flex", "items-center", "justify-center", "gap-2", "text-sm", 3, "click"], ["name", "plus", 1, "text-inherit"], [1, "bg-white", "rounded-2xl", "shadow-sm", "border", "border-slate-200", "p-6"], ["name", "database", 1, "text-inherit"], [1, "mb-5", "p-5", "bg-rose-50", "border-2", "border-rose-200", "rounded-2xl", "animate-fade-in"], [1, "space-y-3"], [1, "w-full", "border-2", "border-slate-200", "text-slate-600", "hover:bg-teal-50", "hover:border-teal-300", "hover:text-teal-700", "py-4", "rounded-xl", "font-bold", "transition-all", "flex", "items-center", "justify-center", "gap-3", "text-base", 3, "click"], ["name", "download", 1, "text-inherit"], [1, "w-full", "border-2", "border-rose-200", "text-rose-500", "hover:bg-rose-50", "hover:border-rose-300", "py-4", "rounded-xl", "font-bold", "transition-all", "flex", "items-center", "justify-center", "gap-2", "text-sm"], [1, "bg-white", "rounded-2xl", "shadow-sm", "border", "border-slate-200", "p-8", "text-center"], [1, "flex", "items-center", "justify-center", "gap-3", "mb-3"], ["name", "heart", 1, "text-indigo-500", 2, "font-size", "32px"], [1, "text-[28px]", "font-extrabold", "text-gray-800", "tracking-tight"], [1, "text-gray-500", "font-medium", "text-base", "mb-1"], [1, "text-gray-500", "text-sm"], ["name", "check-circle", 1, "text-inherit"], [1, "text-teal-700", "text-sm", "font-medium"], [1, "flex", "items-center", "gap-4", "p-4", "bg-slate-50", "rounded-xl", "border", "border-slate-100", "group"], [1, "w-12", "h-12", "rounded-full", "border-2", "border-slate-200", "flex-shrink-0", 3, "src"], [1, "flex-1", "min-w-0"], [1, "font-bold", "text-gray-800", "truncate"], [1, "text-xs", "text-gray-500"], [1, "flex", "items-center", "gap-2", "animate-fade-in"], [1, "flex", "items-center", "gap-2"], [1, "px-3", "py-1.5", "bg-rose-500", "text-white", "text-xs", "font-bold", "rounded-lg", "hover:bg-rose-600", "transition-colors", 3, "click"], [1, "px-3", "py-1.5", "bg-slate-200", "text-gray-600", "text-xs", "font-bold", "rounded-lg", "hover:bg-slate-300", "transition-colors", 3, "click"], [1, "px-3", "py-2", "bg-white", "border", "border-slate-200", "text-slate-600", "text-xs", "font-bold", "rounded-xl", "hover:bg-indigo-50", "hover:border-indigo-300", "hover:text-indigo-600", "transition-all", "flex", "items-center", "gap-1.5", 3, "click"], ["name", "pencil", 1, "text-inherit"], [1, "px-3", "py-2", "bg-white", "border", "border-slate-200", "text-slate-400", "text-xs", "font-bold", "rounded-xl", "hover:bg-rose-50", "hover:border-rose-300", "hover:text-rose-500", "transition-all", "flex", "items-center", "gap-1.5", 3, "click"], ["name", "trash-2", 1, "text-inherit"], [1, "text-sm", "text-gray-700", "mb-4", "font-medium", "flex", "items-center", "gap-2"], ["name", "alert-triangle", 1, "text-inherit"], [1, "flex", "gap-3"], [1, "flex-1", "py-3", "rounded-xl", "bg-gradient-to-r", "from-rose-500", "to-rose-400", "text-white", "font-bold", "hover:from-rose-400", "hover:to-rose-300", "transition-all", "text-sm", "shadow-sm", "flex", "items-center", "justify-center", "gap-2", 3, "click"], ["name", "trash", 1, "text-inherit"], [1, "flex-1", "py-3", "rounded-xl", "border-2", "border-slate-200", "text-gray-600", "font-bold", "hover:bg-slate-100", "transition-all", "text-sm", 3, "click"], [1, "w-full", "border-2", "border-rose-200", "text-rose-500", "hover:bg-rose-50", "hover:border-rose-300", "py-4", "rounded-xl", "font-bold", "transition-all", "flex", "items-center", "justify-center", "gap-2", "text-sm", 3, "click"]], template: function SettingsPageComponent_Template(rf, ctx) {
+    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _SettingsPageComponent, selectors: [["app-settings-page"]], outputs: { openEditChild: "openEditChild", openAddChild: "openAddChild" }, decls: 76, vars: 31, consts: [[1, "max-w-2xl", "mx-auto", "px-4", "py-6", "space-y-6"], [1, "bg-white", "rounded-2xl", "shadow-sm", "border", "border-slate-100", "overflow-hidden"], [1, "h-1", "bg-gradient-to-r", "from-indigo-500", "to-indigo-400"], [1, "p-6"], [1, "text-lg", "font-extrabold", "text-gray-800", "mb-6", "flex", "items-center", "gap-3"], ["name", "user", 1, "text-inherit"], [1, "mb-5", "p-4", "bg-teal-50", "border", "border-teal-100", "rounded-2xl", "flex", "items-center", "gap-3", "animate-fade-in"], [1, "space-y-4"], [1, "grid", "grid-cols-1", "sm:grid-cols-2", "gap-4"], [1, "block", "text-xs", "font-bold", "text-indigo-700", "mb-2", "ml-1", "uppercase", "tracking-wider"], ["type", "text", 1, "w-full", "px-4", "py-3.5", "rounded-xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-indigo-500/10", "focus:border-indigo-500", "outline-none", "transition-all", "text-gray-800", "text-sm", 3, "ngModelChange", "ngModel"], ["type", "tel", 1, "w-full", "px-4", "py-3.5", "rounded-xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-indigo-500/10", "focus:border-indigo-500", "outline-none", "transition-all", "text-gray-800", "text-sm", 3, "ngModelChange", "ngModel"], [1, "w-full", "bg-gradient-to-r", "from-indigo-600", "to-indigo-500", "hover:from-indigo-500", "hover:to-indigo-400", "disabled:opacity-50", "disabled:cursor-not-allowed", "text-white", "py-4", "rounded-xl", "font-bold", "shadow-md", "hover:shadow-lg", "hover:-translate-y-0.5", "transition-all", "flex", "items-center", "justify-center", "gap-2", "text-base", 3, "click", "disabled"], ["name", "loader", 1, "text-inherit"], ["name", "save", 1, "text-inherit"], [1, "bg-white", "rounded-2xl", "shadow-sm", "border", "border-slate-100", "p-6"], [1, "text-lg", "font-extrabold", "text-gray-800", "mb-5", "flex", "items-center", "gap-3"], ["name", "globe", 1, "text-inherit"], [1, "flex", "items-center", "justify-center"], [1, "flex", "items-center", "gap-0", "rounded-full", "bg-slate-100", "p-1.5"], ["aria-label", "Switch to Albanian", 3, "click"], ["name", "check", 1, "text-inherit"], ["aria-label", "Switch to English", 3, "click"], [1, "h-1", "bg-gradient-to-r", "from-amber-500", "to-amber-400"], ["name", "bell", 1, "text-inherit"], [1, "text-sm", "text-amber-600", "bg-amber-50", "rounded-xl", "p-4"], [1, "h-1", "bg-gradient-to-r", "from-teal-500", "to-teal-400"], ["name", "baby", 1, "text-inherit"], [1, "text-gray-500", "text-sm", "text-center", "py-6"], [1, "space-y-3", "mb-6"], [1, "w-full", "border-2", "border-dashed", "border-slate-300", "text-slate-500", "hover:border-indigo-400", "hover:text-indigo-600", "hover:bg-indigo-50", "py-4", "rounded-xl", "font-bold", "transition-all", "flex", "items-center", "justify-center", "gap-2", "text-sm", 3, "click"], ["name", "plus", 1, "text-inherit"], [1, "bg-white", "rounded-2xl", "shadow-sm", "border", "border-slate-200", "p-6"], ["name", "database", 1, "text-inherit"], [1, "mb-5", "p-5", "bg-rose-50", "border-2", "border-rose-200", "rounded-2xl", "animate-fade-in"], [1, "space-y-3"], [1, "w-full", "border-2", "border-slate-200", "text-slate-600", "hover:bg-teal-50", "hover:border-teal-300", "hover:text-teal-700", "py-4", "rounded-xl", "font-bold", "transition-all", "flex", "items-center", "justify-center", "gap-3", "text-base", 3, "click"], ["name", "download", 1, "text-inherit"], [1, "w-full", "border-2", "border-rose-200", "text-rose-500", "hover:bg-rose-50", "hover:border-rose-300", "py-4", "rounded-xl", "font-bold", "transition-all", "flex", "items-center", "justify-center", "gap-2", "text-sm"], [1, "bg-white", "rounded-2xl", "shadow-sm", "border", "border-slate-200", "p-8", "text-center"], [1, "flex", "items-center", "justify-center", "gap-3", "mb-3"], ["name", "heart", 1, "text-indigo-500", 2, "font-size", "32px"], [1, "text-[28px]", "font-extrabold", "text-gray-800", "tracking-tight"], [1, "text-gray-500", "font-medium", "text-base", "mb-1"], [1, "text-gray-500", "text-sm"], ["name", "check-circle", 1, "text-inherit"], [1, "text-teal-700", "text-sm", "font-medium"], [1, "flex", "items-center", "justify-between", "py-3", "border-b", "border-slate-100"], [1, "font-bold", "text-gray-800", "text-sm"], [1, "text-xs", "text-gray-500", "mt-0.5"], ["role", "switch", 1, "relative", "inline-flex", "h-7", "w-12", "items-center", "rounded-full", "transition-colors", "focus:outline-none", "focus:ring-2", "focus:ring-indigo-500", "focus:ring-offset-2", 3, "click"], [1, "inline-block", "h-5", "w-5", "transform", "rounded-full", "bg-white", "shadow", "transition-transform"], [1, "mt-3", "p-3", "bg-amber-50", "border", "border-amber-200", "rounded-xl", "text-xs", "text-amber-700"], [1, "pt-3"], [1, "font-bold", "text-gray-800", "text-sm", "mb-3"], [1, "text-xs", "text-gray-500", "mb-3"], [1, "flex", "items-center", "gap-3"], [1, "flex", "items-center", "gap-2"], [1, "text-xs", "font-semibold", "text-gray-600"], [1, "px-3", "py-2", "rounded-xl", "border-2", "border-slate-200", "bg-slate-50", "text-sm", "font-medium", "text-gray-700", "focus:border-indigo-400", "focus:outline-none", 3, "change", "value"], [3, "value"], [1, "text-gray-400", "font-medium"], [1, "flex", "items-center", "gap-4", "p-4", "bg-slate-50", "rounded-xl", "border", "border-slate-100", "group"], [1, "w-12", "h-12", "rounded-full", "border-2", "border-slate-200", "flex-shrink-0", 3, "src"], [1, "flex-1", "min-w-0"], [1, "font-bold", "text-gray-800", "truncate"], [1, "text-xs", "text-gray-500"], [1, "flex", "items-center", "gap-2", "animate-fade-in"], [1, "px-3", "py-1.5", "bg-rose-500", "text-white", "text-xs", "font-bold", "rounded-lg", "hover:bg-rose-600", "transition-colors", 3, "click"], [1, "px-3", "py-1.5", "bg-slate-200", "text-gray-600", "text-xs", "font-bold", "rounded-lg", "hover:bg-slate-300", "transition-colors", 3, "click"], [1, "px-3", "py-2", "bg-white", "border", "border-slate-200", "text-slate-600", "text-xs", "font-bold", "rounded-xl", "hover:bg-indigo-50", "hover:border-indigo-300", "hover:text-indigo-600", "transition-all", "flex", "items-center", "gap-1.5", 3, "click"], ["name", "pencil", 1, "text-inherit"], [1, "px-3", "py-2", "bg-white", "border", "border-slate-200", "text-slate-400", "text-xs", "font-bold", "rounded-xl", "hover:bg-rose-50", "hover:border-rose-300", "hover:text-rose-500", "transition-all", "flex", "items-center", "gap-1.5", 3, "click"], ["name", "trash-2", 1, "text-inherit"], [1, "text-sm", "text-gray-700", "mb-4", "font-medium", "flex", "items-center", "gap-2"], ["name", "alert-triangle", 1, "text-inherit"], [1, "flex", "gap-3"], [1, "flex-1", "py-3", "rounded-xl", "bg-gradient-to-r", "from-rose-500", "to-rose-400", "text-white", "font-bold", "hover:from-rose-400", "hover:to-rose-300", "transition-all", "text-sm", "shadow-sm", "flex", "items-center", "justify-center", "gap-2", 3, "click"], ["name", "trash", 1, "text-inherit"], [1, "flex-1", "py-3", "rounded-xl", "border-2", "border-slate-200", "text-gray-600", "font-bold", "hover:bg-slate-100", "transition-all", "text-sm", 3, "click"], [1, "w-full", "border-2", "border-rose-200", "text-rose-500", "hover:bg-rose-50", "hover:border-rose-300", "py-4", "rounded-xl", "font-bold", "transition-all", "flex", "items-center", "justify-center", "gap-2", "text-sm", 3, "click"]], template: function SettingsPageComponent_Template(rf, ctx) {
       if (rf & 1) {
         \u0275\u0275elementStart(0, "div", 0)(1, "div", 1);
         \u0275\u0275element(2, "div", 2);
@@ -54190,38 +58595,46 @@ var SettingsPageComponent = class _SettingsPageComponent {
         \u0275\u0275element(42, "lucide-icon", 24);
         \u0275\u0275text(43);
         \u0275\u0275elementEnd();
-        \u0275\u0275conditionalCreate(44, SettingsPageComponent_Conditional_44_Template, 2, 1, "p", 25)(45, SettingsPageComponent_Conditional_45_Template, 3, 0, "div", 26);
-        \u0275\u0275elementStart(46, "button", 27);
-        \u0275\u0275listener("click", function SettingsPageComponent_Template_button_click_46_listener() {
+        \u0275\u0275conditionalCreate(44, SettingsPageComponent_Conditional_44_Template, 2, 1, "p", 25)(45, SettingsPageComponent_Conditional_45_Template, 10, 9);
+        \u0275\u0275elementEnd()();
+        \u0275\u0275elementStart(46, "div", 1);
+        \u0275\u0275element(47, "div", 26);
+        \u0275\u0275elementStart(48, "div", 3)(49, "h3", 16);
+        \u0275\u0275element(50, "lucide-icon", 27);
+        \u0275\u0275text(51);
+        \u0275\u0275elementEnd();
+        \u0275\u0275conditionalCreate(52, SettingsPageComponent_Conditional_52_Template, 2, 1, "p", 28)(53, SettingsPageComponent_Conditional_53_Template, 3, 0, "div", 29);
+        \u0275\u0275elementStart(54, "button", 30);
+        \u0275\u0275listener("click", function SettingsPageComponent_Template_button_click_54_listener() {
           return ctx.openAddChild.emit();
         });
-        \u0275\u0275element(47, "lucide-icon", 28);
-        \u0275\u0275text(48);
+        \u0275\u0275element(55, "lucide-icon", 31);
+        \u0275\u0275text(56);
         \u0275\u0275elementEnd()()();
-        \u0275\u0275elementStart(49, "div", 29)(50, "h3", 16);
-        \u0275\u0275element(51, "lucide-icon", 30);
-        \u0275\u0275text(52);
+        \u0275\u0275elementStart(57, "div", 32)(58, "h3", 16);
+        \u0275\u0275element(59, "lucide-icon", 33);
+        \u0275\u0275text(60);
         \u0275\u0275elementEnd();
-        \u0275\u0275conditionalCreate(53, SettingsPageComponent_Conditional_53_Template, 10, 3, "div", 31);
-        \u0275\u0275elementStart(54, "div", 32)(55, "button", 33);
-        \u0275\u0275listener("click", function SettingsPageComponent_Template_button_click_55_listener() {
+        \u0275\u0275conditionalCreate(61, SettingsPageComponent_Conditional_61_Template, 10, 3, "div", 34);
+        \u0275\u0275elementStart(62, "div", 35)(63, "button", 36);
+        \u0275\u0275listener("click", function SettingsPageComponent_Template_button_click_63_listener() {
           return ctx.exportData();
         });
-        \u0275\u0275element(56, "lucide-icon", 34);
-        \u0275\u0275text(57);
-        \u0275\u0275elementEnd();
-        \u0275\u0275conditionalCreate(58, SettingsPageComponent_Conditional_58_Template, 3, 1, "button", 35);
-        \u0275\u0275elementEnd()();
-        \u0275\u0275elementStart(59, "div", 36)(60, "div", 37);
-        \u0275\u0275element(61, "lucide-icon", 38);
-        \u0275\u0275elementStart(62, "span", 39);
-        \u0275\u0275text(63, "KidDok");
-        \u0275\u0275elementEnd()();
-        \u0275\u0275elementStart(64, "p", 40);
+        \u0275\u0275element(64, "lucide-icon", 37);
         \u0275\u0275text(65);
         \u0275\u0275elementEnd();
-        \u0275\u0275elementStart(66, "p", 41);
-        \u0275\u0275text(67);
+        \u0275\u0275conditionalCreate(66, SettingsPageComponent_Conditional_66_Template, 3, 1, "button", 38);
+        \u0275\u0275elementEnd()();
+        \u0275\u0275elementStart(67, "div", 39)(68, "div", 40);
+        \u0275\u0275element(69, "lucide-icon", 41);
+        \u0275\u0275elementStart(70, "span", 42);
+        \u0275\u0275text(71, "KidDok");
+        \u0275\u0275elementEnd()();
+        \u0275\u0275elementStart(72, "p", 43);
+        \u0275\u0275text(73);
+        \u0275\u0275elementEnd();
+        \u0275\u0275elementStart(74, "p", 44);
+        \u0275\u0275text(75);
         \u0275\u0275elementEnd()()();
       }
       if (rf & 2) {
@@ -54262,25 +58675,29 @@ var SettingsPageComponent = class _SettingsPageComponent {
         \u0275\u0275advance();
         \u0275\u0275textInterpolate1(" ", ctx.i18n.t()["settings.language.en"], " ");
         \u0275\u0275advance(6);
+        \u0275\u0275textInterpolate1(" ", ctx.i18n.t()["settings.notifications.title"], " ");
+        \u0275\u0275advance();
+        \u0275\u0275conditional(!ctx.notifSvc.isSupported ? 44 : 45);
+        \u0275\u0275advance(7);
         \u0275\u0275textInterpolate1(" ", ctx.i18n.t()["settings.children"], " ");
         \u0275\u0275advance();
-        \u0275\u0275conditional(ctx.dataService.children().length === 0 ? 44 : 45);
+        \u0275\u0275conditional(ctx.dataService.children().length === 0 ? 52 : 53);
         \u0275\u0275advance(4);
         \u0275\u0275textInterpolate1(" ", ctx.i18n.t()["settings.children.add"], " ");
         \u0275\u0275advance(4);
         \u0275\u0275textInterpolate1(" ", ctx.i18n.t()["settings.data.title"], " ");
         \u0275\u0275advance();
-        \u0275\u0275conditional(ctx.showClearConfirm() ? 53 : -1);
+        \u0275\u0275conditional(ctx.showClearConfirm() ? 61 : -1);
         \u0275\u0275advance(4);
         \u0275\u0275textInterpolate1(" ", ctx.i18n.t()["settings.data.export"], " ");
         \u0275\u0275advance();
-        \u0275\u0275conditional(!ctx.showClearConfirm() ? 58 : -1);
+        \u0275\u0275conditional(!ctx.showClearConfirm() ? 66 : -1);
         \u0275\u0275advance(7);
         \u0275\u0275textInterpolate(ctx.i18n.t()["settings.about.tagline"]);
         \u0275\u0275advance(2);
         \u0275\u0275textInterpolate(ctx.i18n.t()["settings.about.version"]);
       }
-    }, dependencies: [CommonModule, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel, LucideAngularModule, LucideAngularComponent], styles: ["\n.animate-fade-in[_ngcontent-%COMP%] {\n  animation: _ngcontent-%COMP%_fadeIn 0.25s ease-out;\n}\n@keyframes _ngcontent-%COMP%_fadeIn {\n  from {\n    opacity: 0;\n    transform: translateY(-4px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n/*# sourceMappingURL=settings-page.component.css.map */"] });
+    }, dependencies: [CommonModule, FormsModule, NgSelectOption, \u0275NgSelectMultipleOption, DefaultValueAccessor, NgControlStatus, NgModel, LucideAngularModule, LucideAngularComponent], styles: ["\n.animate-fade-in[_ngcontent-%COMP%] {\n  animation: _ngcontent-%COMP%_fadeIn 0.25s ease-out;\n}\n@keyframes _ngcontent-%COMP%_fadeIn {\n  from {\n    opacity: 0;\n    transform: translateY(-4px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n/*# sourceMappingURL=settings-page.component.css.map */"] });
   }
 };
 (() => {
@@ -54370,7 +58787,121 @@ var SettingsPageComponent = class _SettingsPageComponent {
         </div>
       </div>
 
-      <!-- Section 3: Children Management -->
+      <!-- Section 3: Notifications -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <!-- Amber accent bar -->
+        <div class="h-1 bg-gradient-to-r from-amber-500 to-amber-400"></div>
+        <div class="p-6">
+          <h3 class="text-lg font-extrabold text-gray-800 mb-5 flex items-center gap-3">
+            <lucide-icon name="bell" class="text-inherit"></lucide-icon>
+            {{ i18n.t()['settings.notifications.title'] }}
+          </h3>
+
+          @if (!notifSvc.isSupported) {
+            <p class="text-sm text-amber-600 bg-amber-50 rounded-xl p-4">
+              {{ i18n.locale() === 'sq' ? 'Shfletuesi juaj nuk mb\xEBshtet njoftimet.' : 'Your browser does not support notifications.' }}
+            </p>
+          } @else {
+
+            <!-- Master toggle -->
+            <div class="flex items-center justify-between py-3 border-b border-slate-100">
+              <div>
+                <p class="font-bold text-gray-800 text-sm">{{ i18n.t()['settings.notifications.enable'] }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">{{ i18n.t()['settings.notifications.enableDesc'] }}</p>
+              </div>
+              <button
+                (click)="toggleNotifications()"
+                role="switch"
+                [attr.aria-checked]="notifSvc.enabled()"
+                class="relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                [class]="notifSvc.enabled() ? 'bg-indigo-500' : 'bg-slate-200'"
+              >
+                <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform"
+                      [class]="notifSvc.enabled() ? 'translate-x-6' : 'translate-x-1'"></span>
+              </button>
+            </div>
+
+            @if (notifSvc.permissionLevel === 'denied' && !notifSvc.enabled()) {
+              <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700">
+                {{ i18n.t()['settings.notifications.browserDenied'] }}
+              </div>
+            }
+
+            @if (notifSvc.enabled()) {
+              <!-- Fever Alerts toggle -->
+              <div class="flex items-center justify-between py-3 border-b border-slate-100">
+                <div>
+                  <p class="font-bold text-gray-800 text-sm">{{ i18n.t()['settings.notifications.feverAlerts'] }}</p>
+                  <p class="text-xs text-gray-500 mt-0.5">{{ i18n.t()['settings.notifications.feverAlertsDesc'] }}</p>
+                </div>
+                <button
+                  (click)="notifSvc.updatePrefs({ feverAlerts: !notifSvc.feverAlerts() })"
+                  role="switch"
+                  [attr.aria-checked]="notifSvc.feverAlerts()"
+                  class="relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  [class]="notifSvc.feverAlerts() ? 'bg-rose-500' : 'bg-slate-200'"
+                >
+                  <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform"
+                        [class]="notifSvc.feverAlerts() ? 'translate-x-6' : 'translate-x-1'"></span>
+                </button>
+              </div>
+
+              <!-- Vaccine Alerts toggle -->
+              <div class="flex items-center justify-between py-3 border-b border-slate-100">
+                <div>
+                  <p class="font-bold text-gray-800 text-sm">{{ i18n.t()['settings.notifications.vaccineAlerts'] }}</p>
+                  <p class="text-xs text-gray-500 mt-0.5">{{ i18n.t()['settings.notifications.vaccineAlertsDesc'] }}</p>
+                </div>
+                <button
+                  (click)="notifSvc.updatePrefs({ vaccineAlerts: !notifSvc.vaccineAlerts() })"
+                  role="switch"
+                  [attr.aria-checked]="notifSvc.vaccineAlerts()"
+                  class="relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  [class]="notifSvc.vaccineAlerts() ? 'bg-teal-500' : 'bg-slate-200'"
+                >
+                  <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform"
+                        [class]="notifSvc.vaccineAlerts() ? 'translate-x-6' : 'translate-x-1'"></span>
+                </button>
+              </div>
+
+              <!-- Do Not Disturb -->
+              <div class="pt-3">
+                <p class="font-bold text-gray-800 text-sm mb-3">{{ i18n.t()['settings.notifications.dnd'] }}</p>
+                <p class="text-xs text-gray-500 mb-3">{{ i18n.t()['settings.notifications.dndDesc'] }}</p>
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center gap-2">
+                    <label class="text-xs font-semibold text-gray-600">{{ i18n.t()['settings.notifications.dndFrom'] }}</label>
+                    <select
+                      [value]="notifSvc.dndStart()"
+                      (change)="notifSvc.updatePrefs({ dndStart: +$any($event.target).value })"
+                      class="px-3 py-2 rounded-xl border-2 border-slate-200 bg-slate-50 text-sm font-medium text-gray-700 focus:border-indigo-400 focus:outline-none"
+                    >
+                      @for (h of hours; track h.value) {
+                        <option [value]="h.value">{{ h.label }}</option>
+                      }
+                    </select>
+                  </div>
+                  <span class="text-gray-400 font-medium">\u2014</span>
+                  <div class="flex items-center gap-2">
+                    <label class="text-xs font-semibold text-gray-600">{{ i18n.t()['settings.notifications.dndTo'] }}</label>
+                    <select
+                      [value]="notifSvc.dndEnd()"
+                      (change)="notifSvc.updatePrefs({ dndEnd: +$any($event.target).value })"
+                      class="px-3 py-2 rounded-xl border-2 border-slate-200 bg-slate-50 text-sm font-medium text-gray-700 focus:border-indigo-400 focus:outline-none"
+                    >
+                      @for (h of hours; track h.value) {
+                        <option [value]="h.value">{{ h.label }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Section 4: Children Management -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <!-- Teal accent bar -->
         <div class="h-1 bg-gradient-to-r from-teal-500 to-teal-400"></div>
@@ -54498,49 +59029,61 @@ var SettingsPageComponent = class _SettingsPageComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(SettingsPageComponent, { className: "SettingsPageComponent", filePath: "src/app/components/settings/settings-page.component.ts", lineNumber: 228 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(SettingsPageComponent, { className: "SettingsPageComponent", filePath: "src/app/components/settings/settings-page.component.ts", lineNumber: 343 });
 })();
 
 // src/app/components/shell.component.ts
-var _forTrack015 = ($index, $item) => $item.id;
-function ShellComponent_Conditional_5_Conditional_0_Template(rf, ctx) {
+var _forTrack018 = ($index, $item) => $item.id;
+function ShellComponent_Conditional_7_Template(rf, ctx) {
   if (rf & 1) {
-    const _r1 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 9)(1, "div", 11);
-    \u0275\u0275element(2, "lucide-icon", 12);
+    \u0275\u0275elementStart(0, "span");
+    \u0275\u0275text(1);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "h2", 13);
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(ctx_r0.i18n.isSq() ? "Ndryshimet u ruajt\xEBn!" : "Changes saved!");
+  }
+}
+function ShellComponent_Conditional_9_Conditional_0_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r2 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 11)(1, "div", 13);
+    \u0275\u0275element(2, "lucide-icon", 14);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "h2", 15);
     \u0275\u0275text(4);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "p", 14);
+    \u0275\u0275elementStart(5, "p", 16);
     \u0275\u0275text(6);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "button", 15);
-    \u0275\u0275listener("click", function ShellComponent_Conditional_5_Conditional_0_Template_button_click_7_listener() {
-      \u0275\u0275restoreView(_r1);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r1.isAddingChild.set(true));
+    \u0275\u0275elementStart(7, "button", 17);
+    \u0275\u0275listener("click", function ShellComponent_Conditional_9_Conditional_0_Template_button_click_7_listener() {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.isAddingChild.set(true));
     });
-    \u0275\u0275element(8, "lucide-icon", 16);
+    \u0275\u0275element(8, "lucide-icon", 18);
     \u0275\u0275text(9);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
+    const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance(2);
     \u0275\u0275property("size", 80);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["child.welcome"]);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["child.welcome"]);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["child.welcomeSub"]);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["child.welcomeSub"]);
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.t()["child.addNew"], " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["child.addNew"], " ");
   }
 }
-function ShellComponent_Conditional_5_Conditional_1_For_7_Conditional_11_Template(rf, ctx) {
+function ShellComponent_Conditional_9_Conditional_1_For_7_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 32);
-    \u0275\u0275element(1, "lucide-icon", 35);
+    \u0275\u0275elementStart(0, "div", 34);
+    \u0275\u0275element(1, "lucide-icon", 37);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
   }
@@ -54550,950 +59093,976 @@ function ShellComponent_Conditional_5_Conditional_1_For_7_Conditional_11_Templat
     \u0275\u0275textInterpolate1(" ", child_r5.bloodType, " ");
   }
 }
-function ShellComponent_Conditional_5_Conditional_1_For_7_Template(rf, ctx) {
+function ShellComponent_Conditional_9_Conditional_1_For_7_Template(rf, ctx) {
   if (rf & 1) {
     const _r4 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 20)(1, "button", 25);
-    \u0275\u0275listener("click", function ShellComponent_Conditional_5_Conditional_1_For_7_Template_button_click_1_listener() {
+    \u0275\u0275elementStart(0, "div", 22)(1, "button", 27);
+    \u0275\u0275listener("click", function ShellComponent_Conditional_9_Conditional_1_For_7_Template_button_click_1_listener() {
       const child_r5 = \u0275\u0275restoreView(_r4).$implicit;
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r1.openEditModal(child_r5));
+      const ctx_r0 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r0.openEditModal(child_r5));
     });
-    \u0275\u0275element(2, "lucide-icon", 26);
+    \u0275\u0275element(2, "lucide-icon", 28);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "div", 27);
-    \u0275\u0275listener("click", function ShellComponent_Conditional_5_Conditional_1_For_7_Template_div_click_3_listener() {
+    \u0275\u0275elementStart(3, "div", 29);
+    \u0275\u0275listener("click", function ShellComponent_Conditional_9_Conditional_1_For_7_Template_div_click_3_listener() {
       const child_r5 = \u0275\u0275restoreView(_r4).$implicit;
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r1.selectChild(child_r5.id));
+      const ctx_r0 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r0.selectChild(child_r5.id));
     });
-    \u0275\u0275elementStart(4, "div", 28);
-    \u0275\u0275element(5, "img", 29);
-    \u0275\u0275elementStart(6, "div")(7, "h3", 30);
+    \u0275\u0275elementStart(4, "div", 30);
+    \u0275\u0275element(5, "img", 31);
+    \u0275\u0275elementStart(6, "div")(7, "h3", 32);
     \u0275\u0275text(8);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "p", 31);
+    \u0275\u0275elementStart(9, "p", 33);
     \u0275\u0275text(10);
     \u0275\u0275elementEnd()()();
-    \u0275\u0275conditionalCreate(11, ShellComponent_Conditional_5_Conditional_1_For_7_Conditional_11_Template, 3, 1, "div", 32);
+    \u0275\u0275conditionalCreate(11, ShellComponent_Conditional_9_Conditional_1_For_7_Conditional_11_Template, 3, 1, "div", 34);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(12, "div", 33);
-    \u0275\u0275listener("click", function ShellComponent_Conditional_5_Conditional_1_For_7_Template_div_click_12_listener() {
+    \u0275\u0275elementStart(12, "div", 35);
+    \u0275\u0275listener("click", function ShellComponent_Conditional_9_Conditional_1_For_7_Template_div_click_12_listener() {
       const child_r5 = \u0275\u0275restoreView(_r4).$implicit;
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r1.selectChild(child_r5.id));
+      const ctx_r0 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r0.selectChild(child_r5.id));
     });
-    \u0275\u0275element(13, "lucide-icon", 34);
+    \u0275\u0275element(13, "lucide-icon", 36);
     \u0275\u0275text(14);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
     const child_r5 = ctx.$implicit;
-    const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275advance(5);
+    const ctx_r0 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance();
+    \u0275\u0275attribute("aria-label", ctx_r0.i18n.t()["child.editProfile"]);
+    \u0275\u0275advance(4);
     \u0275\u0275property("src", child_r5.avatarUrl, \u0275\u0275sanitizeUrl);
     \u0275\u0275advance(3);
     \u0275\u0275textInterpolate(child_r5.name);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(ctx_r1.toDisplay(child_r5.dateOfBirth, ctx_r1.i18n.locale()));
+    \u0275\u0275textInterpolate(ctx_r0.toDisplay(child_r5.dateOfBirth, ctx_r0.i18n.locale()));
     \u0275\u0275advance();
     \u0275\u0275conditional(child_r5.bloodType ? 11 : -1);
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.t()["sidebar.openProfile"], " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["sidebar.openProfile"], " ");
   }
 }
-function ShellComponent_Conditional_5_Conditional_1_Template(rf, ctx) {
+function ShellComponent_Conditional_9_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
     const _r3 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 10)(1, "h2", 17);
+    \u0275\u0275elementStart(0, "div", 12)(1, "h2", 19);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "p", 18);
+    \u0275\u0275elementStart(3, "p", 20);
     \u0275\u0275text(4);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "div", 19);
-    \u0275\u0275repeaterCreate(6, ShellComponent_Conditional_5_Conditional_1_For_7_Template, 15, 5, "div", 20, _forTrack015);
-    \u0275\u0275elementStart(8, "div", 21);
-    \u0275\u0275listener("click", function ShellComponent_Conditional_5_Conditional_1_Template_div_click_8_listener() {
+    \u0275\u0275elementStart(5, "div", 21);
+    \u0275\u0275repeaterCreate(6, ShellComponent_Conditional_9_Conditional_1_For_7_Template, 15, 6, "div", 22, _forTrack018);
+    \u0275\u0275elementStart(8, "button", 23);
+    \u0275\u0275listener("click", function ShellComponent_Conditional_9_Conditional_1_Template_button_click_8_listener() {
       \u0275\u0275restoreView(_r3);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r1.isAddingChild.set(true));
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.isAddingChild.set(true));
     });
-    \u0275\u0275elementStart(9, "div", 22);
-    \u0275\u0275element(10, "lucide-icon", 23);
+    \u0275\u0275elementStart(9, "div", 24);
+    \u0275\u0275element(10, "lucide-icon", 25);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(11, "p", 24);
+    \u0275\u0275elementStart(11, "p", 26);
     \u0275\u0275text(12);
     \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
+    const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["child.selectChild"]);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["child.selectChild"]);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["sidebar.selectChildToContinue"]);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["sidebar.selectChildToContinue"]);
     \u0275\u0275advance(2);
-    \u0275\u0275repeater(ctx_r1.dataService.children());
+    \u0275\u0275repeater(ctx_r0.dataService.children());
     \u0275\u0275advance(6);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.t()["child.addNewBtn"], " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["child.addNewBtn"], " ");
   }
 }
-function ShellComponent_Conditional_5_Template(rf, ctx) {
+function ShellComponent_Conditional_9_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275conditionalCreate(0, ShellComponent_Conditional_5_Conditional_0_Template, 10, 4, "div", 9)(1, ShellComponent_Conditional_5_Conditional_1_Template, 13, 3, "div", 10);
+    \u0275\u0275conditionalCreate(0, ShellComponent_Conditional_9_Conditional_0_Template, 10, 4, "div", 11)(1, ShellComponent_Conditional_9_Conditional_1_Template, 13, 3, "div", 12);
   }
   if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext();
-    \u0275\u0275conditional(ctx_r1.dataService.children().length === 0 && !ctx_r1.isAddingChild() ? 0 : 1);
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275conditional(ctx_r0.dataService.children().length === 0 && !ctx_r0.isAddingChild() ? 0 : 1);
   }
 }
-function ShellComponent_Conditional_6_Conditional_9_Template(rf, ctx) {
+function ShellComponent_Conditional_10_Conditional_9_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 41);
-    \u0275\u0275element(1, "lucide-icon", 73);
+    \u0275\u0275elementStart(0, "p", 43);
+    \u0275\u0275element(1, "lucide-icon", 75);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
+    const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.isSq() ? "Emri mund t\xEB p\xEBrmbaj\xEB vet\xEBm shkronja." : "Name can only contain letters.", " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.isSq() ? "Emri mund t\xEB p\xEBrmbaj\xEB vet\xEBm shkronja." : "Name can only contain letters.", " ");
   }
 }
-function ShellComponent_Conditional_6_Conditional_45_Template(rf, ctx) {
+function ShellComponent_Conditional_10_Conditional_45_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "lucide-icon", 58);
+    \u0275\u0275element(0, "lucide-icon", 60);
   }
 }
-function ShellComponent_Conditional_6_Conditional_71_Template(rf, ctx) {
+function ShellComponent_Conditional_10_Conditional_71_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 66);
+    \u0275\u0275elementStart(0, "p", 68);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
+    const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(ctx_r1.newChildDocumentError());
+    \u0275\u0275textInterpolate(ctx_r0.newChildDocumentError());
   }
 }
-function ShellComponent_Conditional_6_Conditional_72_Template(rf, ctx) {
+function ShellComponent_Conditional_10_Conditional_72_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 67);
-    \u0275\u0275element(1, "lucide-icon", 74);
+    \u0275\u0275elementStart(0, "p", 69);
+    \u0275\u0275element(1, "lucide-icon", 76);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
+    const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.t()["child.documentAttached"]);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["child.documentAttached"]);
   }
 }
-function ShellComponent_Conditional_6_Conditional_73_Template(rf, ctx) {
+function ShellComponent_Conditional_10_Conditional_73_Template(rf, ctx) {
   if (rf & 1) {
     const _r7 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div")(1, "label", 39);
+    \u0275\u0275elementStart(0, "div")(1, "label", 41);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "input", 75);
-    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_6_Conditional_73_Template_input_ngModelChange_3_listener($event) {
+    \u0275\u0275elementStart(3, "input", 77);
+    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_10_Conditional_73_Template_input_ngModelChange_3_listener($event) {
       \u0275\u0275restoreView(_r7);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      \u0275\u0275twoWayBindingSet(ctx_r1.newChildDocumentDate, $event) || (ctx_r1.newChildDocumentDate = $event);
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      \u0275\u0275twoWayBindingSet(ctx_r0.newChildDocumentDate, $event) || (ctx_r0.newChildDocumentDate = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
+    const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["child.documentIssueDate"]);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["child.documentIssueDate"]);
     \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.newChildDocumentDate);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.newChildDocumentDate);
   }
 }
-function ShellComponent_Conditional_6_Template(rf, ctx) {
+function ShellComponent_Conditional_10_Template(rf, ctx) {
   if (rf & 1) {
     const _r6 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 5)(1, "h2", 36);
-    \u0275\u0275element(2, "lucide-icon", 37);
+    \u0275\u0275elementStart(0, "div", 7)(1, "h2", 38);
+    \u0275\u0275element(2, "lucide-icon", 39);
     \u0275\u0275text(3);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(4, "div", 38)(5, "div")(6, "label", 39);
+    \u0275\u0275elementStart(4, "div", 40)(5, "div")(6, "label", 41);
     \u0275\u0275text(7);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(8, "input", 40);
-    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_6_Template_input_ngModelChange_8_listener($event) {
+    \u0275\u0275elementStart(8, "input", 42);
+    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_10_Template_input_ngModelChange_8_listener($event) {
       \u0275\u0275restoreView(_r6);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.newChildName, $event) || (ctx_r1.newChildName = $event);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.newChildName, $event) || (ctx_r0.newChildName = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("input", function ShellComponent_Conditional_6_Template_input_input_8_listener($event) {
+    \u0275\u0275listener("input", function ShellComponent_Conditional_10_Template_input_input_8_listener($event) {
       \u0275\u0275restoreView(_r6);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.onAddNameInput($event));
-    })("blur", function ShellComponent_Conditional_6_Template_input_blur_8_listener() {
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onAddNameInput($event));
+    })("blur", function ShellComponent_Conditional_10_Template_input_blur_8_listener() {
       \u0275\u0275restoreView(_r6);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.onAddNameBlur());
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onAddNameBlur());
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275conditionalCreate(9, ShellComponent_Conditional_6_Conditional_9_Template, 3, 1, "p", 41);
+    \u0275\u0275conditionalCreate(9, ShellComponent_Conditional_10_Conditional_9_Template, 3, 1, "p", 43);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(10, "div")(11, "label", 39);
+    \u0275\u0275elementStart(10, "div")(11, "label", 41);
     \u0275\u0275text(12);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(13, "div", 42)(14, "input", 43);
-    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_6_Template_input_ngModelChange_14_listener($event) {
+    \u0275\u0275elementStart(13, "div", 44)(14, "input", 45);
+    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_10_Template_input_ngModelChange_14_listener($event) {
       \u0275\u0275restoreView(_r6);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.newChildDob, $event) || (ctx_r1.newChildDob = $event);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.newChildDob, $event) || (ctx_r0.newChildDob = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("input", function ShellComponent_Conditional_6_Template_input_input_14_listener($event) {
+    \u0275\u0275listener("input", function ShellComponent_Conditional_10_Template_input_input_14_listener($event) {
       \u0275\u0275restoreView(_r6);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.onDateInput($event, (v) => ctx_r1.newChildDob = v, ctx_r1.i18n.locale()));
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onDateInput($event, (v) => ctx_r0.newChildDob = v, ctx_r0.i18n.locale()));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(15, "button", 44);
-    \u0275\u0275element(16, "lucide-icon", 45);
+    \u0275\u0275elementStart(15, "button", 46);
+    \u0275\u0275element(16, "lucide-icon", 47);
     \u0275\u0275elementEnd()()();
-    \u0275\u0275elementStart(17, "div", 46)(18, "div")(19, "label", 39);
+    \u0275\u0275elementStart(17, "div", 48)(18, "div")(19, "label", 41);
     \u0275\u0275text(20);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(21, "input", 47);
-    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_6_Template_input_ngModelChange_21_listener($event) {
+    \u0275\u0275elementStart(21, "input", 49);
+    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_10_Template_input_ngModelChange_21_listener($event) {
       \u0275\u0275restoreView(_r6);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.newChildBirthWeight, $event) || (ctx_r1.newChildBirthWeight = $event);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.newChildBirthWeight, $event) || (ctx_r0.newChildBirthWeight = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(22, "div")(23, "label", 39);
+    \u0275\u0275elementStart(22, "div")(23, "label", 41);
     \u0275\u0275text(24);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(25, "div", 42)(26, "select", 48);
-    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_6_Template_select_ngModelChange_26_listener($event) {
+    \u0275\u0275elementStart(25, "div", 44)(26, "select", 50);
+    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_10_Template_select_ngModelChange_26_listener($event) {
       \u0275\u0275restoreView(_r6);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.newChildBloodType, $event) || (ctx_r1.newChildBloodType = $event);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.newChildBloodType, $event) || (ctx_r0.newChildBloodType = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275elementStart(27, "option", 49);
+    \u0275\u0275elementStart(27, "option", 51);
     \u0275\u0275text(28, "--");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(29, "option", 50);
+    \u0275\u0275elementStart(29, "option", 52);
     \u0275\u0275text(30, "A+");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(31, "option", 51);
+    \u0275\u0275elementStart(31, "option", 53);
     \u0275\u0275text(32, "A-");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(33, "option", 52);
+    \u0275\u0275elementStart(33, "option", 54);
     \u0275\u0275text(34, "B+");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(35, "option", 53);
+    \u0275\u0275elementStart(35, "option", 55);
     \u0275\u0275text(36, "B-");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(37, "option", 54);
+    \u0275\u0275elementStart(37, "option", 56);
     \u0275\u0275text(38, "AB+");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(39, "option", 55);
+    \u0275\u0275elementStart(39, "option", 57);
     \u0275\u0275text(40, "AB-");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(41, "option", 56);
+    \u0275\u0275elementStart(41, "option", 58);
     \u0275\u0275text(42, "O+");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(43, "option", 57);
+    \u0275\u0275elementStart(43, "option", 59);
     \u0275\u0275text(44, "O-");
     \u0275\u0275elementEnd()();
-    \u0275\u0275conditionalCreate(45, ShellComponent_Conditional_6_Conditional_45_Template, 1, 0, "lucide-icon", 58);
-    \u0275\u0275element(46, "lucide-icon", 59);
+    \u0275\u0275conditionalCreate(45, ShellComponent_Conditional_10_Conditional_45_Template, 1, 0, "lucide-icon", 60);
+    \u0275\u0275element(46, "lucide-icon", 61);
     \u0275\u0275elementEnd()()();
-    \u0275\u0275elementStart(47, "div")(48, "label", 39);
+    \u0275\u0275elementStart(47, "div")(48, "label", 41);
     \u0275\u0275text(49);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(50, "div", 42)(51, "select", 60);
-    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_6_Template_select_ngModelChange_51_listener($event) {
+    \u0275\u0275elementStart(50, "div", 44)(51, "select", 62);
+    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_10_Template_select_ngModelChange_51_listener($event) {
       \u0275\u0275restoreView(_r6);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.newChildGender, $event) || (ctx_r1.newChildGender = $event);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.newChildGender, $event) || (ctx_r0.newChildGender = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275elementStart(52, "option", 49);
+    \u0275\u0275elementStart(52, "option", 51);
     \u0275\u0275text(53, "--");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(54, "option", 61);
+    \u0275\u0275elementStart(54, "option", 63);
     \u0275\u0275text(55);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(56, "option", 62);
+    \u0275\u0275elementStart(56, "option", 64);
     \u0275\u0275text(57);
     \u0275\u0275elementEnd()();
-    \u0275\u0275element(58, "lucide-icon", 59);
+    \u0275\u0275element(58, "lucide-icon", 61);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(59, "div")(60, "label", 39);
+    \u0275\u0275elementStart(59, "div")(60, "label", 41);
     \u0275\u0275text(61);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(62, "textarea", 63);
-    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_6_Template_textarea_ngModelChange_62_listener($event) {
+    \u0275\u0275elementStart(62, "textarea", 65);
+    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_10_Template_textarea_ngModelChange_62_listener($event) {
       \u0275\u0275restoreView(_r6);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.newChildAllergies, $event) || (ctx_r1.newChildAllergies = $event);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.newChildAllergies, $event) || (ctx_r0.newChildAllergies = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(63, "div")(64, "label", 39);
+    \u0275\u0275elementStart(63, "div")(64, "label", 41);
     \u0275\u0275text(65);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(66, "textarea", 64);
-    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_6_Template_textarea_ngModelChange_66_listener($event) {
+    \u0275\u0275elementStart(66, "textarea", 66);
+    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_10_Template_textarea_ngModelChange_66_listener($event) {
       \u0275\u0275restoreView(_r6);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.newChildMedicalNotes, $event) || (ctx_r1.newChildMedicalNotes = $event);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.newChildMedicalNotes, $event) || (ctx_r0.newChildMedicalNotes = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(67, "div")(68, "label", 39);
+    \u0275\u0275elementStart(67, "div")(68, "label", 41);
     \u0275\u0275text(69);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(70, "input", 65);
-    \u0275\u0275listener("change", function ShellComponent_Conditional_6_Template_input_change_70_listener($event) {
+    \u0275\u0275elementStart(70, "input", 67);
+    \u0275\u0275listener("change", function ShellComponent_Conditional_10_Template_input_change_70_listener($event) {
       \u0275\u0275restoreView(_r6);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.onNewChildDocumentSelected($event));
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onNewChildDocumentSelected($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275conditionalCreate(71, ShellComponent_Conditional_6_Conditional_71_Template, 2, 1, "p", 66);
-    \u0275\u0275conditionalCreate(72, ShellComponent_Conditional_6_Conditional_72_Template, 3, 1, "p", 67);
+    \u0275\u0275conditionalCreate(71, ShellComponent_Conditional_10_Conditional_71_Template, 2, 1, "p", 68);
+    \u0275\u0275conditionalCreate(72, ShellComponent_Conditional_10_Conditional_72_Template, 3, 1, "p", 69);
     \u0275\u0275elementEnd();
-    \u0275\u0275conditionalCreate(73, ShellComponent_Conditional_6_Conditional_73_Template, 4, 2, "div");
-    \u0275\u0275elementStart(74, "div")(75, "label", 39);
+    \u0275\u0275conditionalCreate(73, ShellComponent_Conditional_10_Conditional_73_Template, 4, 2, "div");
+    \u0275\u0275elementStart(74, "div")(75, "label", 41);
     \u0275\u0275text(76);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(77, "input", 68);
-    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_6_Template_input_ngModelChange_77_listener($event) {
+    \u0275\u0275elementStart(77, "input", 70);
+    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_10_Template_input_ngModelChange_77_listener($event) {
       \u0275\u0275restoreView(_r6);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.newChildDeliveryDoctor, $event) || (ctx_r1.newChildDeliveryDoctor = $event);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.newChildDeliveryDoctor, $event) || (ctx_r0.newChildDeliveryDoctor = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(78, "div", 69)(79, "button", 70);
-    \u0275\u0275listener("click", function ShellComponent_Conditional_6_Template_button_click_79_listener() {
+    \u0275\u0275elementStart(78, "div", 71)(79, "button", 72);
+    \u0275\u0275listener("click", function ShellComponent_Conditional_10_Template_button_click_79_listener() {
       \u0275\u0275restoreView(_r6);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.submitNewChild());
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.submitNewChild());
     });
-    \u0275\u0275element(80, "lucide-icon", 71);
+    \u0275\u0275element(80, "lucide-icon", 73);
     \u0275\u0275text(81);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(82, "button", 72);
-    \u0275\u0275listener("click", function ShellComponent_Conditional_6_Template_button_click_82_listener() {
+    \u0275\u0275elementStart(82, "button", 74);
+    \u0275\u0275listener("click", function ShellComponent_Conditional_10_Template_button_click_82_listener() {
       \u0275\u0275restoreView(_r6);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.cancelAddChild());
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.cancelAddChild());
     });
     \u0275\u0275text(83);
     \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext();
+    const ctx_r0 = \u0275\u0275nextContext();
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.t()["child.addNew"], " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["child.addNew"], " ");
     \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["child.fullName"]);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["child.fullName"]);
     \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.newChildName);
-    \u0275\u0275property("ngClass", ctx_r1.addNameInvalid() ? "border-red-400 focus:ring-4 focus:ring-red-500/10 focus:border-red-500" : "border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500")("placeholder", ctx_r1.i18n.t()["placeholder.fullName"]);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.newChildName);
+    \u0275\u0275property("ngClass", ctx_r0.addNameInvalid() ? "border-red-400 focus:ring-4 focus:ring-red-500/10 focus:border-red-500" : "border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500")("placeholder", ctx_r0.i18n.t()["placeholder.fullName"]);
     \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r1.addNameInvalid() ? 9 : -1);
+    \u0275\u0275conditional(ctx_r0.addNameInvalid() ? 9 : -1);
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["child.dateOfBirth"]);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["child.dateOfBirth"]);
     \u0275\u0275advance(2);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.newChildDob);
-    \u0275\u0275property("placeholder", ctx_r1.i18n.locale() === "sq" ? "DD/MM/YYYY" : "MM/DD/YYYY");
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.newChildDob);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.locale() === "sq" ? "DD/MM/YYYY" : "MM/DD/YYYY");
     \u0275\u0275advance(6);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["child.birthWeight"]);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["child.birthWeight"]);
     \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.newChildBirthWeight);
-    \u0275\u0275property("placeholder", ctx_r1.i18n.t()["placeholder.birthWeight"]);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.newChildBirthWeight);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.t()["placeholder.birthWeight"]);
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["child.bloodType"]);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["child.bloodType"]);
     \u0275\u0275advance(2);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.newChildBloodType);
-    \u0275\u0275property("ngClass", ctx_r1.newChildBloodType ? "border-teal-300 text-gray-800 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500" : "border-slate-200 text-gray-600 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500");
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.newChildBloodType);
+    \u0275\u0275property("ngClass", ctx_r0.newChildBloodType ? "border-teal-300 text-gray-800 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500" : "border-slate-200 text-gray-600 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500");
     \u0275\u0275advance(19);
-    \u0275\u0275conditional(ctx_r1.newChildBloodType ? 45 : -1);
+    \u0275\u0275conditional(ctx_r0.newChildBloodType ? 45 : -1);
     \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.t()["child.gender"], " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["child.gender"], " ");
     \u0275\u0275advance(2);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.newChildGender);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.newChildGender);
     \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.isSq() ? "Mashkull" : "Male");
+    \u0275\u0275textInterpolate(ctx_r0.i18n.isSq() ? "Mashkull" : "Male");
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.isSq() ? "Femer" : "Female");
+    \u0275\u0275textInterpolate(ctx_r0.i18n.isSq() ? "Femer" : "Female");
     \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["child.criticalAllergies"]);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["child.criticalAllergies"]);
     \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.newChildAllergies);
-    \u0275\u0275property("placeholder", ctx_r1.i18n.t()["placeholder.allergies"]);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.newChildAllergies);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.t()["placeholder.allergies"]);
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["child.medicalNotes"]);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["child.medicalNotes"]);
     \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.newChildMedicalNotes);
-    \u0275\u0275property("placeholder", ctx_r1.i18n.t()["placeholder.medicalNotes"]);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.newChildMedicalNotes);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.t()["placeholder.medicalNotes"]);
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["child.medicalDocument"]);
-    \u0275\u0275advance(2);
-    \u0275\u0275conditional(ctx_r1.newChildDocumentError() ? 71 : -1);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["child.medicalDocument"]);
     \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r1.newChildDocument() ? 72 : -1);
+    \u0275\u0275attribute("aria-label", ctx_r0.i18n.t()["child.medicalDocument"]);
     \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r1.newChildDocument() ? 73 : -1);
+    \u0275\u0275conditional(ctx_r0.newChildDocumentError() ? 71 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.newChildDocument() ? 72 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.newChildDocument() ? 73 : -1);
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["child.deliveryDoctor"]);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["child.deliveryDoctor"]);
     \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.newChildDeliveryDoctor);
-    \u0275\u0275property("placeholder", ctx_r1.i18n.t()["placeholder.deliveryDoctor"]);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.newChildDeliveryDoctor);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.t()["placeholder.deliveryDoctor"]);
     \u0275\u0275advance(2);
-    \u0275\u0275property("disabled", ctx_r1.addNameInvalid() && ctx_r1.newChildName.length > 0);
+    \u0275\u0275property("disabled", ctx_r0.addNameInvalid() && ctx_r0.newChildName.length > 0);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.t()["child.saveProfile"], " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["child.saveProfile"], " ");
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["child.cancel"]);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["child.cancel"]);
   }
 }
-function ShellComponent_Conditional_7_Case_1_Template(rf, ctx) {
+function ShellComponent_Conditional_11_Case_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "app-home");
   }
 }
-function ShellComponent_Conditional_7_Case_2_Template(rf, ctx) {
+function ShellComponent_Conditional_11_Case_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "app-diary");
   }
 }
-function ShellComponent_Conditional_7_Case_3_Template(rf, ctx) {
+function ShellComponent_Conditional_11_Case_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "app-temperature-diary");
   }
 }
-function ShellComponent_Conditional_7_Case_4_Template(rf, ctx) {
+function ShellComponent_Conditional_11_Case_4_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "app-growth-tracking");
   }
 }
-function ShellComponent_Conditional_7_Case_5_Template(rf, ctx) {
+function ShellComponent_Conditional_11_Case_5_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "app-records");
   }
 }
-function ShellComponent_Conditional_7_Case_6_Template(rf, ctx) {
+function ShellComponent_Conditional_11_Case_6_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "app-vaccines");
   }
 }
-function ShellComponent_Conditional_7_Case_7_Template(rf, ctx) {
+function ShellComponent_Conditional_11_Case_7_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "app-medications");
+  }
+}
+function ShellComponent_Conditional_11_Case_8_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "app-appointments");
+  }
+}
+function ShellComponent_Conditional_11_Case_9_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "app-lab-results");
+  }
+}
+function ShellComponent_Conditional_11_Case_10_Template(rf, ctx) {
   if (rf & 1) {
     const _r8 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "app-settings-page", 76);
-    \u0275\u0275listener("openEditChild", function ShellComponent_Conditional_7_Case_7_Template_app_settings_page_openEditChild_0_listener($event) {
+    \u0275\u0275elementStart(0, "app-settings-page", 78);
+    \u0275\u0275listener("openEditChild", function ShellComponent_Conditional_11_Case_10_Template_app_settings_page_openEditChild_0_listener($event) {
       \u0275\u0275restoreView(_r8);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r1.openEditModal($event));
-    })("openAddChild", function ShellComponent_Conditional_7_Case_7_Template_app_settings_page_openAddChild_0_listener() {
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.openEditModal($event));
+    })("openAddChild", function ShellComponent_Conditional_11_Case_10_Template_app_settings_page_openAddChild_0_listener() {
       \u0275\u0275restoreView(_r8);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r1.isAddingChild.set(true));
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.isAddingChild.set(true));
     });
     \u0275\u0275elementEnd();
   }
 }
-function ShellComponent_Conditional_7_Template(rf, ctx) {
+function ShellComponent_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 6);
-    \u0275\u0275conditionalCreate(1, ShellComponent_Conditional_7_Case_1_Template, 1, 0, "app-home")(2, ShellComponent_Conditional_7_Case_2_Template, 1, 0, "app-diary")(3, ShellComponent_Conditional_7_Case_3_Template, 1, 0, "app-temperature-diary")(4, ShellComponent_Conditional_7_Case_4_Template, 1, 0, "app-growth-tracking")(5, ShellComponent_Conditional_7_Case_5_Template, 1, 0, "app-records")(6, ShellComponent_Conditional_7_Case_6_Template, 1, 0, "app-vaccines")(7, ShellComponent_Conditional_7_Case_7_Template, 1, 0, "app-settings-page");
+    \u0275\u0275elementStart(0, "div", 8);
+    \u0275\u0275conditionalCreate(1, ShellComponent_Conditional_11_Case_1_Template, 1, 0, "app-home")(2, ShellComponent_Conditional_11_Case_2_Template, 1, 0, "app-diary")(3, ShellComponent_Conditional_11_Case_3_Template, 1, 0, "app-temperature-diary")(4, ShellComponent_Conditional_11_Case_4_Template, 1, 0, "app-growth-tracking")(5, ShellComponent_Conditional_11_Case_5_Template, 1, 0, "app-records")(6, ShellComponent_Conditional_11_Case_6_Template, 1, 0, "app-vaccines")(7, ShellComponent_Conditional_11_Case_7_Template, 1, 0, "app-medications")(8, ShellComponent_Conditional_11_Case_8_Template, 1, 0, "app-appointments")(9, ShellComponent_Conditional_11_Case_9_Template, 1, 0, "app-lab-results")(10, ShellComponent_Conditional_11_Case_10_Template, 1, 0, "app-settings-page");
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
     let tmp_1_0;
-    const ctx_r1 = \u0275\u0275nextContext();
+    const ctx_r0 = \u0275\u0275nextContext();
     \u0275\u0275advance();
-    \u0275\u0275conditional((tmp_1_0 = ctx_r1.currentTab()) === "home" ? 1 : tmp_1_0 === "diary" ? 2 : tmp_1_0 === "temperature" ? 3 : tmp_1_0 === "growth" ? 4 : tmp_1_0 === "records" ? 5 : tmp_1_0 === "vaccines" ? 6 : tmp_1_0 === "settings" ? 7 : -1);
+    \u0275\u0275conditional((tmp_1_0 = ctx_r0.currentTab()) === "home" ? 1 : tmp_1_0 === "diary" ? 2 : tmp_1_0 === "temperature" ? 3 : tmp_1_0 === "growth" ? 4 : tmp_1_0 === "records" ? 5 : tmp_1_0 === "vaccines" ? 6 : tmp_1_0 === "medications" ? 7 : tmp_1_0 === "appointments" ? 8 : tmp_1_0 === "lab-results" ? 9 : tmp_1_0 === "settings" ? 10 : -1);
   }
 }
-function ShellComponent_Conditional_9_Template(rf, ctx) {
+function ShellComponent_Conditional_13_Template(rf, ctx) {
   if (rf & 1) {
     const _r9 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "app-add-edit-child-modal", 77);
-    \u0275\u0275listener("saved", function ShellComponent_Conditional_9_Template_app_add_edit_child_modal_saved_0_listener($event) {
+    \u0275\u0275elementStart(0, "app-add-edit-child-modal", 79);
+    \u0275\u0275listener("saved", function ShellComponent_Conditional_13_Template_app_add_edit_child_modal_saved_0_listener($event) {
       \u0275\u0275restoreView(_r9);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.onChildSaved($event));
-    })("cancelled", function ShellComponent_Conditional_9_Template_app_add_edit_child_modal_cancelled_0_listener() {
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onChildSaved($event));
+    })("cancelled", function ShellComponent_Conditional_13_Template_app_add_edit_child_modal_cancelled_0_listener() {
       \u0275\u0275restoreView(_r9);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.closeModal());
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.closeModal());
     });
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext();
-    \u0275\u0275property("mode", ctx_r1.isAddingChild() ? "add" : "edit")("child", ctx_r1.editingChild() ?? void 0);
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275property("mode", ctx_r0.isAddingChild() ? "add" : "edit")("child", ctx_r0.editingChild() ?? void 0);
   }
 }
-function ShellComponent_Conditional_10_Conditional_17_Template(rf, ctx) {
+function ShellComponent_Conditional_14_Conditional_17_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "lucide-icon", 90);
+    \u0275\u0275element(0, "lucide-icon", 92);
   }
 }
-function ShellComponent_Conditional_10_Conditional_18_Template(rf, ctx) {
+function ShellComponent_Conditional_14_Conditional_18_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 41);
-    \u0275\u0275element(1, "lucide-icon", 73);
+    \u0275\u0275elementStart(0, "p", 43);
+    \u0275\u0275element(1, "lucide-icon", 75);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
+    const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.isSq() ? "Emri mund t\xEB p\xEBrmbaj\xEB vet\xEBm shkronja." : "Name can only contain letters.", " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.isSq() ? "Emri mund t\xEB p\xEBrmbaj\xEB vet\xEBm shkronja." : "Name can only contain letters.", " ");
   }
 }
-function ShellComponent_Conditional_10_Conditional_49_Template(rf, ctx) {
+function ShellComponent_Conditional_14_Conditional_49_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 93);
-    \u0275\u0275element(1, "lucide-icon", 58);
+    \u0275\u0275elementStart(0, "span", 95);
+    \u0275\u0275element(1, "lucide-icon", 60);
     \u0275\u0275elementEnd();
   }
 }
-function ShellComponent_Conditional_10_Conditional_51_Template(rf, ctx) {
+function ShellComponent_Conditional_14_Conditional_51_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 94);
-    \u0275\u0275element(1, "lucide-icon", 58);
+    \u0275\u0275elementStart(0, "p", 96);
+    \u0275\u0275element(1, "lucide-icon", 60);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
+    const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.isSq() ? "Grupi i gjakut u verifikua." : "Blood type verified.", " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.isSq() ? "Grupi i gjakut u verifikua." : "Blood type verified.", " ");
   }
 }
-function ShellComponent_Conditional_10_Conditional_84_Template(rf, ctx) {
+function ShellComponent_Conditional_14_Conditional_84_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 66);
+    \u0275\u0275elementStart(0, "p", 68);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
+    const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(ctx_r1.documentError());
+    \u0275\u0275textInterpolate(ctx_r0.documentError());
   }
 }
-function ShellComponent_Conditional_10_Conditional_85_Template(rf, ctx) {
+function ShellComponent_Conditional_14_Conditional_85_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 67);
-    \u0275\u0275element(1, "lucide-icon", 74);
+    \u0275\u0275elementStart(0, "p", 69);
+    \u0275\u0275element(1, "lucide-icon", 76);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
+    const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.t()["child.documentAttached"]);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["child.documentAttached"]);
   }
 }
-function ShellComponent_Conditional_10_Conditional_86_Template(rf, ctx) {
+function ShellComponent_Conditional_14_Conditional_86_Template(rf, ctx) {
   if (rf & 1) {
     const _r11 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div")(1, "label", 39);
+    \u0275\u0275elementStart(0, "div")(1, "label", 41);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "input", 75);
-    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_10_Conditional_86_Template_input_ngModelChange_3_listener($event) {
+    \u0275\u0275elementStart(3, "input", 77);
+    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_14_Conditional_86_Template_input_ngModelChange_3_listener($event) {
       \u0275\u0275restoreView(_r11);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      \u0275\u0275twoWayBindingSet(ctx_r1.editChildDocumentDate, $event) || (ctx_r1.editChildDocumentDate = $event);
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      \u0275\u0275twoWayBindingSet(ctx_r0.editChildDocumentDate, $event) || (ctx_r0.editChildDocumentDate = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
+    const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["child.documentIssueDate"]);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["child.documentIssueDate"]);
     \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.editChildDocumentDate);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.editChildDocumentDate);
   }
 }
-function ShellComponent_Conditional_10_Conditional_88_Template(rf, ctx) {
+function ShellComponent_Conditional_14_Conditional_88_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 99);
-    \u0275\u0275element(1, "lucide-icon", 74);
+    \u0275\u0275elementStart(0, "div", 101);
+    \u0275\u0275element(1, "lucide-icon", 76);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
+    const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.isSq() ? "Ndryshimet u ruajt\xEBn!" : "Changes saved!", " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.isSq() ? "Ndryshimet u ruajt\xEBn!" : "Changes saved!", " ");
   }
 }
-function ShellComponent_Conditional_10_Conditional_90_Template(rf, ctx) {
+function ShellComponent_Conditional_14_Conditional_90_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "lucide-icon", 104);
+    \u0275\u0275element(0, "lucide-icon", 106);
+    \u0275\u0275elementStart(1, "span");
+    \u0275\u0275text(2);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.isSq() ? "Duke ruajtur..." : "Saving...");
+  }
+}
+function ShellComponent_Conditional_14_Conditional_91_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "lucide-icon", 73);
     \u0275\u0275text(1);
   }
   if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
+    const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.isSq() ? "Duke ruajtur..." : "Saving...", " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["sidebar.saveChanges"], " ");
   }
 }
-function ShellComponent_Conditional_10_Conditional_91_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275element(0, "lucide-icon", 71);
-    \u0275\u0275text(1);
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.t()["sidebar.saveChanges"], " ");
-  }
-}
-function ShellComponent_Conditional_10_Conditional_95_Template(rf, ctx) {
+function ShellComponent_Conditional_14_Conditional_95_Template(rf, ctx) {
   if (rf & 1) {
     const _r12 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 103)(1, "div", 105)(2, "div", 106);
-    \u0275\u0275element(3, "lucide-icon", 107);
+    \u0275\u0275elementStart(0, "div", 105)(1, "div", 107)(2, "div", 108);
+    \u0275\u0275element(3, "lucide-icon", 109);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(4, "div")(5, "p", 108);
+    \u0275\u0275elementStart(4, "div")(5, "p", 110);
     \u0275\u0275text(6);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "p", 109);
+    \u0275\u0275elementStart(7, "p", 111);
     \u0275\u0275text(8);
     \u0275\u0275elementEnd()()();
-    \u0275\u0275elementStart(9, "p", 110);
+    \u0275\u0275elementStart(9, "p", 112);
     \u0275\u0275text(10);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(11, "div", 111)(12, "button", 112);
-    \u0275\u0275listener("click", function ShellComponent_Conditional_10_Conditional_95_Template_button_click_12_listener() {
+    \u0275\u0275elementStart(11, "div", 113)(12, "button", 114);
+    \u0275\u0275listener("click", function ShellComponent_Conditional_14_Conditional_95_Template_button_click_12_listener() {
       \u0275\u0275restoreView(_r12);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r1.showDeleteConfirm.set(false));
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.showDeleteConfirm.set(false));
     });
     \u0275\u0275text(13);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(14, "button", 113);
-    \u0275\u0275listener("click", function ShellComponent_Conditional_10_Conditional_95_Template_button_click_14_listener() {
+    \u0275\u0275elementStart(14, "button", 115);
+    \u0275\u0275listener("click", function ShellComponent_Conditional_14_Conditional_95_Template_button_click_14_listener() {
       \u0275\u0275restoreView(_r12);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r1.confirmDeleteChild());
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.confirmDeleteChild());
     });
-    \u0275\u0275element(15, "lucide-icon", 114);
+    \u0275\u0275element(15, "lucide-icon", 116);
     \u0275\u0275text(16);
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
     let tmp_3_0;
-    const ctx_r1 = \u0275\u0275nextContext(2);
+    const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance(6);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.isSq() ? "Fshi profilin e f\xEBmij\xEBs?" : "Delete child profile?");
+    \u0275\u0275textInterpolate(ctx_r0.i18n.isSq() ? "Fshi profilin e f\xEBmij\xEBs?" : "Delete child profile?");
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate((tmp_3_0 = ctx_r1.editingChild()) == null ? null : tmp_3_0.name);
+    \u0275\u0275textInterpolate((tmp_3_0 = ctx_r0.editingChild()) == null ? null : tmp_3_0.name);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.isSq() ? "Ky veprim nuk mund t\xEB kthehet. T\xEB gjitha t\xEB dh\xEBnat do t\xEB fshihen p\xEBrgjithmon\xEB." : "This action cannot be undone. All data will be permanently deleted.");
+    \u0275\u0275textInterpolate(ctx_r0.i18n.isSq() ? "Ky veprim nuk mund t\xEB kthehet. T\xEB gjitha t\xEB dh\xEBnat do t\xEB fshihen p\xEBrgjithmon\xEB." : "This action cannot be undone. All data will be permanently deleted.");
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.isSq() ? "Anulo" : "Cancel", " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.isSq() ? "Anulo" : "Cancel", " ");
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.isSq() ? "Fshi" : "Delete", " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.isSq() ? "Fshi" : "Delete", " ");
   }
 }
-function ShellComponent_Conditional_10_Template(rf, ctx) {
+function ShellComponent_Conditional_14_Template(rf, ctx) {
   if (rf & 1) {
     const _r10 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 8)(1, "div", 78);
-    \u0275\u0275listener("click", function ShellComponent_Conditional_10_Template_div_click_1_listener() {
+    \u0275\u0275elementStart(0, "div", 10)(1, "div", 80);
+    \u0275\u0275listener("click", function ShellComponent_Conditional_14_Template_div_click_1_listener() {
       \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.closeEditModal());
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.closeEditModal());
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "div", 79);
-    \u0275\u0275element(3, "div", 80);
-    \u0275\u0275elementStart(4, "div", 81)(5, "div", 82)(6, "h2", 83);
-    \u0275\u0275element(7, "lucide-icon", 84);
+    \u0275\u0275elementStart(2, "div", 81);
+    \u0275\u0275element(3, "div", 82);
+    \u0275\u0275elementStart(4, "div", 83)(5, "div", 84)(6, "h2", 85);
+    \u0275\u0275element(7, "lucide-icon", 86);
     \u0275\u0275text(8);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "button", 85);
-    \u0275\u0275listener("click", function ShellComponent_Conditional_10_Template_button_click_9_listener() {
+    \u0275\u0275elementStart(9, "button", 87);
+    \u0275\u0275listener("click", function ShellComponent_Conditional_14_Template_button_click_9_listener() {
       \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.closeEditModal());
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.closeEditModal());
     });
-    \u0275\u0275element(10, "lucide-icon", 86);
+    \u0275\u0275element(10, "lucide-icon", 88);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(11, "div", 87)(12, "div")(13, "label", 88);
+    \u0275\u0275elementStart(11, "div", 89)(12, "div")(13, "label", 90);
     \u0275\u0275text(14);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(15, "div", 42)(16, "input", 89);
-    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_10_Template_input_ngModelChange_16_listener($event) {
+    \u0275\u0275elementStart(15, "div", 44)(16, "input", 91);
+    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_14_Template_input_ngModelChange_16_listener($event) {
       \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.editName, $event) || (ctx_r1.editName = $event);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.editName, $event) || (ctx_r0.editName = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("input", function ShellComponent_Conditional_10_Template_input_input_16_listener($event) {
+    \u0275\u0275listener("input", function ShellComponent_Conditional_14_Template_input_input_16_listener($event) {
       \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.onEditNameInput($event));
-    })("blur", function ShellComponent_Conditional_10_Template_input_blur_16_listener() {
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onEditNameInput($event));
+    })("blur", function ShellComponent_Conditional_14_Template_input_blur_16_listener() {
       \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.onEditNameBlur());
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onEditNameBlur());
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275conditionalCreate(17, ShellComponent_Conditional_10_Conditional_17_Template, 1, 0, "lucide-icon", 90);
+    \u0275\u0275conditionalCreate(17, ShellComponent_Conditional_14_Conditional_17_Template, 1, 0, "lucide-icon", 92);
     \u0275\u0275elementEnd();
-    \u0275\u0275conditionalCreate(18, ShellComponent_Conditional_10_Conditional_18_Template, 3, 1, "p", 41);
+    \u0275\u0275conditionalCreate(18, ShellComponent_Conditional_14_Conditional_18_Template, 3, 1, "p", 43);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(19, "div")(20, "label", 88);
+    \u0275\u0275elementStart(19, "div")(20, "label", 90);
     \u0275\u0275text(21);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(22, "div", 42)(23, "input", 91);
-    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_10_Template_input_ngModelChange_23_listener($event) {
+    \u0275\u0275elementStart(22, "div", 44)(23, "input", 93);
+    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_14_Template_input_ngModelChange_23_listener($event) {
       \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.editDob, $event) || (ctx_r1.editDob = $event);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.editDob, $event) || (ctx_r0.editDob = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("input", function ShellComponent_Conditional_10_Template_input_input_23_listener($event) {
+    \u0275\u0275listener("input", function ShellComponent_Conditional_14_Template_input_input_23_listener($event) {
       \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.onDateInput($event, (v) => ctx_r1.editDob = v, ctx_r1.i18n.locale()));
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onDateInput($event, (v) => ctx_r0.editDob = v, ctx_r0.i18n.locale()));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(24, "button", 44);
-    \u0275\u0275element(25, "lucide-icon", 45);
+    \u0275\u0275elementStart(24, "button", 46);
+    \u0275\u0275element(25, "lucide-icon", 47);
     \u0275\u0275elementEnd()()();
-    \u0275\u0275elementStart(26, "div")(27, "label", 88);
+    \u0275\u0275elementStart(26, "div")(27, "label", 90);
     \u0275\u0275text(28);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(29, "div", 42)(30, "select", 92);
-    \u0275\u0275listener("ngModelChange", function ShellComponent_Conditional_10_Template_select_ngModelChange_30_listener($event) {
+    \u0275\u0275elementStart(29, "div", 44)(30, "select", 94);
+    \u0275\u0275listener("ngModelChange", function ShellComponent_Conditional_14_Template_select_ngModelChange_30_listener($event) {
       \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.editBloodType.set($event));
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.editBloodType.set($event));
     });
-    \u0275\u0275elementStart(31, "option", 49);
+    \u0275\u0275elementStart(31, "option", 51);
     \u0275\u0275text(32, "--");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(33, "option", 50);
+    \u0275\u0275elementStart(33, "option", 52);
     \u0275\u0275text(34, "A+");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(35, "option", 51);
+    \u0275\u0275elementStart(35, "option", 53);
     \u0275\u0275text(36, "A-");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(37, "option", 52);
+    \u0275\u0275elementStart(37, "option", 54);
     \u0275\u0275text(38, "B+");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(39, "option", 53);
+    \u0275\u0275elementStart(39, "option", 55);
     \u0275\u0275text(40, "B-");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(41, "option", 54);
+    \u0275\u0275elementStart(41, "option", 56);
     \u0275\u0275text(42, "AB+");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(43, "option", 55);
+    \u0275\u0275elementStart(43, "option", 57);
     \u0275\u0275text(44, "AB-");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(45, "option", 56);
+    \u0275\u0275elementStart(45, "option", 58);
     \u0275\u0275text(46, "O+");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(47, "option", 57);
+    \u0275\u0275elementStart(47, "option", 59);
     \u0275\u0275text(48, "O-");
     \u0275\u0275elementEnd()();
-    \u0275\u0275conditionalCreate(49, ShellComponent_Conditional_10_Conditional_49_Template, 2, 0, "span", 93);
-    \u0275\u0275element(50, "lucide-icon", 59);
+    \u0275\u0275conditionalCreate(49, ShellComponent_Conditional_14_Conditional_49_Template, 2, 0, "span", 95);
+    \u0275\u0275element(50, "lucide-icon", 61);
     \u0275\u0275elementEnd();
-    \u0275\u0275conditionalCreate(51, ShellComponent_Conditional_10_Conditional_51_Template, 3, 1, "p", 94);
+    \u0275\u0275conditionalCreate(51, ShellComponent_Conditional_14_Conditional_51_Template, 3, 1, "p", 96);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(52, "div")(53, "label", 88);
+    \u0275\u0275elementStart(52, "div")(53, "label", 90);
     \u0275\u0275text(54);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(55, "div", 42)(56, "select", 95);
-    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_10_Template_select_ngModelChange_56_listener($event) {
+    \u0275\u0275elementStart(55, "div", 44)(56, "select", 97);
+    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_14_Template_select_ngModelChange_56_listener($event) {
       \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.editGender, $event) || (ctx_r1.editGender = $event);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.editGender, $event) || (ctx_r0.editGender = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275elementStart(57, "option", 49);
+    \u0275\u0275elementStart(57, "option", 51);
     \u0275\u0275text(58, "--");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(59, "option", 61);
+    \u0275\u0275elementStart(59, "option", 63);
     \u0275\u0275text(60);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(61, "option", 62);
+    \u0275\u0275elementStart(61, "option", 64);
     \u0275\u0275text(62);
     \u0275\u0275elementEnd()();
-    \u0275\u0275element(63, "lucide-icon", 59);
+    \u0275\u0275element(63, "lucide-icon", 61);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(64, "div")(65, "label", 88);
+    \u0275\u0275elementStart(64, "div")(65, "label", 90);
     \u0275\u0275text(66);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(67, "input", 96);
-    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_10_Template_input_ngModelChange_67_listener($event) {
+    \u0275\u0275elementStart(67, "input", 98);
+    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_14_Template_input_ngModelChange_67_listener($event) {
       \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.editBirthWeight, $event) || (ctx_r1.editBirthWeight = $event);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.editBirthWeight, $event) || (ctx_r0.editBirthWeight = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(68, "div")(69, "label", 88);
+    \u0275\u0275elementStart(68, "div")(69, "label", 90);
     \u0275\u0275text(70);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(71, "input", 97);
-    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_10_Template_input_ngModelChange_71_listener($event) {
+    \u0275\u0275elementStart(71, "input", 99);
+    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_14_Template_input_ngModelChange_71_listener($event) {
       \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.editDeliveryDoctor, $event) || (ctx_r1.editDeliveryDoctor = $event);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.editDeliveryDoctor, $event) || (ctx_r0.editDeliveryDoctor = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(72, "div")(73, "label", 39);
+    \u0275\u0275elementStart(72, "div")(73, "label", 41);
     \u0275\u0275text(74);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(75, "textarea", 63);
-    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_10_Template_textarea_ngModelChange_75_listener($event) {
+    \u0275\u0275elementStart(75, "textarea", 65);
+    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_14_Template_textarea_ngModelChange_75_listener($event) {
       \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.editChildAllergies, $event) || (ctx_r1.editChildAllergies = $event);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.editChildAllergies, $event) || (ctx_r0.editChildAllergies = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(76, "div")(77, "label", 39);
+    \u0275\u0275elementStart(76, "div")(77, "label", 41);
     \u0275\u0275text(78);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(79, "textarea", 64);
-    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_10_Template_textarea_ngModelChange_79_listener($event) {
+    \u0275\u0275elementStart(79, "textarea", 66);
+    \u0275\u0275twoWayListener("ngModelChange", function ShellComponent_Conditional_14_Template_textarea_ngModelChange_79_listener($event) {
       \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.editChildMedicalNotes, $event) || (ctx_r1.editChildMedicalNotes = $event);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.editChildMedicalNotes, $event) || (ctx_r0.editChildMedicalNotes = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(80, "div")(81, "label", 39);
+    \u0275\u0275elementStart(80, "div")(81, "label", 41);
     \u0275\u0275text(82);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(83, "input", 65);
-    \u0275\u0275listener("change", function ShellComponent_Conditional_10_Template_input_change_83_listener($event) {
+    \u0275\u0275elementStart(83, "input", 67);
+    \u0275\u0275listener("change", function ShellComponent_Conditional_14_Template_input_change_83_listener($event) {
       \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.onDocumentSelected($event));
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onDocumentSelected($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275conditionalCreate(84, ShellComponent_Conditional_10_Conditional_84_Template, 2, 1, "p", 66);
-    \u0275\u0275conditionalCreate(85, ShellComponent_Conditional_10_Conditional_85_Template, 3, 1, "p", 67);
+    \u0275\u0275conditionalCreate(84, ShellComponent_Conditional_14_Conditional_84_Template, 2, 1, "p", 68);
+    \u0275\u0275conditionalCreate(85, ShellComponent_Conditional_14_Conditional_85_Template, 3, 1, "p", 69);
     \u0275\u0275elementEnd();
-    \u0275\u0275conditionalCreate(86, ShellComponent_Conditional_10_Conditional_86_Template, 4, 2, "div");
-    \u0275\u0275elementStart(87, "div", 98);
-    \u0275\u0275conditionalCreate(88, ShellComponent_Conditional_10_Conditional_88_Template, 3, 1, "div", 99);
-    \u0275\u0275elementStart(89, "button", 100);
-    \u0275\u0275listener("click", function ShellComponent_Conditional_10_Template_button_click_89_listener() {
+    \u0275\u0275conditionalCreate(86, ShellComponent_Conditional_14_Conditional_86_Template, 4, 2, "div");
+    \u0275\u0275elementStart(87, "div", 100);
+    \u0275\u0275conditionalCreate(88, ShellComponent_Conditional_14_Conditional_88_Template, 3, 1, "div", 101);
+    \u0275\u0275elementStart(89, "button", 102);
+    \u0275\u0275listener("click", function ShellComponent_Conditional_14_Template_button_click_89_listener() {
       \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.saveEditChild());
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.saveEditChild());
     });
-    \u0275\u0275conditionalCreate(90, ShellComponent_Conditional_10_Conditional_90_Template, 2, 1)(91, ShellComponent_Conditional_10_Conditional_91_Template, 2, 1);
+    \u0275\u0275conditionalCreate(90, ShellComponent_Conditional_14_Conditional_90_Template, 3, 1)(91, ShellComponent_Conditional_14_Conditional_91_Template, 2, 1);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(92, "button", 101);
-    \u0275\u0275listener("click", function ShellComponent_Conditional_10_Template_button_click_92_listener() {
+    \u0275\u0275elementStart(92, "button", 103);
+    \u0275\u0275listener("click", function ShellComponent_Conditional_14_Template_button_click_92_listener() {
       \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.showDeleteConfirm.set(true));
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.showDeleteConfirm.set(true));
     });
-    \u0275\u0275element(93, "lucide-icon", 102);
+    \u0275\u0275element(93, "lucide-icon", 104);
     \u0275\u0275text(94);
     \u0275\u0275elementEnd()();
-    \u0275\u0275conditionalCreate(95, ShellComponent_Conditional_10_Conditional_95_Template, 17, 5, "div", 103);
+    \u0275\u0275conditionalCreate(95, ShellComponent_Conditional_14_Conditional_95_Template, 17, 5, "div", 105);
     \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext();
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275attribute("aria-labelledby", "edit-child-title");
     \u0275\u0275advance(8);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.t()["child.editProfile"], " ");
-    \u0275\u0275advance(6);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.t()["child.fullName"], " ");
-    \u0275\u0275advance(2);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.editName);
-    \u0275\u0275property("ngClass", ctx_r1.editNameInvalid() ? "border-red-400 focus:ring-4 focus:ring-red-500/10 focus:border-red-500" : "border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["child.editProfile"], " ");
     \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r1.editNameInvalid() ? 17 : -1);
-    \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r1.editNameInvalid() ? 18 : -1);
-    \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.t()["child.dateOfBirth"], " ");
-    \u0275\u0275advance(2);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.editDob);
-    \u0275\u0275property("placeholder", ctx_r1.i18n.locale() === "sq" ? "DD/MM/YYYY" : "MM/DD/YYYY");
+    \u0275\u0275ariaProperty("aria-label", \u0275\u0275interpolate(ctx_r0.i18n.t()["child.cancel"]));
     \u0275\u0275advance(5);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.t()["child.bloodType"], " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["child.fullName"], " ");
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngModel", ctx_r1.editBloodType())("ngClass", ctx_r1.editBloodType() ? "border-teal-300 text-gray-800 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500" : "border-slate-200 text-gray-600 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500");
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.editName);
+    \u0275\u0275property("ngClass", ctx_r0.editNameInvalid() ? "border-red-400 focus:ring-4 focus:ring-red-500/10 focus:border-red-500" : "border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500");
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.editNameInvalid() ? 17 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.editNameInvalid() ? 18 : -1);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["child.dateOfBirth"], " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.editDob);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.locale() === "sq" ? "DD/MM/YYYY" : "MM/DD/YYYY");
+    \u0275\u0275advance(5);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["child.bloodType"], " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275property("ngModel", ctx_r0.editBloodType())("ngClass", ctx_r0.editBloodType() ? "border-teal-300 text-gray-800 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500" : "border-slate-200 text-gray-600 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500");
     \u0275\u0275advance(19);
-    \u0275\u0275conditional(ctx_r1.editBloodType() ? 49 : -1);
+    \u0275\u0275conditional(ctx_r0.editBloodType() ? 49 : -1);
     \u0275\u0275advance(2);
-    \u0275\u0275conditional(ctx_r1.editBloodType() ? 51 : -1);
+    \u0275\u0275conditional(ctx_r0.editBloodType() ? 51 : -1);
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.t()["child.gender"], " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["child.gender"], " ");
     \u0275\u0275advance(2);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.editGender);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.editGender);
     \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.isSq() ? "Mashkull" : "Male");
+    \u0275\u0275textInterpolate(ctx_r0.i18n.isSq() ? "Mashkull" : "Male");
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.isSq() ? "Femer" : "Female");
+    \u0275\u0275textInterpolate(ctx_r0.i18n.isSq() ? "Femer" : "Female");
     \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.t()["child.birthWeight"], " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["child.birthWeight"], " ");
     \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.editBirthWeight);
-    \u0275\u0275property("placeholder", ctx_r1.i18n.t()["placeholder.birthWeight"]);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.editBirthWeight);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.t()["placeholder.birthWeight"]);
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.t()["child.deliveryDoctor"], " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["child.deliveryDoctor"], " ");
     \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.editDeliveryDoctor);
-    \u0275\u0275property("placeholder", ctx_r1.i18n.t()["placeholder.deliveryDoctor"]);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.editDeliveryDoctor);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.t()["placeholder.deliveryDoctor"]);
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["child.criticalAllergies"]);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["child.criticalAllergies"]);
     \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.editChildAllergies);
-    \u0275\u0275property("placeholder", ctx_r1.i18n.t()["placeholder.allergies"]);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.editChildAllergies);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.t()["placeholder.allergies"]);
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["child.medicalNotes"]);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["child.medicalNotes"]);
     \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.editChildMedicalNotes);
-    \u0275\u0275property("placeholder", ctx_r1.i18n.t()["placeholder.medicalNotes"]);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.editChildMedicalNotes);
+    \u0275\u0275property("placeholder", ctx_r0.i18n.t()["placeholder.medicalNotes"]);
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["child.medicalDocument"]);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["child.medicalDocument"]);
+    \u0275\u0275advance();
+    \u0275\u0275attribute("aria-label", ctx_r0.i18n.t()["child.medicalDocument"]);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.documentError() ? 84 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.editChildDocument() ? 85 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.editChildDocument() ? 86 : -1);
     \u0275\u0275advance(2);
-    \u0275\u0275conditional(ctx_r1.documentError() ? 84 : -1);
+    \u0275\u0275conditional(ctx_r0.saveSuccess() ? 88 : -1);
     \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r1.editChildDocument() ? 85 : -1);
+    \u0275\u0275property("disabled", ctx_r0.editNameInvalid() || ctx_r0.saving());
     \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r1.editChildDocument() ? 86 : -1);
-    \u0275\u0275advance(2);
-    \u0275\u0275conditional(ctx_r1.saveSuccess() ? 88 : -1);
-    \u0275\u0275advance();
-    \u0275\u0275property("disabled", ctx_r1.editNameInvalid() || ctx_r1.saving());
-    \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r1.saving() ? 90 : 91);
+    \u0275\u0275conditional(ctx_r0.saving() ? 90 : 91);
     \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.t()["sidebar.deleteProfile"], " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["sidebar.deleteProfile"], " ");
     \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r1.showDeleteConfirm() ? 95 : -1);
+    \u0275\u0275conditional(ctx_r0.showDeleteConfirm() ? 95 : -1);
   }
 }
 var ShellComponent = class _ShellComponent {
@@ -55644,6 +60213,7 @@ var ShellComponent = class _ShellComponent {
       { id: "temperature", icon: "thermostat", label: t["nav.temperatureDiary"] },
       { id: "growth", icon: "show_chart", label: t["nav.growthTracking"] },
       { id: "records", icon: "vaccines", label: t["nav.records"] },
+      { id: "medications", icon: "pill", label: t["nav.medications"] },
       { id: "settings", icon: "settings", label: t["nav.settings"] }
     ];
   }
@@ -55906,48 +60476,56 @@ var ShellComponent = class _ShellComponent {
     };
   }
   static {
-    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ShellComponent, selectors: [["app-shell"]], decls: 11, vars: 5, consts: [[1, "h-screen", "flex", "bg-background", "overflow-hidden", "relative", "font-sans"], [1, "hidden", "lg:block"], [1, "flex-1", "flex", "flex-col", "h-screen", "overflow-hidden", "relative", "z-10", "w-full"], [3, "childSwitchRequested", "addChildRequested", "switchProfileRequested", "backRequested", "localeToggleRequested", "currentTab", "viewState"], [1, "flex-1", "overflow-y-auto", "w-full", "px-4", "pt-6", "pb-24", "lg:px-12", "lg:py-10", "bg-slate-50/50", "relative"], [1, "glass", "max-w-3xl", "mx-auto", "rounded-[2rem]", "p-10", "lg:p-14", "animate-slide-up", "shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)]", "border", "border-white"], [1, "animate-fade-in", "h-full"], [3, "mode", "child"], [1, "fixed", "inset-0", "z-50", "flex", "items-center", "justify-center", "p-4"], [1, "h-full", "flex", "flex-col", "items-center", "justify-center", "text-center", "animate-slide-up", "max-w-lg", "mx-auto"], [1, "animate-slide-up"], [1, "w-40", "h-40", "bg-gradient-to-tr", "from-primary-100", "to-teal-50", "text-primary-500", "rounded-full", "flex", "items-center", "justify-center", "mb-10", "shadow-glass", "border", "border-white"], ["name", "party-popper", 1, "opacity-80", 3, "size"], [1, "text-3xl", "lg:text-4xl", "font-extrabold", "text-gray-800", "mb-4", "tracking-tight"], [1, "text-gray-500", "text-lg", "mb-10", "leading-relaxed"], [1, "bg-slate-900", "hover:bg-primary-600", "text-white", "px-10", "py-5", "rounded-2xl", "font-bold", "shadow-[0_10px_20px_rgba(0,0,0,0.1)]", "transition-all", "transform", "hover:-translate-y-1", "flex", "items-center", "gap-3", "text-lg", "w-full", "sm:w-auto", "justify-center", 3, "click"], ["name", "plus", 1, "bg-white/20", "rounded-full", "p-1"], [1, "text-3xl", "font-extrabold", "text-gray-800", "mb-2", "tracking-tight"], [1, "text-gray-500", "text-sm", "mb-10", "font-medium", "leading-relaxed"], [1, "grid", "grid-cols-1", "sm:grid-cols-2", "lg:grid-cols-3", "gap-6"], [1, "bg-white", "rounded-[2rem]", "p-8", "shadow-md", "border", "border-slate-100", "hover:shadow-xl", "hover:border-primary-200", "transition-all", "group", "relative", "card-hover"], [1, "bg-slate-50", "rounded-[2rem]", "p-8", "shadow-md", "border-2", "border-dashed", "border-slate-200", "hover:border-primary-300", "hover:bg-primary-50", "transition-all", "cursor-pointer", "flex", "flex-col", "items-center", "justify-center", "gap-4", "text-center", "group", 3, "click"], [1, "w-16", "h-16", "rounded-full", "bg-slate-100", "group-hover:bg-primary-100", "flex", "items-center", "justify-center", "transition-all"], ["name", "plus", 1, "text-3xl", "text-slate-400", "group-hover:text-primary-500", "transition-colors"], [1, "font-bold", "text-slate-500", "group-hover:text-primary-600", "transition-colors", "text-base"], [1, "absolute", "top-5", "right-5", "w-9", "h-9", "rounded-xl", "bg-slate-50", "hover:bg-primary-50", "border", "border-slate-200", "hover:border-primary-300", "flex", "items-center", "justify-center", "text-slate-400", "hover:text-primary-600", "transition-all", "shadow-sm", 3, "click"], ["name", "pencil", 1, "text-base"], [1, "cursor-pointer", 3, "click"], [1, "flex", "items-center", "gap-5", "mb-5"], [1, "w-16", "h-16", "rounded-full", "border-4", "border-slate-100", "group-hover:border-primary-200", "transition-all", "shadow-sm", 3, "src"], [1, "font-extrabold", "text-xl", "text-gray-800", "group-hover:text-primary-700", "transition-colors"], [1, "text-sm", "text-gray-500", "font-medium"], [1, "flex", "items-center", "gap-2", "text-sm", "text-gray-500", "font-medium"], [1, "mt-5", "bg-gradient-to-r", "from-primary-50", "to-teal-50", "rounded-2xl", "p-4", "flex", "items-center", "justify-center", "gap-2", "text-primary-600", "font-bold", "group-hover:from-primary-100", "group-hover:to-teal-100", "transition-all", "cursor-pointer", 3, "click"], ["name", "log-in", 1, "text-lg"], ["name", "droplet", 1, "text-teal-500", "text-base"], [1, "text-3xl", "font-extrabold", "text-gray-800", "mb-10", "flex", "items-center", "gap-4"], ["name", "user-plus", 1, "text-primary-500", "bg-primary-50", "p-3", "rounded-2xl"], [1, "space-y-8"], [1, "block", "text-sm", "font-bold", "text-primary-700", "mb-3", "ml-1", "tracking-wide", "uppercase", "text-xs"], ["type", "text", 1, "w-full", "px-5", "py-4.5", "rounded-2xl", "bg-white", "border-2", "transition-all", "text-lg", "text-gray-800", "placeholder-gray-300", 3, "ngModelChange", "input", "blur", "ngModel", "ngClass", "placeholder"], [1, "mt-2", "text-sm", "text-red-500", "font-medium", "flex", "items-center", "gap-1"], [1, "relative"], ["type", "text", "maxlength", "10", 1, "w-full", "px-5", "py-4.5", "pr-12", "rounded-2xl", "bg-white", "border-2", "border-slate-200", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-lg", "text-gray-600", "placeholder-gray-300", 3, "ngModelChange", "input", "ngModel", "placeholder"], ["type", "button", "onclick", "this.previousElementSibling.showPicker?.()", 1, "absolute", "right-3", "top-1/2", "-translate-y-1/2", "w-8", "h-8", "flex", "items-center", "justify-center", "rounded-xl", "text-slate-400", "hover:text-primary-500", "hover:bg-primary-50", "transition-all", "cursor-pointer"], ["name", "calendar", 1, "text-inherit"], [1, "grid", "grid-cols-1", "sm:grid-cols-2", "gap-6"], ["type", "number", "step", "0.01", 1, "w-full", "px-5", "py-4.5", "rounded-2xl", "bg-white", "border-2", "border-slate-200", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-lg", "text-gray-600", "shadow-sm", "placeholder-gray-300", 3, "ngModelChange", "ngModel", "placeholder"], [1, "w-full", "px-5", "py-4.5", "rounded-2xl", "bg-white", "border-2", "transition-all", "text-lg", "shadow-sm", "appearance-none", 3, "ngModelChange", "ngModel", "ngClass"], ["value", ""], ["value", "A+"], ["value", "A-"], ["value", "B+"], ["value", "B-"], ["value", "AB+"], ["value", "AB-"], ["value", "O+"], ["value", "O-"], ["name", "badge-check", 1, "text-inherit"], ["name", "chevron-down", 1, "text-inherit"], [1, "w-full", "px-5", "py-4.5", "rounded-2xl", "bg-white", "border-2", "border-slate-200", "transition-all", "text-lg", "shadow-sm", "appearance-none", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", 3, "ngModelChange", "ngModel"], ["value", "M"], ["value", "F"], ["rows", "2", 1, "w-full", "px-5", "py-4", "rounded-2xl", "bg-white", "border-2", "border-slate-200", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-lg", "text-gray-800", "shadow-sm", "placeholder-gray-300", "resize-none", 3, "ngModelChange", "ngModel", "placeholder"], ["rows", "3", 1, "w-full", "px-5", "py-4", "rounded-2xl", "bg-white", "border-2", "border-slate-200", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-lg", "text-gray-800", "shadow-sm", "placeholder-gray-300", "resize-none", 3, "ngModelChange", "ngModel", "placeholder"], ["type", "file", "accept", ".pdf,image/*", 1, "w-full", "file:mr-4", "file:px-4", "file:py-2", "file:rounded-xl", "file:border-0", "file:bg-primary-50", "file:text-primary-700", "file:font-bold", "file:cursor-pointer", "text-sm", "text-gray-500", "cursor-pointer", 3, "change"], [1, "text-red-500", "text-xs", "mt-1"], [1, "text-teal-600", "text-xs", "mt-1", "flex", "items-center", "gap-1"], ["type", "text", 1, "w-full", "px-5", "py-4.5", "rounded-2xl", "bg-white", "border-2", "border-slate-200", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-lg", "text-gray-800", "shadow-sm", "placeholder-gray-300", 3, "ngModelChange", "ngModel", "placeholder"], [1, "flex", "flex-col", "sm:flex-row", "gap-4", "pt-6", "border-t", "border-gray-100", "mt-4"], [1, "flex-1", "bg-gradient-to-r", "from-primary-600", "to-primary-500", "hover:from-primary-500", "hover:to-primary-400", "text-white", "py-4.5", "rounded-2xl", "font-bold", "hover:shadow-lg", "hover:-translate-y-0.5", "transition-all", "flex", "items-center", "justify-center", "gap-2", "text-lg", "shadow-md", 3, "click", "disabled"], ["name", "save", 1, "text-inherit"], [1, "px-8", "py-4.5", "bg-slate-100", "text-slate-600", "font-bold", "rounded-2xl", "hover:bg-slate-200", "transition-colors", "text-lg", "hover:-translate-y-0.5", 3, "click"], ["name", "alert-circle", 1, "text-inherit"], ["name", "check-circle", 1, "text-inherit"], ["type", "date", 1, "w-full", "px-5", "py-4", "rounded-2xl", "bg-white", "border-2", "border-slate-200", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-lg", "text-gray-600", "shadow-sm", 3, "ngModelChange", "ngModel"], [3, "openEditChild", "openAddChild"], [3, "saved", "cancelled", "mode", "child"], [1, "absolute", "inset-0", "bg-black/40", "backdrop-blur-sm", 3, "click"], [1, "relative", "z-10", "w-full", "max-w-md", "bg-white", "rounded-[2rem]", "shadow-[0_32px_80px_-12px_rgba(0,0,0,0.25)]", "border", "border-slate-100", "overflow-hidden", "animate-slide-up"], [1, "h-1.5", "bg-gradient-to-r", "from-primary-600", "via-primary-500", "to-teal-400"], [1, "p-10"], [1, "flex", "items-center", "justify-between", "mb-8"], [1, "text-2xl", "font-black", "text-gray-800", "flex", "items-center", "gap-3"], ["name", "pencil", 1, "text-inherit"], [1, "w-9", "h-9", "rounded-xl", "bg-slate-50", "hover:bg-slate-100", "flex", "items-center", "justify-center", "text-slate-400", "hover:text-slate-600", "transition-all", "shadow-sm", "border", "border-slate-200", 3, "click"], ["name", "x", 1, "text-inherit"], [1, "space-y-6"], [1, "block", "text-xs", "font-bold", "text-primary-700", "mb-2.5", "ml-1", "uppercase", "tracking-wider"], ["type", "text", 1, "w-full", "px-5", "py-4", "rounded-2xl", "bg-slate-50", "border-2", "transition-all", "text-lg", "text-gray-800", "pr-10", 3, "ngModelChange", "input", "blur", "ngModel", "ngClass"], ["name", "alert-circle", 1, "absolute", "right-3", "top-1/2", "-translate-y-1/2", "text-red-400", "text-xl", "animate-fade-in"], ["type", "text", "maxlength", "10", 1, "w-full", "px-5", "py-4", "pr-12", "rounded-2xl", "bg-slate-50", "border-2", "border-slate-200", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-lg", "text-gray-600", "placeholder-gray-300", 3, "ngModelChange", "input", "ngModel", "placeholder"], [1, "w-full", "px-5", "py-4", "rounded-2xl", "bg-slate-50", "border-2", "transition-all", "text-lg", "shadow-sm", "appearance-none", 3, "ngModelChange", "ngModel", "ngClass"], [1, "absolute", "right-12", "top-1/2", "-translate-y-1/2", "flex", "items-center", "gap-1", "animate-fade-in"], [1, "mt-2", "text-xs", "text-teal-600", "font-medium", "flex", "items-center", "gap-1", "animate-fade-in"], [1, "w-full", "px-5", "py-4", "rounded-2xl", "bg-slate-50", "border-2", "border-slate-200", "transition-all", "text-lg", "shadow-sm", "appearance-none", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", 3, "ngModelChange", "ngModel"], ["type", "number", "step", "0.01", 1, "w-full", "px-5", "py-4", "rounded-2xl", "bg-slate-50", "border-2", "border-slate-200", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-lg", "text-gray-800", "shadow-sm", "placeholder-gray-300", 3, "ngModelChange", "ngModel", "placeholder"], ["type", "text", 1, "w-full", "px-5", "py-4", "rounded-2xl", "bg-slate-50", "border-2", "border-slate-200", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-lg", "text-gray-800", "shadow-sm", "placeholder-gray-300", 3, "ngModelChange", "ngModel", "placeholder"], [1, "flex", "flex-col", "gap-3", "pt-4", "border-t", "border-gray-100"], [1, "flex", "items-center", "gap-2", "p-3", "bg-teal-50", "border", "border-teal-200", "rounded-xl", "text-teal-700", "text-sm", "font-medium", "animate-fade-in"], [1, "w-full", "bg-gradient-to-r", "from-primary-600", "to-primary-500", "hover:from-primary-500", "hover:to-primary-400", "text-white", "py-4", "rounded-2xl", "font-bold", "hover:shadow-lg", "hover:-translate-y-0.5", "transition-all", "flex", "items-center", "justify-center", "gap-2", "text-base", "shadow-md", "disabled:opacity-50", "disabled:cursor-not-allowed", "disabled:transform-none", 3, "click", "disabled"], [1, "w-full", "border-2", "border-red-200", "text-red-500", "hover:bg-red-50", "hover:border-red-300", "py-3.5", "rounded-2xl", "font-bold", "transition-all", "flex", "items-center", "justify-center", "gap-2", "text-sm", 3, "click"], ["name", "trash-2", 1, "text-inherit"], [1, "mt-4", "p-5", "bg-red-50", "border-2", "border-red-200", "rounded-2xl", "animate-fade-in"], ["name", "loader", 1, "text-inherit"], [1, "flex", "items-center", "gap-3", "mb-3"], [1, "w-10", "h-10", "bg-red-100", "rounded-full", "flex", "items-center", "justify-center"], ["name", "alert-triangle", 1, "text-inherit"], [1, "font-bold", "text-gray-800", "text-base"], [1, "text-sm", "text-gray-500"], [1, "text-sm", "text-gray-600", "mb-5"], [1, "flex", "gap-3"], [1, "flex-1", "py-3", "rounded-xl", "border-2", "border-slate-200", "text-gray-600", "font-bold", "hover:bg-slate-100", "transition-all", "text-sm", 3, "click"], [1, "flex-1", "py-3", "rounded-xl", "bg-gradient-to-r", "from-red-500", "to-red-400", "text-white", "font-bold", "hover:from-red-400", "hover:to-red-300", "transition-all", "text-sm", "shadow-sm", "flex", "items-center", "justify-center", "gap-2", 3, "click"], ["name", "trash", 1, "text-inherit"]], template: function ShellComponent_Template(rf, ctx) {
+    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ShellComponent, selectors: [["app-shell"]], decls: 15, vars: 6, consts: [[1, "h-screen", "flex", "bg-background", "overflow-hidden", "relative", "font-sans"], [1, "hidden", "lg:block"], ["id", "main-content", 1, "flex-1", "flex", "flex-col", "h-screen", "overflow-hidden", "relative", "z-10", "w-full"], ["href", "#main-content", 1, "sr-only", "focus:not-sr-only", "focus:absolute", "focus:top-2", "focus:left-2", "focus:z-50", "focus:px-4", "focus:py-2", "focus:bg-primary-600", "focus:text-white", "focus:rounded-lg"], [3, "childSwitchRequested", "addChildRequested", "switchProfileRequested", "backRequested", "localeToggleRequested", "currentTab", "viewState"], ["aria-live", "polite", "aria-atomic", "true", 1, "sr-only"], [1, "flex-1", "overflow-y-auto", "w-full", "px-4", "pt-6", "pb-24", "lg:px-12", "lg:py-10", "bg-slate-50/50", "relative"], [1, "glass", "max-w-3xl", "mx-auto", "rounded-[2rem]", "p-10", "lg:p-14", "animate-slide-up", "shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)]", "border", "border-white"], [1, "animate-fade-in", "h-full"], [3, "mode", "child"], ["role", "dialog", "aria-modal", "true", 1, "fixed", "inset-0", "z-50", "flex", "items-center", "justify-center", "p-4"], [1, "h-full", "flex", "flex-col", "items-center", "justify-center", "text-center", "animate-slide-up", "max-w-lg", "mx-auto"], [1, "animate-slide-up"], [1, "w-40", "h-40", "bg-gradient-to-tr", "from-primary-100", "to-teal-50", "text-primary-500", "rounded-full", "flex", "items-center", "justify-center", "mb-10", "shadow-glass", "border", "border-white"], ["name", "party-popper", 1, "opacity-80", 3, "size"], [1, "text-3xl", "lg:text-4xl", "font-extrabold", "text-gray-800", "mb-4", "tracking-tight"], [1, "text-gray-500", "text-lg", "mb-10", "leading-relaxed"], [1, "bg-slate-900", "hover:bg-primary-600", "text-white", "px-10", "py-5", "rounded-2xl", "font-bold", "shadow-[0_10px_20px_rgba(0,0,0,0.1)]", "transition-all", "transform", "hover:-translate-y-1", "flex", "items-center", "gap-3", "text-lg", "w-full", "sm:w-auto", "justify-center", 3, "click"], ["name", "plus", "aria-hidden", "true", 1, "bg-white/20", "rounded-full", "p-1"], [1, "text-3xl", "font-extrabold", "text-gray-800", "mb-2", "tracking-tight"], [1, "text-gray-500", "text-sm", "mb-10", "font-medium", "leading-relaxed"], [1, "grid", "grid-cols-1", "sm:grid-cols-2", "lg:grid-cols-3", "gap-6"], [1, "bg-white", "rounded-[2rem]", "p-8", "shadow-md", "border", "border-slate-100", "hover:shadow-xl", "hover:border-primary-200", "transition-all", "group", "relative", "card-hover"], ["type", "button", 1, "bg-slate-50", "rounded-[2rem]", "p-8", "shadow-md", "border-2", "border-dashed", "border-slate-200", "hover:border-primary-300", "hover:bg-primary-50", "transition-all", "cursor-pointer", "flex", "flex-col", "items-center", "justify-center", "gap-4", "text-center", "group", "w-full", "text-left", 3, "click"], [1, "w-16", "h-16", "rounded-full", "bg-slate-100", "group-hover:bg-primary-100", "flex", "items-center", "justify-center", "transition-all"], ["name", "plus", "aria-hidden", "true", 1, "text-3xl", "text-slate-400", "group-hover:text-primary-500", "transition-colors"], [1, "font-bold", "text-slate-500", "group-hover:text-primary-600", "transition-colors", "text-base"], [1, "absolute", "top-5", "right-5", "w-9", "h-9", "rounded-xl", "bg-slate-50", "hover:bg-primary-50", "border", "border-slate-200", "hover:border-primary-300", "flex", "items-center", "justify-center", "text-slate-400", "hover:text-primary-600", "transition-all", "shadow-sm", 3, "click"], ["name", "pencil", "aria-hidden", "true", 1, "text-base"], [1, "cursor-pointer", 3, "click"], [1, "flex", "items-center", "gap-5", "mb-5"], [1, "w-16", "h-16", "rounded-full", "border-4", "border-slate-100", "group-hover:border-primary-200", "transition-all", "shadow-sm", 3, "src"], [1, "font-extrabold", "text-xl", "text-gray-800", "group-hover:text-primary-700", "transition-colors"], [1, "text-sm", "text-gray-500", "font-medium"], [1, "flex", "items-center", "gap-2", "text-sm", "text-gray-500", "font-medium"], [1, "mt-5", "bg-gradient-to-r", "from-primary-50", "to-teal-50", "rounded-2xl", "p-4", "flex", "items-center", "justify-center", "gap-2", "text-primary-600", "font-bold", "group-hover:from-primary-100", "group-hover:to-teal-100", "transition-all", "cursor-pointer", 3, "click"], ["name", "log-in", 1, "text-lg"], ["name", "droplet", 1, "text-teal-500", "text-base"], [1, "text-3xl", "font-extrabold", "text-gray-800", "mb-10", "flex", "items-center", "gap-4"], ["name", "user-plus", "aria-hidden", "true", 1, "text-primary-500", "bg-primary-50", "p-3", "rounded-2xl"], [1, "space-y-8"], [1, "block", "text-sm", "font-bold", "text-primary-700", "mb-3", "ml-1", "tracking-wide", "uppercase", "text-xs"], ["type", "text", 1, "w-full", "px-5", "py-4.5", "rounded-2xl", "bg-white", "border-2", "transition-all", "text-lg", "text-gray-800", "placeholder-gray-300", 3, "ngModelChange", "input", "blur", "ngModel", "ngClass", "placeholder"], [1, "mt-2", "text-sm", "text-red-500", "font-medium", "flex", "items-center", "gap-1"], [1, "relative"], ["type", "text", "maxlength", "10", 1, "w-full", "px-5", "py-4.5", "pr-12", "rounded-2xl", "bg-white", "border-2", "border-slate-200", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-lg", "text-gray-600", "placeholder-gray-300", 3, "ngModelChange", "input", "ngModel", "placeholder"], ["type", "button", "onclick", "this.previousElementSibling.showPicker?.()", 1, "absolute", "right-3", "top-1/2", "-translate-y-1/2", "w-8", "h-8", "flex", "items-center", "justify-center", "rounded-xl", "text-slate-400", "hover:text-primary-500", "hover:bg-primary-50", "transition-all", "cursor-pointer"], ["name", "calendar", 1, "text-inherit"], [1, "grid", "grid-cols-1", "sm:grid-cols-2", "gap-6"], ["type", "number", "step", "0.01", 1, "w-full", "px-5", "py-4.5", "rounded-2xl", "bg-white", "border-2", "border-slate-200", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-lg", "text-gray-600", "shadow-sm", "placeholder-gray-300", 3, "ngModelChange", "ngModel", "placeholder"], [1, "w-full", "px-5", "py-4.5", "rounded-2xl", "bg-white", "border-2", "transition-all", "text-lg", "shadow-sm", "appearance-none", 3, "ngModelChange", "ngModel", "ngClass"], ["value", ""], ["value", "A+"], ["value", "A-"], ["value", "B+"], ["value", "B-"], ["value", "AB+"], ["value", "AB-"], ["value", "O+"], ["value", "O-"], ["name", "badge-check", 1, "text-inherit"], ["name", "chevron-down", 1, "text-inherit"], [1, "w-full", "px-5", "py-4.5", "rounded-2xl", "bg-white", "border-2", "border-slate-200", "transition-all", "text-lg", "shadow-sm", "appearance-none", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", 3, "ngModelChange", "ngModel"], ["value", "M"], ["value", "F"], ["rows", "2", 1, "w-full", "px-5", "py-4", "rounded-2xl", "bg-white", "border-2", "border-slate-200", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-lg", "text-gray-800", "shadow-sm", "placeholder-gray-300", "resize-none", 3, "ngModelChange", "ngModel", "placeholder"], ["rows", "3", 1, "w-full", "px-5", "py-4", "rounded-2xl", "bg-white", "border-2", "border-slate-200", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-lg", "text-gray-800", "shadow-sm", "placeholder-gray-300", "resize-none", 3, "ngModelChange", "ngModel", "placeholder"], ["type", "file", "accept", ".pdf,image/*", 1, "w-full", "file:mr-4", "file:px-4", "file:py-2", "file:rounded-xl", "file:border-0", "file:bg-primary-50", "file:text-primary-700", "file:font-bold", "file:cursor-pointer", "text-sm", "text-gray-500", "cursor-pointer", 3, "change"], [1, "text-red-500", "text-xs", "mt-1"], [1, "text-teal-600", "text-xs", "mt-1", "flex", "items-center", "gap-1"], ["type", "text", 1, "w-full", "px-5", "py-4.5", "rounded-2xl", "bg-white", "border-2", "border-slate-200", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-lg", "text-gray-800", "shadow-sm", "placeholder-gray-300", 3, "ngModelChange", "ngModel", "placeholder"], [1, "flex", "flex-col", "sm:flex-row", "gap-4", "pt-6", "border-t", "border-gray-100", "mt-4"], ["type", "button", 1, "flex-1", "bg-gradient-to-r", "from-primary-600", "to-primary-500", "hover:from-primary-500", "hover:to-primary-400", "text-white", "py-4.5", "rounded-2xl", "font-bold", "hover:shadow-lg", "hover:-translate-y-0.5", "transition-all", "flex", "items-center", "justify-center", "gap-2", "text-lg", "shadow-md", 3, "click", "disabled"], ["name", "save", "aria-hidden", "true", 1, "text-inherit"], ["type", "button", 1, "px-8", "py-4.5", "bg-slate-100", "text-slate-600", "font-bold", "rounded-2xl", "hover:bg-slate-200", "transition-colors", "text-lg", "hover:-translate-y-0.5", 3, "click"], ["name", "alert-circle", 1, "text-inherit"], ["name", "check-circle", 1, "text-inherit"], ["type", "date", 1, "w-full", "px-5", "py-4", "rounded-2xl", "bg-white", "border-2", "border-slate-200", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-lg", "text-gray-600", "shadow-sm", 3, "ngModelChange", "ngModel"], [3, "openEditChild", "openAddChild"], [3, "saved", "cancelled", "mode", "child"], ["aria-hidden", "true", 1, "absolute", "inset-0", "bg-black/40", "backdrop-blur-sm", 3, "click"], [1, "relative", "z-10", "w-full", "max-w-md", "bg-white", "rounded-[2rem]", "shadow-[0_32px_80px_-12px_rgba(0,0,0,0.25)]", "border", "border-slate-100", "overflow-hidden", "animate-slide-up"], [1, "h-1.5", "bg-gradient-to-r", "from-primary-600", "via-primary-500", "to-teal-400"], [1, "p-10"], [1, "flex", "items-center", "justify-between", "mb-8"], ["id", "edit-child-title", 1, "text-2xl", "font-black", "text-gray-800", "flex", "items-center", "gap-3"], ["name", "pencil", "aria-hidden", "true", 1, "text-inherit"], ["type", "button", 1, "w-9", "h-9", "rounded-xl", "bg-slate-50", "hover:bg-slate-100", "flex", "items-center", "justify-center", "text-slate-400", "hover:text-slate-600", "transition-all", "shadow-sm", "border", "border-slate-200", 3, "click", "aria-label"], ["name", "x", "aria-hidden", "true", 1, "text-inherit"], [1, "space-y-6"], [1, "block", "text-xs", "font-bold", "text-primary-700", "mb-2.5", "ml-1", "uppercase", "tracking-wider"], ["type", "text", 1, "w-full", "px-5", "py-4", "rounded-2xl", "bg-slate-50", "border-2", "transition-all", "text-lg", "text-gray-800", "pr-10", 3, "ngModelChange", "input", "blur", "ngModel", "ngClass"], ["name", "alert-circle", 1, "absolute", "right-3", "top-1/2", "-translate-y-1/2", "text-red-400", "text-xl", "animate-fade-in"], ["type", "text", "maxlength", "10", 1, "w-full", "px-5", "py-4", "pr-12", "rounded-2xl", "bg-slate-50", "border-2", "border-slate-200", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-lg", "text-gray-600", "placeholder-gray-300", 3, "ngModelChange", "input", "ngModel", "placeholder"], [1, "w-full", "px-5", "py-4", "rounded-2xl", "bg-slate-50", "border-2", "transition-all", "text-lg", "shadow-sm", "appearance-none", 3, "ngModelChange", "ngModel", "ngClass"], [1, "absolute", "right-12", "top-1/2", "-translate-y-1/2", "flex", "items-center", "gap-1", "animate-fade-in"], [1, "mt-2", "text-xs", "text-teal-600", "font-medium", "flex", "items-center", "gap-1", "animate-fade-in"], [1, "w-full", "px-5", "py-4", "rounded-2xl", "bg-slate-50", "border-2", "border-slate-200", "transition-all", "text-lg", "shadow-sm", "appearance-none", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", 3, "ngModelChange", "ngModel"], ["type", "number", "step", "0.01", 1, "w-full", "px-5", "py-4", "rounded-2xl", "bg-slate-50", "border-2", "border-slate-200", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-lg", "text-gray-800", "shadow-sm", "placeholder-gray-300", 3, "ngModelChange", "ngModel", "placeholder"], ["type", "text", 1, "w-full", "px-5", "py-4", "rounded-2xl", "bg-slate-50", "border-2", "border-slate-200", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-lg", "text-gray-800", "shadow-sm", "placeholder-gray-300", 3, "ngModelChange", "ngModel", "placeholder"], [1, "flex", "flex-col", "gap-3", "pt-4", "border-t", "border-gray-100"], [1, "flex", "items-center", "gap-2", "p-3", "bg-teal-50", "border", "border-teal-200", "rounded-xl", "text-teal-700", "text-sm", "font-medium", "animate-fade-in"], ["type", "button", 1, "w-full", "bg-gradient-to-r", "from-primary-600", "to-primary-500", "hover:from-primary-500", "hover:to-primary-400", "text-white", "py-4", "rounded-2xl", "font-bold", "hover:shadow-lg", "hover:-translate-y-0.5", "transition-all", "flex", "items-center", "justify-center", "gap-2", "text-base", "shadow-md", "disabled:opacity-50", "disabled:cursor-not-allowed", "disabled:transform-none", 3, "click", "disabled"], ["type", "button", 1, "w-full", "border-2", "border-red-200", "text-red-500", "hover:bg-red-50", "hover:border-red-300", "py-3.5", "rounded-2xl", "font-bold", "transition-all", "flex", "items-center", "justify-center", "gap-2", "text-sm", 3, "click"], ["name", "trash-2", "aria-hidden", "true", 1, "text-inherit"], [1, "mt-4", "p-5", "bg-red-50", "border-2", "border-red-200", "rounded-2xl", "animate-fade-in"], ["name", "loader", "aria-hidden", "true", 1, "text-inherit"], [1, "flex", "items-center", "gap-3", "mb-3"], [1, "w-10", "h-10", "bg-red-100", "rounded-full", "flex", "items-center", "justify-center"], ["name", "alert-triangle", 1, "text-inherit"], [1, "font-bold", "text-gray-800", "text-base"], [1, "text-sm", "text-gray-500"], [1, "text-sm", "text-gray-600", "mb-5"], [1, "flex", "gap-3"], ["type", "button", 1, "flex-1", "py-3", "rounded-xl", "border-2", "border-slate-200", "text-gray-600", "font-bold", "hover:bg-slate-100", "transition-all", "text-sm", 3, "click"], ["type", "button", 1, "flex-1", "py-3", "rounded-xl", "bg-gradient-to-r", "from-red-500", "to-red-400", "text-white", "font-bold", "hover:from-red-400", "hover:to-red-300", "transition-all", "text-sm", "shadow-sm", "flex", "items-center", "justify-center", "gap-2", 3, "click"], ["name", "trash", "aria-hidden", "true", 1, "text-inherit"]], template: function ShellComponent_Template(rf, ctx) {
       if (rf & 1) {
         \u0275\u0275elementStart(0, "div", 0);
         \u0275\u0275element(1, "app-sidebar", 1);
-        \u0275\u0275elementStart(2, "main", 2)(3, "app-header", 3);
-        \u0275\u0275listener("childSwitchRequested", function ShellComponent_Template_app_header_childSwitchRequested_3_listener($event) {
+        \u0275\u0275elementStart(2, "main", 2)(3, "a", 3);
+        \u0275\u0275text(4, "Skip to main content");
+        \u0275\u0275elementEnd();
+        \u0275\u0275elementStart(5, "app-header", 4);
+        \u0275\u0275listener("childSwitchRequested", function ShellComponent_Template_app_header_childSwitchRequested_5_listener($event) {
           return ctx.selectChild($event);
-        })("addChildRequested", function ShellComponent_Template_app_header_addChildRequested_3_listener() {
+        })("addChildRequested", function ShellComponent_Template_app_header_addChildRequested_5_listener() {
           return ctx.showChildModal.set(true);
-        })("switchProfileRequested", function ShellComponent_Template_app_header_switchProfileRequested_3_listener() {
+        })("switchProfileRequested", function ShellComponent_Template_app_header_switchProfileRequested_5_listener() {
           return ctx.goToSelector();
-        })("backRequested", function ShellComponent_Template_app_header_backRequested_3_listener() {
+        })("backRequested", function ShellComponent_Template_app_header_backRequested_5_listener() {
           return ctx.goToSelector();
-        })("localeToggleRequested", function ShellComponent_Template_app_header_localeToggleRequested_3_listener() {
+        })("localeToggleRequested", function ShellComponent_Template_app_header_localeToggleRequested_5_listener() {
           return ctx.i18n.toggleLocale();
         });
         \u0275\u0275elementEnd();
-        \u0275\u0275elementStart(4, "div", 4);
-        \u0275\u0275conditionalCreate(5, ShellComponent_Conditional_5_Template, 2, 1)(6, ShellComponent_Conditional_6_Template, 84, 36, "div", 5)(7, ShellComponent_Conditional_7_Template, 8, 1, "div", 6);
+        \u0275\u0275elementStart(6, "div", 5);
+        \u0275\u0275conditionalCreate(7, ShellComponent_Conditional_7_Template, 2, 1, "span");
+        \u0275\u0275elementEnd();
+        \u0275\u0275elementStart(8, "div", 6);
+        \u0275\u0275conditionalCreate(9, ShellComponent_Conditional_9_Template, 2, 1)(10, ShellComponent_Conditional_10_Template, 84, 37, "div", 7)(11, ShellComponent_Conditional_11_Template, 11, 1, "div", 8);
         \u0275\u0275elementEnd()();
-        \u0275\u0275element(8, "app-bottom-nav");
-        \u0275\u0275conditionalCreate(9, ShellComponent_Conditional_9_Template, 1, 2, "app-add-edit-child-modal", 7);
-        \u0275\u0275conditionalCreate(10, ShellComponent_Conditional_10_Template, 96, 39, "div", 8);
+        \u0275\u0275element(12, "app-bottom-nav");
+        \u0275\u0275conditionalCreate(13, ShellComponent_Conditional_13_Template, 1, 2, "app-add-edit-child-modal", 9);
+        \u0275\u0275conditionalCreate(14, ShellComponent_Conditional_14_Template, 96, 43, "div", 10);
         \u0275\u0275elementEnd();
       }
       if (rf & 2) {
-        \u0275\u0275advance(3);
+        \u0275\u0275advance(5);
         \u0275\u0275property("currentTab", ctx.currentTab())("viewState", ctx.viewState());
         \u0275\u0275advance(2);
-        \u0275\u0275conditional(ctx.viewState() === "selector" ? 5 : ctx.isAddingChild() ? 6 : 7);
+        \u0275\u0275conditional(ctx.saveSuccess() ? 7 : -1);
+        \u0275\u0275advance(2);
+        \u0275\u0275conditional(ctx.viewState() === "selector" ? 9 : ctx.isAddingChild() ? 10 : 11);
         \u0275\u0275advance(4);
-        \u0275\u0275conditional(ctx.showChildModal() ? 9 : -1);
+        \u0275\u0275conditional(ctx.showChildModal() ? 13 : -1);
         \u0275\u0275advance();
-        \u0275\u0275conditional(ctx.editingChild() ? 10 : -1);
+        \u0275\u0275conditional(ctx.editingChild() ? 14 : -1);
       }
-    }, dependencies: [CommonModule, NgClass, FormsModule, NgSelectOption, \u0275NgSelectMultipleOption, DefaultValueAccessor, NumberValueAccessor, SelectControlValueAccessor, NgControlStatus, MaxLengthValidator, NgModel, LucideAngularModule, LucideAngularComponent, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent], styles: ["\n.pb-safe[_ngcontent-%COMP%] {\n  padding-bottom: env(safe-area-inset-bottom, 1rem);\n}\n.card-hover[_ngcontent-%COMP%] {\n  transition: transform 0.2s ease, box-shadow 0.2s ease;\n}\n.card-hover[_ngcontent-%COMP%]:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);\n}\nbutton[_ngcontent-%COMP%]:not(:disabled):active {\n  transform: scale(0.98);\n}\n.success-flash[_ngcontent-%COMP%] {\n  animation: _ngcontent-%COMP%_success-flash 0.6s ease-out;\n}\n@keyframes _ngcontent-%COMP%_success-flash {\n  0% {\n    background-color: #d1fae5;\n  }\n  100% {\n    background-color: transparent;\n  }\n}\n.animate-slide-up[_ngcontent-%COMP%] {\n  animation: _ngcontent-%COMP%_slideUp 0.35s ease-out;\n}\n@keyframes _ngcontent-%COMP%_slideUp {\n  from {\n    opacity: 0;\n    transform: translateY(16px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n.animate-fade-in[_ngcontent-%COMP%] {\n  animation: _ngcontent-%COMP%_fadeIn 0.3s ease-out;\n}\n@keyframes _ngcontent-%COMP%_fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n/*# sourceMappingURL=shell.component.css.map */"] });
+    }, dependencies: [CommonModule, NgClass, FormsModule, NgSelectOption, \u0275NgSelectMultipleOption, DefaultValueAccessor, NumberValueAccessor, SelectControlValueAccessor, NgControlStatus, MaxLengthValidator, NgModel, LucideAngularModule, LucideAngularComponent, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, MedicationsComponent, AppointmentsComponent, LabResultsComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent], styles: ["\n.pb-safe[_ngcontent-%COMP%] {\n  padding-bottom: env(safe-area-inset-bottom, 1rem);\n}\n.card-hover[_ngcontent-%COMP%] {\n  transition: transform 0.2s ease, box-shadow 0.2s ease;\n}\n.card-hover[_ngcontent-%COMP%]:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);\n}\nbutton[_ngcontent-%COMP%]:not(:disabled):active {\n  transform: scale(0.98);\n}\n.success-flash[_ngcontent-%COMP%] {\n  animation: _ngcontent-%COMP%_success-flash 0.6s ease-out;\n}\n@keyframes _ngcontent-%COMP%_success-flash {\n  0% {\n    background-color: #d1fae5;\n  }\n  100% {\n    background-color: transparent;\n  }\n}\n.animate-slide-up[_ngcontent-%COMP%] {\n  animation: _ngcontent-%COMP%_slideUp 0.35s ease-out;\n}\n@keyframes _ngcontent-%COMP%_slideUp {\n  from {\n    opacity: 0;\n    transform: translateY(16px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n.animate-fade-in[_ngcontent-%COMP%] {\n  animation: _ngcontent-%COMP%_fadeIn 0.3s ease-out;\n}\n@keyframes _ngcontent-%COMP%_fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n/*# sourceMappingURL=shell.component.css.map */"], changeDetection: 0 });
   }
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ShellComponent, [{
     type: Component,
-    args: [{ selector: "app-shell", imports: [CommonModule, FormsModule, LucideAngularModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent], template: `
+    args: [{ selector: "app-shell", changeDetection: ChangeDetectionStrategy.OnPush, imports: [CommonModule, FormsModule, LucideAngularModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, MedicationsComponent, AppointmentsComponent, LabResultsComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent], template: `
 
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
 
@@ -55955,7 +60533,10 @@ var ShellComponent = class _ShellComponent {
       <app-sidebar class="hidden lg:block" />
 
       <!-- Main Content Area -->
-      <main class="flex-1 flex flex-col h-screen overflow-hidden relative z-10 w-full">
+      <main class="flex-1 flex flex-col h-screen overflow-hidden relative z-10 w-full" id="main-content">
+
+        <!-- Skip to main content link for keyboard users -->
+        <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded-lg">Skip to main content</a>
 
         <!-- Top Header (extracted to HeaderComponent) -->
         <app-header
@@ -55967,6 +60548,13 @@ var ShellComponent = class _ShellComponent {
           (backRequested)="goToSelector()"
           (localeToggleRequested)="i18n.toggleLocale()"
         />
+
+        <!-- Live region for dynamic announcements -->
+        <div aria-live="polite" aria-atomic="true" class="sr-only">
+          @if (saveSuccess()) {
+            <span>{{ i18n.isSq() ? 'Ndryshimet u ruajt\xEBn!' : 'Changes saved!' }}</span>
+          }
+        </div>
 
         <!-- Main Workspace -->
         <div class="flex-1 overflow-y-auto w-full px-4 pt-6 pb-24 lg:px-12 lg:py-10 bg-slate-50/50 relative">
@@ -55981,7 +60569,7 @@ var ShellComponent = class _ShellComponent {
                 <h2 class="text-3xl lg:text-4xl font-extrabold text-gray-800 mb-4 tracking-tight">{{ i18n.t()['child.welcome'] }}</h2>
                 <p class="text-gray-500 text-lg mb-10 leading-relaxed">{{ i18n.t()['child.welcomeSub'] }}</p>
                 <button (click)="isAddingChild.set(true)" class="bg-slate-900 hover:bg-primary-600 text-white px-10 py-5 rounded-2xl font-bold shadow-[0_10px_20px_rgba(0,0,0,0.1)] transition-all transform hover:-translate-y-1 flex items-center gap-3 text-lg w-full sm:w-auto justify-center">
-                  <lucide-icon name="plus" class="bg-white/20 rounded-full p-1"></lucide-icon> {{ i18n.t()['child.addNew'] }}
+                  <lucide-icon name="plus" class="bg-white/20 rounded-full p-1" aria-hidden="true"></lucide-icon> {{ i18n.t()['child.addNew'] }}
                 </button>
               </div>
             } @else {
@@ -55992,8 +60580,9 @@ var ShellComponent = class _ShellComponent {
                   @for (child of dataService.children(); track child.id) {
                     <div class="bg-white rounded-[2rem] p-8 shadow-md border border-slate-100 hover:shadow-xl hover:border-primary-200 transition-all group relative card-hover">
                       <button (click)="openEditModal(child)"
-                              class="absolute top-5 right-5 w-9 h-9 rounded-xl bg-slate-50 hover:bg-primary-50 border border-slate-200 hover:border-primary-300 flex items-center justify-center text-slate-400 hover:text-primary-600 transition-all shadow-sm">
-                        <lucide-icon name="pencil" class="text-base"></lucide-icon>
+                              class="absolute top-5 right-5 w-9 h-9 rounded-xl bg-slate-50 hover:bg-primary-50 border border-slate-200 hover:border-primary-300 flex items-center justify-center text-slate-400 hover:text-primary-600 transition-all shadow-sm"
+                              [attr.aria-label]="i18n.t()['child.editProfile']">
+                        <lucide-icon name="pencil" class="text-base" aria-hidden="true"></lucide-icon>
                       </button>
                       <div (click)="selectChild(child.id)" class="cursor-pointer">
                         <div class="flex items-center gap-5 mb-5">
@@ -56016,15 +60605,15 @@ var ShellComponent = class _ShellComponent {
                       </div>
                     </div>
                   }
-                  <div (click)="isAddingChild.set(true)"
-                       class="bg-slate-50 rounded-[2rem] p-8 shadow-md border-2 border-dashed border-slate-200 hover:border-primary-300 hover:bg-primary-50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 text-center group">
+                  <button type="button" (click)="isAddingChild.set(true)"
+                          class="bg-slate-50 rounded-[2rem] p-8 shadow-md border-2 border-dashed border-slate-200 hover:border-primary-300 hover:bg-primary-50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 text-center group w-full text-left">
                     <div class="w-16 h-16 rounded-full bg-slate-100 group-hover:bg-primary-100 flex items-center justify-center transition-all">
-                      <lucide-icon name="plus" class="text-3xl text-slate-400 group-hover:text-primary-500 transition-colors"></lucide-icon>
+                      <lucide-icon name="plus" class="text-3xl text-slate-400 group-hover:text-primary-500 transition-colors" aria-hidden="true"></lucide-icon>
                     </div>
                     <p class="font-bold text-slate-500 group-hover:text-primary-600 transition-colors text-base">
                       {{ i18n.t()['child.addNewBtn'] }}
                     </p>
-                  </div>
+                  </button>
                 </div>
               </div>
             }
@@ -56034,7 +60623,7 @@ var ShellComponent = class _ShellComponent {
           @else if (isAddingChild()) {
             <div class="glass max-w-3xl mx-auto rounded-[2rem] p-10 lg:p-14 animate-slide-up shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white">
               <h2 class="text-3xl font-extrabold text-gray-800 mb-10 flex items-center gap-4">
-                <lucide-icon name="user-plus" class="text-primary-500 bg-primary-50 p-3 rounded-2xl"></lucide-icon>
+                <lucide-icon name="user-plus" class="text-primary-500 bg-primary-50 p-3 rounded-2xl" aria-hidden="true"></lucide-icon>
                 {{ i18n.t()['child.addNew'] }}
               </h2>
               <div class="space-y-8">
@@ -56133,7 +60722,8 @@ var ShellComponent = class _ShellComponent {
                 <div>
                   <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.medicalDocument'] }}</label>
                   <input type="file" accept=".pdf,image/*" (change)="onNewChildDocumentSelected($event)"
-                    class="w-full file:mr-4 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-primary-50 file:text-primary-700 file:font-bold file:cursor-pointer text-sm text-gray-500 cursor-pointer">
+                    class="w-full file:mr-4 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-primary-50 file:text-primary-700 file:font-bold file:cursor-pointer text-sm text-gray-500 cursor-pointer"
+                    [attr.aria-label]="i18n.t()['child.medicalDocument']">
                   @if (newChildDocumentError()) {
                     <p class="text-red-500 text-xs mt-1">{{ newChildDocumentError() }}</p>
                   }
@@ -56157,12 +60747,12 @@ var ShellComponent = class _ShellComponent {
                          [placeholder]="i18n.t()['placeholder.deliveryDoctor']">
                 </div>
                 <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-100 mt-4">
-                  <button (click)="submitNewChild()"
+                  <button type="button" (click)="submitNewChild()"
                           class="flex-1 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white py-4.5 rounded-2xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-lg shadow-md"
                           [disabled]="addNameInvalid() && newChildName.length > 0">
-                    <lucide-icon name="save" class="text-inherit"></lucide-icon> {{ i18n.t()['child.saveProfile'] }}
+                    <lucide-icon name="save" class="text-inherit" aria-hidden="true"></lucide-icon> {{ i18n.t()['child.saveProfile'] }}
                   </button>
-                  <button (click)="cancelAddChild()"
+                  <button type="button" (click)="cancelAddChild()"
                           class="px-8 py-4.5 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-colors text-lg hover:-translate-y-0.5">{{ i18n.t()['child.cancel'] }}</button>
                 </div>
               </div>
@@ -56179,6 +60769,9 @@ var ShellComponent = class _ShellComponent {
                 @case ('growth') { <app-growth-tracking /> }
                 @case ('records') { <app-records /> }
                 @case ('vaccines') { <app-vaccines /> }
+                @case ('medications') { <app-medications /> }
+                @case ('appointments') { <app-appointments /> }
+                @case ('lab-results') { <app-lab-results /> }
                 @case ('settings') {
                   <app-settings-page
                     (openEditChild)="openEditModal($event)"
@@ -56210,9 +60803,9 @@ var ShellComponent = class _ShellComponent {
            EDIT CHILD MODAL (Overlay)
            \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 -->
       @if (editingChild()) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" [attr.aria-labelledby]="'edit-child-title'">
           <!-- Backdrop -->
-          <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" (click)="closeEditModal()"></div>
+          <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" (click)="closeEditModal()" aria-hidden="true"></div>
 
           <!-- Modal Card -->
           <div class="relative z-10 w-full max-w-md bg-white rounded-[2rem] shadow-[0_32px_80px_-12px_rgba(0,0,0,0.25)] border border-slate-100 overflow-hidden animate-slide-up">
@@ -56224,13 +60817,14 @@ var ShellComponent = class _ShellComponent {
 
               <!-- Header -->
               <div class="flex items-center justify-between mb-8">
-                <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3">
-                  <lucide-icon name="pencil" class="text-inherit"></lucide-icon>
+                <h2 id="edit-child-title" class="text-2xl font-black text-gray-800 flex items-center gap-3">
+                  <lucide-icon name="pencil" class="text-inherit" aria-hidden="true"></lucide-icon>
                   {{ i18n.t()['child.editProfile'] }}
                 </h2>
-                <button (click)="closeEditModal()"
-                        class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all shadow-sm border border-slate-200">
-                  <lucide-icon name="x" class="text-inherit"></lucide-icon>
+                <button type="button" (click)="closeEditModal()"
+                        class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all shadow-sm border border-slate-200"
+                        aria-label="{{ i18n.t()['child.cancel'] }}">
+                  <lucide-icon name="x" class="text-inherit" aria-hidden="true"></lucide-icon>
                 </button>
               </div>
 
@@ -56367,7 +60961,8 @@ var ShellComponent = class _ShellComponent {
                 <div>
                   <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.medicalDocument'] }}</label>
                   <input type="file" accept=".pdf,image/*" (change)="onDocumentSelected($event)"
-                    class="w-full file:mr-4 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-primary-50 file:text-primary-700 file:font-bold file:cursor-pointer text-sm text-gray-500 cursor-pointer">
+                    class="w-full file:mr-4 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-primary-50 file:text-primary-700 file:font-bold file:cursor-pointer text-sm text-gray-500 cursor-pointer"
+                    [attr.aria-label]="i18n.t()['child.medicalDocument']">
                   @if (documentError()) {
                     <p class="text-red-500 text-xs mt-1">{{ documentError() }}</p>
                   }
@@ -56394,20 +60989,20 @@ var ShellComponent = class _ShellComponent {
                       {{ i18n.isSq() ? 'Ndryshimet u ruajt\xEBn!' : 'Changes saved!' }}
                     </div>
                   }
-                  <button (click)="saveEditChild()"
+                  <button type="button" (click)="saveEditChild()"
                           class="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white py-4 rounded-2xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-base shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                           [disabled]="editNameInvalid() || saving()">
                     @if (saving()) {
-                      <lucide-icon name="loader" class="text-inherit"></lucide-icon>
-                      {{ i18n.isSq() ? 'Duke ruajtur...' : 'Saving...' }}
+                      <lucide-icon name="loader" class="text-inherit" aria-hidden="true"></lucide-icon>
+                      <span>{{ i18n.isSq() ? 'Duke ruajtur...' : 'Saving...' }}</span>
                     } @else {
-                      <lucide-icon name="save" class="text-inherit"></lucide-icon>
+                      <lucide-icon name="save" class="text-inherit" aria-hidden="true"></lucide-icon>
                       {{ i18n.t()['sidebar.saveChanges'] }}
                     }
                   </button>
-                  <button (click)="showDeleteConfirm.set(true)"
+                  <button type="button" (click)="showDeleteConfirm.set(true)"
                           class="w-full border-2 border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 py-3.5 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 text-sm">
-                    <lucide-icon name="trash-2" class="text-inherit"></lucide-icon>
+                    <lucide-icon name="trash-2" class="text-inherit" aria-hidden="true"></lucide-icon>
                     {{ i18n.t()['sidebar.deleteProfile'] }}
                   </button>
                 </div>
@@ -56425,13 +61020,13 @@ var ShellComponent = class _ShellComponent {
                     </div>
                     <p class="text-sm text-gray-600 mb-5">{{ i18n.isSq() ? 'Ky veprim nuk mund t\xEB kthehet. T\xEB gjitha t\xEB dh\xEBnat do t\xEB fshihen p\xEBrgjithmon\xEB.' : 'This action cannot be undone. All data will be permanently deleted.' }}</p>
                     <div class="flex gap-3">
-                      <button (click)="showDeleteConfirm.set(false)"
+                      <button type="button" (click)="showDeleteConfirm.set(false)"
                               class="flex-1 py-3 rounded-xl border-2 border-slate-200 text-gray-600 font-bold hover:bg-slate-100 transition-all text-sm">
                         {{ i18n.isSq() ? 'Anulo' : 'Cancel' }}
                       </button>
-                      <button (click)="confirmDeleteChild()"
+                      <button type="button" (click)="confirmDeleteChild()"
                               class="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-500 to-red-400 text-white font-bold hover:from-red-400 hover:to-red-300 transition-all text-sm shadow-sm flex items-center justify-center gap-2">
-                        <lucide-icon name="trash" class="text-inherit"></lucide-icon>
+                        <lucide-icon name="trash" class="text-inherit" aria-hidden="true"></lucide-icon>
                         {{ i18n.isSq() ? 'Fshi' : 'Delete' }}
                       </button>
                     </div>
@@ -56448,7 +61043,7 @@ var ShellComponent = class _ShellComponent {
   }], () => [], null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ShellComponent, { className: "ShellComponent", filePath: "src/app/components/shell.component.ts", lineNumber: 566 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ShellComponent, { className: "ShellComponent", filePath: "src/app/components/shell.component.ts", lineNumber: 587 });
 })();
 
 // src/app/components/pin-lock.component.ts
@@ -57453,6 +62048,10 @@ var appConfig = {
   providers: [
     provideRouter(routes),
     provideHttpClient(),
+    provideServiceWorker("ngsw-worker.js", {
+      enabled: !isDevMode(),
+      registrationStrategy: "registerWhenStable:30000"
+    }),
     { provide: LOCALE_ID, useValue: "it" },
     importProvidersFrom(LucideAngularModule.pick({
       PartyPopper,
@@ -57530,6 +62129,15 @@ var appConfig = {
 
 // src/app/app.component.ts
 var AppComponent = class _AppComponent {
+  constructor() {
+    this.data = inject2(DataService);
+    this.notif = inject2(NotificationService);
+  }
+  ngOnInit() {
+    setTimeout(() => {
+      this.notif.checkVaccineAlerts();
+    }, 1500);
+  }
   static {
     this.\u0275fac = function AppComponent_Factory(__ngFactoryType__) {
       return new (__ngFactoryType__ || _AppComponent)();
@@ -57554,7 +62162,7 @@ var AppComponent = class _AppComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AppComponent, { className: "AppComponent", filePath: "src/app/app.component.ts", lineNumber: 9 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AppComponent, { className: "AppComponent", filePath: "src/app/app.component.ts", lineNumber: 11 });
 })();
 
 // src/main.ts

@@ -16,6 +16,8 @@ exports.ChildrenController = void 0;
 const common_1 = require("@nestjs/common");
 const passport_1 = require("@nestjs/passport");
 const children_service_1 = require("./children.service");
+const create_child_dto_1 = require("./dto/create-child.dto");
+const update_child_dto_1 = require("./dto/update-child.dto");
 let ChildrenController = class ChildrenController {
     childrenService;
     constructor(childrenService) {
@@ -27,23 +29,45 @@ let ChildrenController = class ChildrenController {
     findAll(req) {
         return this.childrenService.findAllByUser(req.user.userId);
     }
-    findOne(req, id) {
-        return this.childrenService.findOne(id, req.user.userId);
+    async findOne(req, id) {
+        const child = await this.childrenService.findOneById(id);
+        if (!child) {
+            throw new common_1.NotFoundException('Child not found');
+        }
+        if (!await this.childrenService.hasAccess(id, req.user.userId)) {
+            throw new common_1.ForbiddenException('You do not have access to this child profile.');
+        }
+        return child;
     }
-    update(req, id, updateData) {
-        return this.childrenService.update(id, req.user.userId, updateData);
+    async update(req, id, updateChildDto) {
+        const child = await this.childrenService.findOneById(id);
+        if (!child) {
+            throw new common_1.NotFoundException('Child not found');
+        }
+        if (!await this.childrenService.hasAccess(id, req.user.userId)) {
+            throw new common_1.ForbiddenException('You do not have access to this child profile.');
+        }
+        return this.childrenService.update(id, req.user.userId, updateChildDto);
     }
-    remove(req, id) {
+    async remove(req, id) {
+        const child = await this.childrenService.findOneById(id);
+        if (!child) {
+            throw new common_1.NotFoundException('Child not found');
+        }
+        if (!await this.childrenService.hasAccess(id, req.user.userId)) {
+            throw new common_1.ForbiddenException('You do not have access to this child profile.');
+        }
         return this.childrenService.remove(id, req.user.userId);
     }
 };
 exports.ChildrenController = ChildrenController;
 __decorate([
     (0, common_1.Post)(),
+    (0, common_1.UsePipes)(new common_1.ValidationPipe({ whitelist: true, transform: true })),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object, create_child_dto_1.CreateChildDto]),
     __metadata("design:returntype", void 0)
 ], ChildrenController.prototype, "create", null);
 __decorate([
@@ -59,16 +83,17 @@ __decorate([
     __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], ChildrenController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
+    (0, common_1.UsePipes)(new common_1.ValidationPipe({ whitelist: true, transform: true })),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object, String, update_child_dto_1.UpdateChildDto]),
+    __metadata("design:returntype", Promise)
 ], ChildrenController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
@@ -76,7 +101,7 @@ __decorate([
     __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], ChildrenController.prototype, "remove", null);
 exports.ChildrenController = ChildrenController = __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),

@@ -45,11 +45,11 @@ export class BottomNavComponent {
   readonly currentTab = this.dataService.currentTab;
 
   readonly tabs: NavTab[] = [
-    { id: 'home', icon: 'home', labelKey: 'bottomNav.home' },
-    { id: 'temperature', icon: 'thermostat', labelKey: 'bottomNav.temperature' },
-    { id: 'growth', icon: 'trending_up', labelKey: 'bottomNav.growth' },
-    { id: 'diary', icon: 'edit_document', labelKey: 'bottomNav.diary' },
-    { id: 'vaccines', icon: 'vaccines', labelKey: 'bottomNav.vaccines' },
+    { id: 'home', icon: 'house', labelKey: 'bottomNav.home' },
+    { id: 'temperature', icon: 'thermometer', labelKey: 'bottomNav.temperature' },
+    { id: 'growth', icon: 'trending-up', labelKey: 'bottomNav.growth' },
+    { id: 'diary', icon: 'book-open', labelKey: 'bottomNav.diary' },
+    { id: 'vaccines', icon: 'syringe', labelKey: 'bottomNav.vaccines' },
   ];
 
   label(key: string): string {

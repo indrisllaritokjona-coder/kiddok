@@ -19,11 +19,12 @@ import { BottomNavComponent } from './bottom-nav.component';
 import { FormsModule } from '@angular/forms';
 import { AddEditChildModalComponent } from '../features/child/add-edit-child-modal/add-edit-child-modal.component';
 import { SettingsPageComponent } from './settings/settings-page.component';
+import { AnalyticsComponent } from './analytics.component';
 
 @Component({
     selector: 'app-shell',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, FormsModule, LucideAngularModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, MedicationsComponent, AppointmentsComponent, LabResultsComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent],
+    imports: [CommonModule, FormsModule, LucideAngularModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, MedicationsComponent, AppointmentsComponent, LabResultsComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent, AnalyticsComponent],
     template: `
 
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
@@ -271,6 +272,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                 @case ('medications') { <app-medications /> }
                 @case ('appointments') { <app-appointments /> }
                 @case ('lab-results') { <app-lab-results /> }
+                @case ('analytics') { <app-analytics /> }
                 @case ('settings') {
                   <app-settings-page
                     (openEditChild)="openEditModal($event)"

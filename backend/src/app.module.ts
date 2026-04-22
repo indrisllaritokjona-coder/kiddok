@@ -19,6 +19,10 @@ import { LabResultsModule } from './lab-results/lab-results.module';
 import { ShareModule } from './share/share.module';
 import { FamilyMembersModule } from './family-members/family-members.module';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ExportModule } from './export/export.module';
+import { ImportModule } from './import/import.module';
+import { MailModule } from './mail/mail.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -38,12 +42,17 @@ import { ThrottlerModule } from '@nestjs/throttler';
     LabResultsModule,
     ShareModule,
     FamilyMembersModule,
+    // Scheduling + Email
+    ScheduleModule.forRoot(),
+    MailModule,
     // Global rate limiting: 100 requests per minute per IP
     ThrottlerModule.forRoot([{
       name: 'short',
       ttl: 60000,
       limit: 100,
     }]),
+    ExportModule,
+    ImportModule,
   ],
   controllers: [AppController],
   providers: [AppService],

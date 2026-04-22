@@ -285,6 +285,7 @@ export class SidebarComponent {
     { id: 'medications', icon: 'pill', labelKey: 'sidebar.nav.medications' },
     { id: 'appointments', icon: 'calendar-check', labelKey: 'sidebar.nav.appointments' },
     { id: 'lab-results', icon: 'flask-conical', labelKey: 'sidebar.nav.labResults' },
+    { id: 'analytics', icon: 'bar-chart-2', labelKey: 'sidebar.nav.analytics' },
   ];
 
   readonly activeChild = computed(() => {

@@ -123,6 +123,16 @@ export class QuickActionsGridComponent {
         badge: overdueCount,
         route: 'records',
       },
+      {
+        id: 'analytics',
+        icon: 'bar_chart_2',
+        labelKey: 'home.quickActions.analytics',
+        descKey: 'home.quickActions.analyticsDesc',
+        color: '#0EA5E9',
+        colorClass: 'bg-sky-50 text-sky-500',
+        badge: 0,
+        route: 'analytics',
+      },
     ];
   });
 

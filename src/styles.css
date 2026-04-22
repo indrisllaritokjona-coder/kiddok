@@ -2,13 +2,187 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
+@layer base {
+  /* Dark mode defaults */
+  .dark {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-card: #1e293b;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --border-color: #334155;
+  }
+
+  /* Accent color: purple (default) */
+  :root, [data-accent="purple"] {
+    --accent-50: #f5f3ff;
+    --accent-100: #ede9fe;
+    --accent-200: #ddd6fe;
+    --accent-300: #c4b5fd;
+    --accent-400: #a78bfa;
+    --accent-500: #8b5cf6;
+    --accent-600: #7c3aed;
+    --accent-900: #4c1d95;
+  }
+
+  /* Accent color: blue */
+  [data-accent="blue"] {
+    --accent-50: #eff6ff;
+    --accent-100: #dbeafe;
+    --accent-200: #bfdbfe;
+    --accent-300: #93c5fd;
+    --accent-400: #60a5fa;
+    --accent-500: #3b82f6;
+    --accent-600: #2563eb;
+    --accent-900: #1e3a8a;
+  }
+
+  /* Accent color: green */
+  [data-accent="green"] {
+    --accent-50: #f0fdf4;
+    --accent-100: #dcfce7;
+    --accent-200: #bbf7d0;
+    --accent-300: #86efac;
+    --accent-400: #4ade80;
+    --accent-500: #22c55e;
+    --accent-600: #16a34a;
+    --accent-900: #14532d;
+  }
+
+  /* Accent color: orange */
+  [data-accent="orange"] {
+    --accent-50: #fff7ed;
+    --accent-100: #ffedd5;
+    --accent-200: #fed7aa;
+    --accent-300: #fdba74;
+    --accent-400: #fb923c;
+    --accent-500: #f97316;
+    --accent-600: #ea580c;
+    --accent-900: #7c2d12;
+  }
+
+  /* Font size: small */
+  [data-font-size="small"] {
+    font-size: 14px;
+  }
+
+  /* Font size: medium (default) */
+  [data-font-size="medium"] {
+    font-size: 16px;
+  }
+
+  /* Font size: large */
+  [data-font-size="large"] {
+    font-size: 18px;
+  }
+}
+
+@layer components {
   .glass {
     @apply bg-white/60 backdrop-blur-lg border border-white/40 shadow-glass;
   }
   .glass-dark {
     @apply bg-gray-900/60 backdrop-blur-lg border border-gray-700/40 shadow-glass rounded-2xl;
   }
+}
+
+/* Dark mode styles */
+.dark body {
+  @apply bg-slate-900 text-slate-100;
+}
+
+.dark .bg-white {
+  @apply bg-slate-800;
+}
+
+.dark .bg-slate-50 {
+  @apply bg-slate-700;
+}
+
+.dark .bg-slate-100 {
+  @apply bg-slate-700;
+}
+
+.dark .bg-slate-200 {
+  @apply bg-slate-600;
+}
+
+.dark .text-gray-800 {
+  @apply text-slate-100;
+}
+
+.dark .text-gray-600 {
+  @apply text-slate-300;
+}
+
+.dark .text-gray-500 {
+  @apply text-slate-400;
+}
+
+.dark .text-gray-400 {
+  @apply text-slate-400;
+}
+
+.dark .border-slate-200 {
+  @apply border-slate-600;
+}
+
+.dark .border-slate-100 {
+  @apply border-slate-700;
+}
+
+.dark .border-slate-300 {
+  @apply border-slate-600;
+}
+
+.dark .shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+.dark .shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+}
+
+.dark .shadow-glass {
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Accent color utilities */
+.text-accent {
+  color: var(--accent-500);
+}
+.bg-accent {
+  background-color: var(--accent-500);
+}
+.bg-accent-50 {
+  background-color: var(--accent-50);
+}
+.bg-accent-100 {
+  background-color: var(--accent-100);
+}
+.border-accent-300 {
+  border-color: var(--accent-300);
+}
+.text-accent-600 {
+  color: var(--accent-600);
+}
+.text-accent-700 {
+  color: var(--accent-700);
+}
+.hover\:bg-accent-50:hover {
+  background-color: var(--accent-50);
+}
+.hover\:border-accent-300:hover {
+  border-color: var(--accent-300);
+}
+.hover\:text-accent-600:hover {
+  color: var(--accent-600);
+}
+.focus\:ring-accent-500\/10:focus {
+  --tw-ring-color: var(--accent-500);
+}
+.placeholder-gray-300::placeholder {
+  color: #cbd5e1;
 }
 
 /* Page transitions */
@@ -39,6 +213,10 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
+.dark .card-hover:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -62,4 +240,8 @@
 
 body {
   @apply bg-slate-50 text-gray-800 font-sans antialiased;
+}
+
+.dark body {
+  @apply bg-slate-900 text-slate-100;
 }

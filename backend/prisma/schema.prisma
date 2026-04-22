@@ -42,6 +42,8 @@ model Child {
   diaryEntries        DiaryEntry[]
   illnessEpisodes     IllnessEpisode[]
   medications          Medication[]
+  appointments        Appointment[]
+  labResults          LabResult[]
   familyMembers       FamilyMember[]
   shareLinks          ShareLink[]
   createdAt          DateTime       @default(now())
@@ -53,17 +55,15 @@ model HealthRecord {
   childId         String
   child           Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
   date            DateTime @default(now())
-  type            String   // "ILLNESS", "CHECKUP", "SYMPTOM", "TEMP", "MEDICATION", "VACCINE"
+  type            String
   symptoms        String?
   diagnosis       String?
   medications     String?
   notes           String?
   attachments     String[]
   doctorName      String?
-  // Temperature log fields
   temperature     Float?
   temperatureTime String?
-  // Medication log fields
   medicationName   String?
   medicationDose   String?
   medicationTime   String?
@@ -112,9 +112,9 @@ model DiaryEntry {
   id          String   @id @default(uuid())
   childId     String
   child       Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
-  type        String   // symptom | meal | sleep | mood | activity
+  type        String
   description String?
-  severity    String?  // mild | moderate | severe
+  severity    String?
   duration    String?
   loggedAt    DateTime @default(now())
   notes       String?
@@ -178,7 +178,35 @@ model FamilyMember {
   user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   childId  String
   child    Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
-  role     String // 'parent' | 'grandparent' | 'nanny' | 'doctor'
+  role     String
 
   @@unique([userId, childId])
+}
+
+model Appointment {
+  id         String   @id @default(uuid())
+  childId    String
+  child      Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  title      String
+  doctorName String?
+  location   String?
+  dateTime   DateTime
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model LabResult {
+  id             String   @id @default(uuid())
+  childId        String
+  child          Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  testName       String
+  result         String
+  unit           String?
+  referenceRange String?
+  date           DateTime
+  doctor         String?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }

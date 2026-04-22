@@ -27,6 +27,10 @@ const lab_results_module_1 = require("./lab-results/lab-results.module");
 const share_module_1 = require("./share/share.module");
 const family_members_module_1 = require("./family-members/family-members.module");
 const throttler_1 = require("@nestjs/throttler");
+const export_module_1 = require("./export/export.module");
+const import_module_1 = require("./import/import.module");
+const mail_module_1 = require("./mail/mail.module");
+const schedule_1 = require("@nestjs/schedule");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -49,11 +53,15 @@ exports.AppModule = AppModule = __decorate([
             lab_results_module_1.LabResultsModule,
             share_module_1.ShareModule,
             family_members_module_1.FamilyMembersModule,
+            schedule_1.ScheduleModule.forRoot(),
+            mail_module_1.MailModule,
             throttler_1.ThrottlerModule.forRoot([{
                     name: 'short',
                     ttl: 60000,
                     limit: 100,
                 }]),
+            export_module_1.ExportModule,
+            import_module_1.ImportModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

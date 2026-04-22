@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["angular:styles/component:css;4edade868300c889bf3186ff41a82f8dc02abd53db4197e6f0acdbebcee4f2ee;C:/Users/g_gus/Desktop/jona/kiddok/src/app/components/home.component.ts"],
-  "sourcesContent": ["\n      :host { display: block; }\n    "],
-  "mappings": ";AACM;AAAQ,WAAS;AAAO;",
-  "names": []
-}

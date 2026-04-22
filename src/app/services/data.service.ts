@@ -77,6 +77,22 @@ export interface DiaryEntry {
   notes?: string;
 }
 
+export interface VaccineRecord {
+  id: string;
+  childId: string;
+  vaccineName?: string;
+  manufacturer?: string;
+  doseNumber: number;
+  totalDoses: number;
+  dueDate: string;
+  completedAt?: string;
+  administeredBy?: string;
+  batchNumber?: string;
+  site?: string;
+  notes?: string;
+  status: 'overdue' | 'due' | 'upcoming' | 'completed';
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -102,6 +118,7 @@ export class DataService {
   records = signal<MedicalRecord[]>([]);
   temperatureEntries = signal<TemperatureEntry[]>([]);
   growthEntries = signal<GrowthEntry[]>([]);
+  vaccineRecords = signal<VaccineRecord[]>([]);
 
   // Parent profile
   parentProfile = signal<ParentProfile>({ name: '', surname: '', phone: '' });
@@ -391,6 +408,44 @@ export class DataService {
       console.error('[DataService] loadGrowthEntries failed:', err);
       this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
       return [];
+    }
+  }
+
+  async loadVaccineRecords(childId: string): Promise<VaccineRecord[]> {
+    try {
+      const records = await firstValueFrom(
+        this.http.get<VaccineRecord[]>(`${this.API_URL}/vaccines/child/${childId}`, this.getHeaders())
+      );
+      this.vaccineRecords.set(records);
+      return records;
+    } catch (err: any) {
+      console.error('[DataService] loadVaccineRecords failed:', err);
+      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+      return [];
+    }
+  }
+
+  async exportChildCsv(childId: string): Promise<void> {
+    try {
+      const response = await firstValueFrom(
+        this.http.get(`${this.API_URL}/export/${childId}/csv`, {
+          ...this.getHeaders(),
+          responseType: 'blob',
+        })
+      ) as Blob;
+      const url = URL.createObjectURL(response);
+      const a = document.createElement('a');
+      a.href = url;
+      const contentDisposition = (response as any)['type'];
+      // Extract filename from Content-Disposition or generate default
+      a.download = `kiddok_export_${childId}_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error('[DataService] exportChildCsv failed:', err);
+      this.toast.show('Eksportimi dështoi. Provoni përsëri.', 'error');
     }
   }
 

@@ -223,8 +223,6 @@ interface NavItem {
     }
 
     .sidebar__nav-icon {
-      font-size: 22px;
-      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
       flex-shrink: 0;
     }
 

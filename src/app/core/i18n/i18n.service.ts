@@ -362,6 +362,22 @@ const translations = {
   'vaccines.alertCard.dueSoon': { sq: 'pÃ«r shkak sot', en: 'due today' },
   'vaccines.alertCard.upcoming': { sq: 'nÃ« pritje', en: 'upcoming' },
   'vaccines.alertCard.dismiss': { sq: 'Hiqe', en: 'Dismiss' },
+  // Records (Vaccine/Medical Records page)
+  'records.title': { sq: 'Dosja e Vaksinave', en: 'Vaccine Records' },
+  'records.subtitle': { sq: 'Kalendari zyrtar i mjekimeve dhe rekomandimeve të mjekut.', en: 'Official schedule of treatments and doctor recommendations.' },
+  'records.addRecord': { sq: 'Shto Dokument i Ri', en: 'Add New Record' },
+  'records.formTitle': { sq: 'Skeda e Vaksinimit', en: 'Vaccination Record' },
+  'records.nameLabel': { sq: 'Emërtimi / Përshkrimi', en: 'Name / Description' },
+  'records.namePlaceholder': { sq: 'Psh: Vaksina MMR II', en: 'e.g. MMR II Vaccine' },
+  'records.statusLabel': { sq: 'Kryerja është...', en: 'Status is...' },
+  'records.completed': { sq: 'Përfunduar', en: 'Completed' },
+  'records.pending': { sq: 'Në Pritje', en: 'Pending' },
+  'records.dateLabel': { sq: 'Data e Planifikimit/Bërjes', en: 'Scheduled / Completion Date' },
+  'records.updateButton': { sq: 'Përditëso Dosjen', en: 'Update Record' },
+  'records.emptyTitle': { sq: 'Asnjë e dhënë laboratorike.', en: 'No medical records yet.' },
+  'records.emptyHint': { sq: 'Regjistro të paktën një vaksinë ose vizitë te mjeku.', en: 'Record at least one vaccine or doctor visit.' },
+  'records.status.done': { sq: 'Kryer', en: 'Done' },
+  'records.status.planned': { sq: 'Në plan', en: 'Planned' },
 } as const;
 
 type TranslationKey = keyof RawTranslations;

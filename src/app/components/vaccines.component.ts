@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService, ChildProfile } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
+import { VaccineScheduleComponent, VaccineRecord } from './vaccines/vaccine-schedule.component';
+import { VaccineAlertCardComponent, VaccineAlert } from './vaccines/vaccine-alert-card.component';
 
 export interface VaccineRecord {
   id: string;
@@ -34,7 +36,7 @@ const STANDARD_VACCINES = [
 
 @Component({
   selector: 'app-vaccines',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, VaccineScheduleComponent, VaccineAlertCardComponent],
   template: `
     <div class="min-h-screen bg-gray-50 pb-24">
 
@@ -92,111 +94,28 @@ const STANDARD_VACCINES = [
         </div>
       }
 
-      <!-- Alert Banner (Overdue) -->
-      @if (overdueCount() > 0 && !loading()) {
-        <div class="mx-4 mt-6 bg-rose-50 border border-rose-200 rounded-2xl p-4 flex items-center gap-3" id="overdue-section">
-          <div class="relative flex-shrink-0">
-            <div class="w-3 h-3 rounded-full bg-rose-500 animate-pulse"></div>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="font-bold text-rose-700 text-sm">
-              {{ t()['vaccines.alert.overdue'].replace('{n}', overdueCount().toString()) }}
-            </p>
-          </div>
-          <button (click)="showAddModal.set(true)"
-            class="bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold px-4 py-2 rounded-xl flex-shrink-0 transition-all">
-            {{ t()['vaccines.markComplete'] || 'Shëno si e bërë' }}
-          </button>
+      <!-- Alert Cards -->
+      @if (overdueAlerts().length > 0 && !loading()) {
+        <div class="mx-4 mt-6 space-y-2">
+          @for (alert of overdueAlerts(); track alert.id) {
+            <app-vaccine-alert-card
+              [alert]="alert"
+              (action)="handleAlertAction(alert)"
+              (dismiss)="dismissAlert(alert.id)"
+            />
+          }
         </div>
       }
 
-      <!-- Coming Up Card -->
-      @if (upcomingVaccines().length > 0 && !loading()) {
+      <!-- Vaccine Schedule Timeline -->
+      @if (!loading()) {
         <div class="mx-4 mt-6">
-          <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 ml-1">
-            {{ t()['vaccines.comingUp'] || 'Vijon së shpejti' }}
-          </h3>
-          <div class="space-y-3">
-            @for (v of upcomingVaccines().slice(0, 2); track v.id) {
-              <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl flex items-center justify-center"
-                  [ngClass]="getStatusBgClass(v.status)">
-                  <span class="material-icons" [ngClass]="getStatusTextClass(v.status)">{{ getStatusIcon(v.status) }}</span>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <p class="font-bold text-gray-800 text-sm truncate">{{ v.vaccineName }}</p>
-                  <p class="text-xs text-gray-500">{{ formatDate(v.dueDate) }}</p>
-                </div>
-                <div class="text-right flex-shrink-0">
-                  <span class="text-xs font-bold px-2.5 py-1 rounded-full"
-                    [ngClass]="getBadgeClass(v.status)">
-                    {{ v.doseNumber }}/{{ v.totalDoses }} {{ t()['vaccines.dosesProgress'] ? '' : 'doza' }}
-                  </span>
-                </div>
-              </div>
-            }
-          </div>
+          <app-vaccine-schedule
+            [childId]="dataService.activeChildId()"
+            [vaccineRecords]="childVaccines()"
+            (markComplete)="onScheduleMarkComplete($event)"
+          />
         </div>
-      }
-
-      <!-- Vaccine Timeline -->
-      @if (!loading() && childVaccines().length > 0) {
-        <!-- Overdue Section -->
-        @if (overdueVaccines().length > 0) {
-          <div class="mx-4 mt-6">
-            <h3 class="text-xs font-bold text-rose-600 uppercase tracking-widest mb-3 ml-1 flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-              {{ t()['vaccines.status.overdue'] || 'Vonuar' }} ({{ overdueVaccines().length }})
-            </h3>
-            <div class="space-y-3">
-              @for (v of overdueVaccines(); track v.id) {
-                <ng-container *ngTemplateOutlet="vaccineCard; context: {v: v}"></ng-container>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Due Section -->
-        @if (dueVaccines().length > 0) {
-          <div class="mx-4 mt-6">
-            <h3 class="text-xs font-bold text-orange-600 uppercase tracking-widest mb-3 ml-1">
-              {{ t()['vaccines.status.due'] || 'Për shkak' }} ({{ dueVaccines().length }})
-            </h3>
-            <div class="space-y-3">
-              @for (v of dueVaccines(); track v.id) {
-                <ng-container *ngTemplateOutlet="vaccineCard; context: {v: v}"></ng-container>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Upcoming Section -->
-        @if (upcomingVaccines().length > 0) {
-          <div class="mx-4 mt-6">
-            <h3 class="text-xs font-bold text-teal-600 uppercase tracking-widest mb-3 ml-1">
-              {{ t()['vaccines.status.upcoming'] || 'Së shpejti' }} ({{ upcomingVaccines().length }})
-            </h3>
-            <div class="space-y-3">
-              @for (v of upcomingVaccines(); track v.id) {
-                <ng-container *ngTemplateOutlet="vaccineCard; context: {v: v}"></ng-container>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Completed Section -->
-        @if (completedVaccines().length > 0) {
-          <div class="mx-4 mt-6">
-            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 ml-1">
-              {{ t()['vaccines.status.completed'] || 'Përfunduar' }} ({{ completedVaccines().length }})
-            </h3>
-            <div class="space-y-3">
-              @for (v of completedVaccines(); track v.id) {
-                <ng-container *ngTemplateOutlet="vaccineCard; context: {v: v}"></ng-container>
-              }
-            </div>
-          </div>
-        }
       }
 
     </div>
@@ -426,6 +345,9 @@ export class VaccinesComponent implements OnInit {
   formDoctor = '';
   formNotes = '';
 
+  // Dismissed alerts
+  dismissedAlertIds = signal<Set<string>>(new Set());
+
   t = computed(() => this.i18n.t());
 
   childVaccines = computed(() => {
@@ -439,6 +361,17 @@ export class VaccinesComponent implements OnInit {
   upcomingVaccines = computed(() => this.childVaccines().filter(v => v.status === 'upcoming'));
   completedVaccines = computed(() => this.childVaccines().filter(v => v.status === 'completed'));
   overdueCount = computed(() => this.overdueVaccines().length);
+
+  overdueAlerts = computed<VaccineAlert[]>(() => {
+    return this.overdueVaccines().map(v => ({
+      id: v.id,
+      vaccineName: v.vaccineName,
+      doseLabel: `${v.doseNumber}/${v.totalDoses}`,
+      dueDate: v.dueDate,
+      status: 'overdue' as const,
+      daysOverdue: Math.floor((Date.now() - new Date(v.dueDate).getTime()) / 86400000),
+    })).filter(a => !this.dismissedAlertIds().has(a.id));
+  });
 
   ngOnInit() {
     this.loadVaccines();
@@ -684,5 +617,28 @@ export class VaccinesComponent implements OnInit {
     this.formSite = '';
     this.formDoctor = '';
     this.formNotes = '';
+  }
+
+  handleAlertAction(alert: VaccineAlert) {
+    const record = this.vaccines().find(v => v.id === alert.id);
+    if (record) this.markComplete(record, new Event('click'));
+  }
+
+  dismissAlert(alertId: string) {
+    this.dismissedAlertIds.update(set => {
+      const newSet = new Set(set);
+      newSet.add(alertId);
+      return newSet;
+    });
+  }
+
+  onScheduleMarkComplete(event: { entry: any; date: string }) {
+    const record = this.vaccines().find(v =>
+      v.vaccineName.includes(event.entry.scheduleEntry.code) &&
+      v.doseNumber === event.entry.doseIndex
+    );
+    if (record) {
+      this.markComplete(record, new Event('click'));
+    }
   }
 }

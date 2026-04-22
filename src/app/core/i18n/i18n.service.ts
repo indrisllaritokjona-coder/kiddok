@@ -325,6 +325,7 @@ const translations = {
   'vaccines.totalDoses': { sq: 'Nga gjithsej', en: 'of total' },
   'vaccines.dateGiven': { sq: 'Data e vendosjes', en: 'Date Given' },
   'vaccines.batchNumber': { sq: 'Numri i batch-it', en: 'Batch Number' },
+  'vaccines.manufacturer': { sq: 'Prodhuesi', en: 'Manufacturer' },
   'vaccines.injectionSite': { sq: 'Vendi i injeksionit', en: 'Injection Site' },
   'vaccines.doctor': { sq: 'Mjeku/Dhoma', en: 'Doctor/Clinic' },
   'vaccines.notes': { sq: 'Shënime', en: 'Notes' },
@@ -343,6 +344,23 @@ const translations = {
   'vaccines.site.thigh': { sq: 'Kofshë', en: 'Thigh' },
   'vaccines.cancel': { sq: 'Anulo', en: 'Cancel' },
   'vaccines.save': { sq: 'Ruaj', en: 'Save' },
+  // Vaccine Schedule
+  'vaccines.schedule.title': { sq: 'Planifikimi i Vaksinave', en: 'Vaccine Schedule' },
+  'vaccines.schedule.completed': { sq: 'Përfunduar', en: 'Completed' },
+  'vaccines.schedule.upcoming': { sq: 'Në pritje', en: 'Upcoming' },
+  'vaccines.schedule.overdue': { sq: 'I vonuar', en: 'Overdue' },
+  'vaccines.schedule.notStarted': { sq: 'I pamartur', en: 'Not started' },
+  'vaccines.schedule.dueSoon': { sq: 'Së shpejti', en: 'Due soon' },
+  'vaccines.schedule.expandDetails': { sq: 'Shiko detajet', en: 'View details' },
+  'vaccines.schedule.markComplete': { sq: 'Shëno të përfunduar', en: 'Mark complete' },
+  'vaccines.schedule.completionDate': { sq: 'Data e përfundimit', en: 'Completion date' },
+  // Vaccine Alert Card
+  'vaccines.alertCard.markComplete': { sq: 'Shëno të përfunduar', en: 'Mark complete' },
+  'vaccines.alertCard.viewDetails': { sq: 'Shiko detajet', en: 'View details' },
+  'vaccines.alertCard.overdue': { sq: 'e vonuar {n} ditë', en: 'overdue by {n} days' },
+  'vaccines.alertCard.dueSoon': { sq: 'për shkak sot', en: 'due today' },
+  'vaccines.alertCard.upcoming': { sq: 'në pritje', en: 'upcoming' },
+  'vaccines.alertCard.dismiss': { sq: 'Hiqe', en: 'Dismiss' },
 } as const;
 
 type TranslationKey = keyof RawTranslations;

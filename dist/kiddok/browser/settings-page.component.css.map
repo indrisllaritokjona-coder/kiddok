@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["angular:styles/component:css;8f6a1dc74b2cbc43b8890a8c2ed75780d07c073aa4c1e620542f24a1d031493d;C:/Users/g_gus/Desktop/jona/kiddok/src/app/components/settings/settings-page.component.ts"],
+  "sourcesContent": ["\n    .animate-fade-in {\n      animation: fadeIn 0.25s ease-out;\n    }\n    @keyframes fadeIn {\n      from { opacity: 0; transform: translateY(-4px); }\n      to { opacity: 1; transform: translateY(0); }\n    }\n  "],
+  "mappings": ";AACI,CAAC;AACC,aAAW,OAAO,MAAM;AAC1B;AACA,WAFa;AAGX;AAAO,aAAS;AAAG,eAAW,WAAW;AAAO;AAChD;AAAK,aAAS;AAAG,eAAW,WAAW;AAAI;AAC7C;",
+  "names": []
+}

@@ -260,6 +260,7 @@ export class TemperatureDiaryComponent implements OnInit, AfterViewInit, OnDestr
   saving = signal(false);
   saved = signal(false);
 
+  private chartInitialized = false;
   private chartInstance: any = null;
   private chartEffect: any = null;
 

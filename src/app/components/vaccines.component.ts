@@ -187,7 +187,7 @@ const STANDARD_VACCINES = [
         <!-- Completed Section -->
         @if (completedVaccines().length > 0) {
           <div class="mx-4 mt-6">
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">
+            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 ml-1">
               {{ t()['vaccines.status.completed'] || 'Përfunduar' }} ({{ completedVaccines().length }})
             </h3>
             <div class="space-y-3">
@@ -231,7 +231,7 @@ const STANDARD_VACCINES = [
           </div>
 
           <!-- Expand Icon -->
-          <span class="material-icons text-gray-400 text-lg flex-shrink-0 transition-transform"
+          <span class="material-icons text-gray-500 text-lg flex-shrink-0 transition-transform"
             [ngClass]="expandedId() === v.id ? 'rotate-180' : ''">expand_more</span>
         </div>
 
@@ -290,7 +290,7 @@ const STANDARD_VACCINES = [
           <!-- Header -->
           <div class="sticky top-0 bg-white px-6 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between rounded-t-3xl">
             <h2 class="text-xl font-extrabold text-gray-800">{{ t()['vaccines.addRecord'] || 'Shto Vaksina' }}</h2>
-            <button (click)="showAddModal.set(false)" class="text-gray-400 hover:text-gray-600 bg-gray-100 p-2 rounded-xl transition-all">
+            <button (click)="showAddModal.set(false)" class="text-gray-500 hover:text-gray-600 bg-gray-100 p-2 rounded-xl transition-all">
               <span class="material-icons">close</span>
             </button>
           </div>

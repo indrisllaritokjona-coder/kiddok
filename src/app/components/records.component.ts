@@ -25,7 +25,7 @@ import { FormsModule } from '@angular/forms';
           <div class="bg-white p-8 rounded-3xl shadow-soft xl:col-span-1 animate-slide-up border border-gray-100 sticky top-4">
             <div class="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
                <h3 class="font-bold text-xl text-gray-800">Skeda e Vaksinimit</h3>
-               <button (click)="isAdding.set(false)" class="text-gray-400 hover:text-gray-600 bg-gray-100 p-1.5 rounded-xl"><span class="material-icons">close</span></button>
+               <button (click)="isAdding.set(false)" class="text-gray-500 hover:text-gray-600 bg-gray-100 p-1.5 rounded-xl"><span class="material-icons">close</span></button>
             </div>
             
             <div class="space-y-5">

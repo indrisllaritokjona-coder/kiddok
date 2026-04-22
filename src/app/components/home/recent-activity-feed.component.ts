@@ -40,7 +40,7 @@ interface ActivityItem {
             <path d="M54 52 Q60 57 66 52" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.4"/>
           </svg>
           <p class="font-semibold text-gray-600 text-base mb-1">{{ i18n.t()['home.recentActivity.empty'] }}</p>
-          <p class="text-sm text-gray-400 font-medium">{{ i18n.t()['home.recentActivity.emptyDesc'] }}</p>
+          <p class="text-sm text-gray-500 font-medium">{{ i18n.t()['home.recentActivity.emptyDesc'] }}</p>
         </div>
       } @else {
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm divide-y divide-gray-50 overflow-hidden">
@@ -62,12 +62,12 @@ interface ActivityItem {
               <!-- Content -->
               <div class="flex-1 min-w-0">
                 <p class="font-semibold text-gray-800 text-sm truncate">{{ item.title }}</p>
-                <p class="text-xs text-gray-400 font-medium mt-0.5">{{ item.value }}</p>
+                <p class="text-xs text-gray-500 font-medium mt-0.5">{{ item.value }}</p>
               </div>
 
               <!-- Time + chevron -->
               <div class="flex items-center gap-2 flex-shrink-0">
-                <span class="text-xs text-gray-400 font-medium">{{ item.timeAgo }}</span>
+                <span class="text-xs text-gray-500 font-medium">{{ item.timeAgo }}</span>
                 <span class="material-icons text-gray-300 text-base group-hover:text-primary-400 transition-colors">chevron_right</span>
               </div>
             </div>

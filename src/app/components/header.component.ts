@@ -43,9 +43,10 @@ import { I18nService } from '../core/i18n/i18n.service';
 
         <!-- Language toggle (mobile only) -->
         <button (click)="localeToggleRequested.emit()"
-                class="lg:hidden flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-full text-xs font-bold text-gray-600 transition-all">
+                class="lg:hidden flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-full text-xs font-bold text-gray-600 transition-all"
+                aria-label="Switch to English/Albanian">
           <span class="material-icons text-sm">language</span>
-          {{ i18n.locale() === 'sq' ? 'SQ' : 'EN' }}
+          {{ i18n.locale() === 'sq' ? i18n.t()['header.sq'] : i18n.t()['header.en'] }}
         </button>
 
         <!-- Child Switcher Pill -->
@@ -65,11 +66,11 @@ import { I18nService } from '../core/i18n/i18n.service';
               }
             } @else {
               <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-slate-100 flex items-center justify-center border-2 border-dashed border-slate-300">
-                <span class="material-icons text-gray-400 text-sm">person</span>
+                <span class="material-icons text-gray-500 text-sm">person</span>
               </div>
               <span class="font-bold text-gray-500 hidden sm:block">{{ i18n.t()['child.addNewBtn'] }}</span>
             }
-            <span class="material-icons text-gray-400 text-sm transition-transform duration-200"
+            <span class="material-icons text-gray-500 text-sm transition-transform duration-200"
                   [class.rotate-180]="showDropdown()">expand_more</span>
           </button>
 
@@ -80,7 +81,7 @@ import { I18nService } from '../core/i18n/i18n.service';
               <!-- Section label -->
               <div class="px-5 pb-3 pt-1 mb-2 border-b border-gray-50 flex items-center gap-2">
                 <span class="material-icons text-primary-500 text-sm">family_restroom</span>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">
                   {{ i18n.t()['header.profileLabel'] }}
                 </span>
               </div>
@@ -88,7 +89,7 @@ import { I18nService } from '../core/i18n/i18n.service';
               <!-- Empty state -->
               @if (!hasChildren()) {
                 <div class="px-5 py-8 text-center">
-                  <p class="text-gray-400 text-sm font-medium">
+                  <p class="text-gray-500 text-sm font-medium">
                     {{ i18n.t()['header.noChildrenPlaceholder'] }}
                   </p>
                 </div>

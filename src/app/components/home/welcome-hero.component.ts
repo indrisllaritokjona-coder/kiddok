@@ -26,7 +26,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
           />
 
           <!-- Text content -->
-          <div class="flex-1 min-w-0" [style.animation]="'fadeInUp 600ms ease 80ms both'">
+          <div class="flex-1 min-w-0" [style.animation]="'fadeInUp 350ms ease-out both'">
             <p class="text-primary-100 text-sm font-medium mb-1 flex items-center gap-1.5">
               <span class="material-icons text-xs">{{ timeIcon() }}</span>
               {{ timeGreeting() }}
@@ -43,7 +43,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
           </div>
 
           <!-- Date display -->
-          <div class="hidden sm:flex flex-col items-end text-white/80" [style.animation]="'fadeInUp 600ms ease 200ms both'">
+          <div class="hidden sm:flex flex-col items-end text-white/80" [style.animation]="'fadeInUp 350ms ease-out both'">
             <span class="text-xs font-medium opacity-70">{{ dayName() }}</span>
             <span class="text-lg font-bold text-white">{{ dateDisplay() }}</span>
           </div>

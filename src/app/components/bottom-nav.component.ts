@@ -22,7 +22,7 @@ interface NavTab {
             class="flex flex-col items-center justify-center gap-1 flex-1 h-full py-2 px-1 transition-colors duration-200 appearance-none bg-transparent border-none cursor-pointer"
             [class.text-indigo-600]="currentTab() === tab.id"
             [class.text-stone-500]="currentTab() !== tab.id"
-            (click)="navigate(tab.id)">
+            (click)="navigate(tab.id)" aria-label="{{ label(tab.labelKey) }}">
             <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;">
               {{ tab.icon }}
             </span>

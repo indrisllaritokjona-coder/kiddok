@@ -53,7 +53,7 @@ interface QuickAction {
 
             <!-- Label -->
             <p class="font-semibold text-gray-800 text-base mb-1">{{ i18n.t()[action.labelKey] }}</p>
-            <p class="text-xs text-gray-400 font-medium">{{ i18n.t()[action.descKey] }}</p>
+            <p class="text-xs text-gray-500 font-medium">{{ i18n.t()[action.descKey] }}</p>
           </button>
         }
       </div>

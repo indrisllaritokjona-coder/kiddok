@@ -286,68 +286,29 @@ export class PinLockComponent {
   // ── Computed strings ────────────────────────────────────────
   isSq = computed(() => this.i18n.locale() === 'sq');
 
-  brandSubtitle = computed(() =>
-    this.isSq() ? 'Paneli i Prindërve' : 'Parent Dashboard'
-  );
-  welcomeTitle = computed(() =>
-    this.isSq() ? 'Mirësevini!' : 'Welcome!'
-  );
-  welcomeSubtitle = computed(() =>
-    this.isSq()
-      ? 'Hyni në llogarinë tuaj për të menaxhuar shëndetin e fëmijës.'
-      : 'Log in to manage your child\'s health records.'
-  );
-  usernameLabel = computed(() =>
-    this.isSq() ? 'Vendosni kodin e përdoruesit' : 'Enter User ID'
-  );
-  usernamePlaceholder = computed(() =>
-    this.isSq() ? 'P.sh. elena.hoxha' : 'e.g. elena.hoxha'
-  );
-  passwordLabel = computed(() =>
-    this.isSq() ? 'Vendosni fjalëkalimin' : 'Enter Password'
-  );
-  passwordPlaceholder = computed(() =>
-    this.isSq() ? 'Fjalëkalimi juaj' : 'Your password'
-  );
-  submitText = computed(() =>
-    this.isSq() ? 'Vazhdoni me identifikimin' : 'Continue Sign In'
-  );
-  loadingText = computed(() =>
-    this.isSq() ? 'Duke u identifikuar...' : 'Authenticating...'
-  );
-  languageLabel = computed(() =>
-    this.isSq() ? 'Gjuha:' : 'Language:'
-  );
-  footerText = computed(() =>
-    this.isSq() ? 'Të dhënat tuaja janë të sigurta & të mbrojtura' : 'Your data is safe & protected'
-  );
-  forgotLinkText = computed(() =>
-    this.isSq() ? 'Keni harruar fjalëkalimin tuaj?' : 'Forgot your password?'
-  );
-  backText = computed(() =>
-    this.isSq() ? 'Kthehu' : 'Go back'
-  );
+  brandSubtitle = computed(() => this.i18n.t()['pin.dashboard']);
+  welcomeTitle = computed(() => this.i18n.t()['pin.welcome']);
+  welcomeSubtitle = computed(() => this.i18n.t()['child.welcomeSub']);
+  usernameLabel = computed(() => this.i18n.t()['pin.enterUserId']);
+  usernamePlaceholder = computed(() => this.i18n.t()['pin.userIdHint']);
+  passwordLabel = computed(() => this.i18n.t()['pin.enterPassword']);
+  passwordPlaceholder = computed(() => this.i18n.t()['pin.yourPassword']);
+  submitText = computed(() => this.i18n.t()['pin.continueSignIn']);
+  loadingText = computed(() => this.i18n.t()['pin.authenticating']);
+  languageLabel = computed(() => this.i18n.t()['pin.language']);
+  footerText = computed(() => this.i18n.t()['pin.safeData']);
+  forgotLinkText = computed(() => this.i18n.t()['pin.forgotPassword']);
+  backText = computed(() => this.i18n.t()['pin.goBack']);
 
-  // Forgot mode computed strings
-  forgotTitle = computed(() =>
-    this.isSq() ? 'Ripërtëri fjalëkalimin' : 'Reset Password'
-  );
+  forgotTitle = computed(() => this.i18n.t()['pin.resetPassword']);
   forgotSubtitle = computed(() =>
-    this.isSq()
+    this.i18n.isSq()
       ? 'Vendosni NID / NIPT për t\'u identifikuar dhe për të rikthyer qasjen në llogarinë tuaj.'
       : 'Enter your NID / NIPT to verify your identity and recover access to your account.'
   );
-  confirmLabel = computed(() =>
-    this.isSq() ? 'NID / NIPT' : 'NID / NIPT'
-  );
-  otpLabel = computed(() =>
-    this.isSq() ? 'Kodi i konfirmimit' : 'Confirmation Code'
-  );
-  otpSuccessMsg = computed(() =>
-    this.isSq()
-      ? 'Një kod i ri sigurie u dërgua në numrin tuaj të telefonit që përfundon me ****123.'
-      : 'A new security code was sent to your phone number ending in ****123.'
-  );
+  confirmLabel = computed(() => this.i18n.t()['pin.nid']);
+  otpLabel = computed(() => this.i18n.t()['pin.confirmationCode']);
+  otpSuccessMsg = computed(() => this.i18n.t()['pin.otpSent']);
 
   // ── Border classes ─────────────────────────────────────────
 
@@ -402,9 +363,7 @@ export class PinLockComponent {
   touchUserId() {
     this.userIdTouched.set(true);
     if (!this.userId) {
-      this.userIdError.set(
-        this.isSq() ? 'Vendosni kodin e përdoruesit NID / NIPT' : 'Enter your User ID / NID / NIPT'
-      );
+      this.userIdError.set(this.i18n.t()['pin.enterNid']);
     }
   }
 
@@ -415,7 +374,7 @@ export class PinLockComponent {
   touchPassword() {
     this.passwordTouched.set(true);
     if (!this.password) {
-      this.passwordError.set(this.isSq() ? 'Vendosni fjalëkalimin' : 'Enter your password');
+      this.passwordError.set(this.i18n.t()['pin.enterPassword']);
     }
   }
 
@@ -426,11 +385,7 @@ export class PinLockComponent {
   touchForgotNid() {
     this.forgotNidTouched.set(true);
     if (!this.forgotNid) {
-      this.forgotNidError.set(
-        this.isSq()
-          ? 'Vendosni NID / NIPT për konfirmimin e identitetit tuaj'
-          : 'Enter your NID / NIPT to confirm identity'
-      );
+      this.forgotNidError.set(this.i18n.t()['pin.enterNidConfirm']);
     }
   }
 
@@ -441,11 +396,7 @@ export class PinLockComponent {
   touchOtp() {
     this.otpTouched.set(true);
     if (!this.otpCode || this.otpCode.length < 6) {
-      this.otpError.set(
-        this.isSq()
-          ? 'Vendosni kodin e konfirmimit (6 shifra)'
-          : 'Enter the 6-digit confirmation code'
-      );
+      this.otpError.set(this.i18n.t()['pin.enterOtp']);
     }
   }
 
@@ -467,10 +418,10 @@ export class PinLockComponent {
     this.userIdTouched.set(true);
     this.passwordTouched.set(true);
     if (!this.userId) {
-      this.userIdError.set(this.isSq() ? 'Vendosni kodin e përdoruesit NID / NIPT' : 'Enter your User ID / NID / NIPT');
+      this.userIdError.set(this.i18n.t()['pin.enterNid']);
     }
     if (!this.password) {
-      this.passwordError.set(this.isSq() ? 'Vendosni fjalëkalimin' : 'Enter your password');
+      this.passwordError.set(this.i18n.t()['pin.enterPassword']);
     }
     if (!this.userId || !this.password) return;
 
@@ -481,7 +432,7 @@ export class PinLockComponent {
       if (success) {
         this.router.navigate(['/child-selector']);
       } else {
-        this.errorMsg.set(this.isSq() ? 'Kodi ose fjalëkalimi është i pasaktë.' : 'Invalid username or password.');
+        this.errorMsg.set(this.i18n.t()['pin.invalidCredentials']);
         this.loading.set(false);
       }
     }, 700);
@@ -492,11 +443,7 @@ export class PinLockComponent {
     if (!this.otpSent()) {
       this.forgotNidTouched.set(true);
       if (!this.forgotNid) {
-        this.forgotNidError.set(
-          this.isSq()
-            ? 'Vendosni NID / NIPT për konfirmimin e identitetit tuaj'
-            : 'Enter your NID / NIPT to confirm identity'
-        );
+        this.forgotNidError.set(this.i18n.t()['pin.enterNidConfirm']);
         return;
       }
       // NID valid — show OTP step
@@ -511,11 +458,7 @@ export class PinLockComponent {
     // OTP step — validate code
     this.otpTouched.set(true);
     if (!this.otpCode || this.otpCode.length < 6) {
-      this.otpError.set(
-        this.isSq()
-          ? 'Vendosni kodin e konfirmimit (6 shifra)'
-          : 'Enter the 6-digit confirmation code'
-      );
+      this.otpError.set(this.i18n.t()['pin.enterOtp']);
       return;
     }
 

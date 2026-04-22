@@ -26,7 +26,7 @@ interface NavItem {
       <!-- Active child mini-card -->
       <div class="sidebar__child-card" [class.sidebar__child-card--empty]="!activeChild()">
         @if (activeChild(); as child) {
-          <img [src]="avatarUrl(child.id)" class="sidebar__avatar" alt="avatar" />
+          <img [src]="avatarUrl(child.id)" class="sidebar__avatar" [alt]="child.name + ' avatar'" />
           <div class="sidebar__child-info">
             <span class="sidebar__child-name">{{ child.name }}</span>
             <span class="sidebar__age-badge">{{ ageLabel(child) }}</span>

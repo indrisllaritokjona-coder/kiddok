@@ -74,14 +74,14 @@ import { I18nService } from '../../core/i18n/i18n.service';
         </h3>
         <div class="flex items-center justify-center">
           <div class="flex items-center gap-0 rounded-full bg-slate-100 p-1.5">
-            <button (click)="setLocale('sq')"
+            <button aria-label="Switch to Albanian" (click)="setLocale('sq')"
                     [class]="activeClass('sq')">
               @if (i18n.locale() === 'sq') {
                 <span class="material-icons text-sm">check</span>
               }
               {{ i18n.t()['settings.language.sq'] }}
             </button>
-            <button (click)="setLocale('en')"
+            <button aria-label="Switch to English" (click)="setLocale('en')"
                     [class]="activeClass('en')">
               @if (i18n.locale() === 'en') {
                 <span class="material-icons text-sm">check</span>
@@ -103,8 +103,8 @@ import { I18nService } from '../../core/i18n/i18n.service';
           </h3>
 
           @if (dataService.children().length === 0) {
-            <p class="text-gray-400 text-sm text-center py-6">
-              {{ i18n.locale() === 'sq' ? 'Akzni s\'ka fëmijë të regjistruar.' : 'No children registered yet.' }}
+            <p class="text-gray-500 text-sm text-center py-6">
+              {{ i18n.t()['settings.noChildren'] }}
             </p>
           } @else {
             <div class="space-y-3 mb-6">
@@ -115,7 +115,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
                   <!-- Info -->
                   <div class="flex-1 min-w-0">
                     <p class="font-bold text-gray-800 truncate">{{ child.name }}</p>
-                    <p class="text-xs text-gray-400">{{ formatDate(child.dateOfBirth) }}</p>
+                    <p class="text-xs text-gray-500">{{ formatDate(child.dateOfBirth) }}</p>
                   </div>
                   <!-- Actions -->
                   @if (deleteConfirmId() === child.id) {
@@ -208,7 +208,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
           <span class="text-[28px] font-extrabold text-gray-800 tracking-tight">KidDok</span>
         </div>
         <p class="text-gray-500 font-medium text-base mb-1">{{ i18n.t()['settings.about.tagline'] }}</p>
-        <p class="text-gray-400 text-sm">{{ i18n.t()['settings.about.version'] }}</p>
+        <p class="text-gray-500 text-sm">{{ i18n.t()['settings.about.version'] }}</p>
       </div>
 
     </div>

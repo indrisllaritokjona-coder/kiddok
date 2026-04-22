@@ -59,8 +59,8 @@ import { SettingsPageComponent } from './settings/settings-page.component';
             } @else {
               <div class="animate-slide-up">
                 <h2 class="text-3xl font-extrabold text-gray-800 mb-2 tracking-tight">{{ i18n.t()['child.selectChild'] }}</h2>
-                <p class="text-gray-400 text-sm mb-10 font-medium">
-                  {{ i18n.locale() === 'sq' ? 'Zgjidhni profilin e fëmijës për të vazhduar.' : 'Select a child profile to continue.' }}
+                <p class="text-gray-500 text-sm mb-10 font-medium">
+                <p class="text-gray-500 text-sm mb-10 font-medium leading-relaxed">{{ i18n.t()['sidebar.selectChildToContinue'] }}</p>
                 </p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   @for (child of dataService.children(); track child.id) {
@@ -74,7 +74,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                           <img [src]="child.avatarUrl" class="w-16 h-16 rounded-full border-4 border-slate-100 group-hover:border-primary-200 transition-all shadow-sm" />
                           <div>
                             <h3 class="font-extrabold text-xl text-gray-800 group-hover:text-primary-700 transition-colors">{{ child.name }}</h3>
-                            <p class="text-sm text-gray-400 font-medium">{{ toDisplay(child.dateOfBirth, i18n.locale()) }}</p>
+                            <p class="text-sm text-gray-500 font-medium">{{ toDisplay(child.dateOfBirth, i18n.locale()) }}</p>
                           </div>
                         </div>
                         @if (child.bloodType) {
@@ -86,7 +86,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                       </div>
                       <div (click)="selectChild(child.id)" class="mt-5 bg-gradient-to-r from-primary-50 to-teal-50 rounded-2xl p-4 flex items-center justify-center gap-2 text-primary-600 font-bold group-hover:from-primary-100 group-hover:to-teal-100 transition-all cursor-pointer">
                         <span class="material-icons text-lg">login</span>
-                        {{ i18n.locale() === 'sq' ? 'Hapni Profilin' : 'Open Profile' }}
+                        {{ i18n.t()['sidebar.openProfile'] }}
                       </div>
                     </div>
                   }
@@ -166,7 +166,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                       @if (newChildBloodType) {
                         <span class="absolute right-12 top-1/2 -translate-y-1/2 material-icons text-teal-500 bg-teal-50 rounded-full text-sm animate-fade-in">verified</span>
                       }
-                      <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-gray-400 text-lg pointer-events-none">expand_more</span>
+                      <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-gray-500 text-lg pointer-events-none">expand_more</span>
                     </div>
                   </div>
                 </div>
@@ -174,7 +174,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                 <!-- Issue #7: Gender in Add form -->
                 <div>
                   <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">
-                    {{ i18n.locale() === 'sq' ? 'Gjinia' : 'Gender' }}
+                    {{ i18n.t()['child.gender'] }}
                   </label>
                   <div class="relative">
                     <select [(ngModel)]="newChildGender"
@@ -183,7 +183,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                       <option value="M">{{ i18n.isSq() ? 'Mashkull' : 'Male' }}</option>
                       <option value="F">{{ i18n.isSq() ? 'Femer' : 'Female' }}</option>
                     </select>
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-gray-400 text-lg pointer-events-none">expand_more</span>
+                    <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-gray-500 text-lg pointer-events-none">expand_more</span>
                   </div>
                 </div>
 
@@ -300,7 +300,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
               <div class="flex items-center justify-between mb-8">
                 <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3">
                   <span class="material-icons text-primary-500 bg-primary-50 p-2 rounded-xl">edit</span>
-                  {{ i18n.locale() === 'sq' ? 'Modifiko Profilin e Fëmijës' : 'Edit Child Profile' }}
+                  {{ i18n.t()['child.editProfile'] }}
                 </h2>
                 <button (click)="closeEditModal()"
                         class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all shadow-sm border border-slate-200">
@@ -375,7 +375,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                         <span class="material-icons text-teal-500 bg-teal-50 rounded-full text-sm shadow-sm">verified</span>
                       </span>
                     }
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-gray-400 text-lg pointer-events-none">expand_more</span>
+                    <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-gray-500 text-lg pointer-events-none">expand_more</span>
                   </div>
                   @if (editBloodType()) {
                     <p class="mt-2 text-xs text-teal-600 font-medium flex items-center gap-1 animate-fade-in">
@@ -388,7 +388,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                 <!-- Issue #7: Gender -->
                 <div>
                   <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">
-                    {{ i18n.locale() === 'sq' ? 'Gjinia' : 'Gender' }}
+                    {{ i18n.t()['child.gender'] }}
                   </label>
                   <div class="relative">
                     <select [(ngModel)]="editGender"
@@ -397,7 +397,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                       <option value="M">{{ i18n.isSq() ? 'Mashkull' : 'Male' }}</option>
                       <option value="F">{{ i18n.isSq() ? 'Femer' : 'Female' }}</option>
                     </select>
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-gray-400 text-lg pointer-events-none">expand_more</span>
+                    <span class="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-gray-500 text-lg pointer-events-none">expand_more</span>
                   </div>
                 </div>
 
@@ -476,13 +476,13 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                       {{ i18n.isSq() ? 'Duke ruajtur...' : 'Saving...' }}
                     } @else {
                       <span class="material-icons">save</span>
-                      {{ i18n.locale() === 'sq' ? 'Ruaj Ndryshimet' : 'Save Changes' }}
+                      {{ i18n.t()['sidebar.saveChanges'] }}
                     }
                   </button>
                   <button (click)="showDeleteConfirm.set(true)"
                           class="w-full border-2 border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 py-3.5 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 text-sm">
                     <span class="material-icons text-base">delete_outline</span>
-                    {{ i18n.locale() === 'sq' ? 'Fshi Profilin' : 'Delete Profile' }}
+                    {{ i18n.t()['sidebar.deleteProfile'] }}
                   </button>
                 </div>
                 <!-- Delete Confirmation Modal (Issue #5) -->

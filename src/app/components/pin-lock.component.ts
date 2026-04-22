@@ -1,7 +1,6 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
-import { LucideAngularModule } from 'lucide-angular';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DataService } from '../services/data.service';
@@ -9,7 +8,7 @@ import { I18nService } from '../core/i18n/i18n.service';
 
 @Component({
     selector: 'app-pin-lock',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, LucideAngularModule],
     template: `
     <div class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-100 to-slate-200 font-sans overflow-hidden relative">
 

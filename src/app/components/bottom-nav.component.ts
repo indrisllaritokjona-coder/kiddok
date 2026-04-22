@@ -2,7 +2,6 @@
 import { LucideAngularModule } from 'lucide-angular';
 
 import { CommonModule } from '@angular/common';
-import { LucideAngularModule } from 'lucide-angular';
 import { DataService } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
 

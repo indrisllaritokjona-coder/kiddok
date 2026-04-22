@@ -16,11 +16,11 @@ interface NavItem {
   standalone: true,
   imports: [CommonModule, LucideAngularModule],
   template: `
-    <aside class="sidebar">
+    <aside class="sidebar" aria-label="Sidebar navigation">
       <!-- Brand row -->
       <div class="sidebar__brand">
         <span class="sidebar__logo">KidDok</span>
-        <button class="locale-toggle" (click)="i18n.toggleLocale()" [attr.aria-label]="'Switch to ' + (i18n.locale() === 'sq' ? 'English' : 'Albanian')">
+        <button type="button" class="locale-toggle" (click)="i18n.toggleLocale()" [attr.aria-label]="'Switch to ' + (i18n.locale() === 'sq' ? 'English' : 'Albanian')">
           {{ i18n.locale() === 'sq' ? 'EN' : 'SQ' }}
         </button>
       </div>
@@ -35,21 +35,23 @@ interface NavItem {
           </div>
         } @else {
           <div class="sidebar__child-placeholder">
-            <lucide-icon name="user" class="sidebar__placeholder-icon"></lucide-icon>
+            <lucide-icon name="user" class="sidebar__placeholder-icon" aria-hidden="true"></lucide-icon>
             <span class="sidebar__placeholder-text">{{ t()['sidebar.noChildSelected'] }}</span>
           </div>
         }
       </div>
 
       <!-- Navigation list -->
-      <nav class="sidebar__nav">
+      <nav class="sidebar__nav" aria-label="Main navigation">
         @for (item of navItems; track item.id) {
           <button
+            type="button"
             class="sidebar__nav-item"
             [class.sidebar__nav-item--active]="currentTab() === item.id"
             (click)="navigateTo(item.id)"
+            [attr.aria-current]="currentTab() === item.id ? 'page' : null"
           >
-            <lucide-icon [name]="item.icon" class="sidebar__nav-icon"></lucide-icon>
+            <lucide-icon [name]="item.icon" class="sidebar__nav-icon" aria-hidden="true"></lucide-icon>
             <span>{{ t()[item.labelKey] }}</span>
           </button>
         }
@@ -57,12 +59,12 @@ interface NavItem {
 
       <!-- Footer -->
       <div class="sidebar__footer">
-        <button class="sidebar__footer-item" (click)="navigateTo('settings')">
-          <lucide-icon name="settings" class="sidebar__nav-icon"></lucide-icon>
+        <button type="button" class="sidebar__footer-item" (click)="navigateTo('settings')">
+          <lucide-icon name="settings" class="sidebar__nav-icon" aria-hidden="true"></lucide-icon>
           <span>{{ t()['sidebar.footer.settings'] }}</span>
         </button>
-        <button class="sidebar__footer-item sidebar__footer-item--logout" (click)="logout()">
-          <lucide-icon name="log-out" class="sidebar__nav-icon"></lucide-icon>
+        <button type="button" class="sidebar__footer-item sidebar__footer-item--logout" (click)="logout()">
+          <lucide-icon name="log-out" class="sidebar__nav-icon" aria-hidden="true"></lucide-icon>
           <span>{{ t()['sidebar.footer.logout'] }}</span>
         </button>
       </div>

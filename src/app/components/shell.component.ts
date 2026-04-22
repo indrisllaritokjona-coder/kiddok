@@ -30,7 +30,10 @@ import { SettingsPageComponent } from './settings/settings-page.component';
       <app-sidebar class="hidden lg:block" />
 
       <!-- Main Content Area -->
-      <main class="flex-1 flex flex-col h-screen overflow-hidden relative z-10 w-full">
+      <main class="flex-1 flex flex-col h-screen overflow-hidden relative z-10 w-full" id="main-content">
+
+        <!-- Skip to main content link for keyboard users -->
+        <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded-lg">Skip to main content</a>
 
         <!-- Top Header (extracted to HeaderComponent) -->
         <app-header
@@ -42,6 +45,13 @@ import { SettingsPageComponent } from './settings/settings-page.component';
           (backRequested)="goToSelector()"
           (localeToggleRequested)="i18n.toggleLocale()"
         />
+
+        <!-- Live region for dynamic announcements -->
+        <div aria-live="polite" aria-atomic="true" class="sr-only">
+          @if (saveSuccess()) {
+            <span>{{ i18n.isSq() ? 'Ndryshimet u ruajtën!' : 'Changes saved!' }}</span>
+          }
+        </div>
 
         <!-- Main Workspace -->
         <div class="flex-1 overflow-y-auto w-full px-4 pt-6 pb-24 lg:px-12 lg:py-10 bg-slate-50/50 relative">

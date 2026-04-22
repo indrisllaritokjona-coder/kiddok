@@ -25,14 +25,15 @@ import { I18nService } from '../core/i18n/i18n.service';
       <!-- LEFT: Back button + Page title -->
       <div class="flex items-center gap-3">
         @if (viewState === 'app') {
-          <button (click)="backRequested.emit()"
-                  class="flex items-center gap-2 px-3 py-2 rounded-xl bg-white shadow-soft border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all text-gray-600 hover:text-primary-600">
-            <lucide-icon name="arrow-left" class="text-inherit"></lucide-icon>
+          <button type="button" (click)="backRequested.emit()"
+                  class="flex items-center gap-2 px-3 py-2 rounded-xl bg-white shadow-soft border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all text-gray-600 hover:text-primary-600"
+                  [attr.aria-label]="i18n.t()['nav.back']">
+            <lucide-icon name="arrow-left" class="text-inherit" aria-hidden="true"></lucide-icon>
             <span class="text-sm font-bold hidden sm:block">{{ i18n.t()['nav.back'] }}</span>
           </button>
         }
-        <button class="lg:hidden p-2 rounded-xl bg-white shadow-soft border border-gray-100">
-          <lucide-icon name="menu" class="text-inherit"></lucide-icon>
+        <button type="button" class="lg:hidden p-2 rounded-xl bg-white shadow-soft border border-gray-100" aria-label="Open menu">
+          <lucide-icon name="menu" class="text-inherit" aria-hidden="true"></lucide-icon>
         </button>
         <!-- Page title -->
         <h1 class="text-base lg:text-lg font-extrabold text-gray-800 hidden sm:block ml-2">
@@ -44,21 +45,24 @@ import { I18nService } from '../core/i18n/i18n.service';
       <div class="flex items-center gap-4 lg:gap-8">
 
         <!-- Language toggle (mobile only) -->
-        <button (click)="localeToggleRequested.emit()"
+        <button type="button" (click)="localeToggleRequested.emit()"
                 class="lg:hidden flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-full text-xs font-bold text-gray-600 transition-all"
-                aria-label="Switch to English/Albanian">
-          <lucide-icon name="globe" class="text-inherit"></lucide-icon>
+                [attr.aria-label]="i18n.locale() === 'sq' ? 'Switch to English' : 'Kalo në shqip'">
+          <lucide-icon name="globe" class="text-inherit" aria-hidden="true"></lucide-icon>
           {{ i18n.locale() === 'sq' ? i18n.t()['header.sq'] : i18n.t()['header.en'] }}
         </button>
 
         <!-- Child Switcher Pill -->
         <div class="relative" #dropdownRef>
-          <button (click)="toggleDropdown()"
+          <button type="button" (click)="toggleDropdown()"
                   class="flex items-center gap-3 bg-white px-4 py-2 lg:py-2.5 rounded-2xl shadow-soft border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all"
                   [class.border-primary-300]="showDropdown()"
-                  [class.shadow-md]="showDropdown()">
+                  [class.shadow-md]="showDropdown()"
+                  [attr.aria-expanded]="showDropdown()"
+                  aria-haspopup="listbox">
             @if (activeChild()) {
               <img [src]="activeChild()!.avatarUrl"
+                   [alt]="activeChild()!.name"
                    class="w-8 h-8 lg:w-10 lg:h-10 rounded-full border-2 border-primary-100 object-cover" />
               <span class="font-bold text-gray-800 hidden sm:block text-sm lg:text-base">{{ activeChild()!.name }}</span>
               @if (activeChildAge()) {
@@ -68,20 +72,20 @@ import { I18nService } from '../core/i18n/i18n.service';
               }
             } @else {
               <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-slate-100 flex items-center justify-center border-2 border-dashed border-slate-300">
-                <lucide-icon name="user" class="text-inherit"></lucide-icon>
+                <lucide-icon name="user" class="text-inherit" aria-hidden="true"></lucide-icon>
               </div>
               <span class="font-bold text-gray-500 hidden sm:block">{{ i18n.t()['child.addNewBtn'] }}</span>
             }
-            <lucide-icon name="chevron-down" class="text-gray-500 text-sm transition-transform duration-200" [class.rotate-180]="showDropdown()"></lucide-icon>
+            <lucide-icon name="chevron-down" class="text-gray-500 text-sm transition-transform duration-200" [class.rotate-180]="showDropdown()" aria-hidden="true"></lucide-icon>
           </button>
 
           <!-- Dropdown Panel -->
           @if (showDropdown()) {
-            <div class="absolute right-0 top-full mt-2 w-80 bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-gray-100 py-3 animate-slide-up z-50 overflow-hidden max-h-[80vh] overflow-y-auto">
+            <div role="listbox" aria-label="Child selector" class="absolute right-0 top-full mt-2 w-80 bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-gray-100 py-3 animate-slide-up z-50 overflow-hidden max-h-[80vh] overflow-y-auto">
 
               <!-- Section label -->
               <div class="px-5 pb-3 pt-1 mb-2 border-b border-gray-50 flex items-center gap-2">
-                <lucide-icon name="users" class="text-inherit"></lucide-icon>
+                <lucide-icon name="users" class="text-inherit" aria-hidden="true"></lucide-icon>
                 <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">
                   {{ i18n.t()['header.profileLabel'] }}
                 </span>
@@ -98,10 +102,12 @@ import { I18nService } from '../core/i18n/i18n.service';
 
               <!-- Child list -->
               @for (child of allChildren(); track child.id) {
-                <div (click)="onChildSelected(child)"
+                <div role="option" (click)="onChildSelected(child)"
                      class="flex items-center gap-4 px-5 py-3 hover:bg-primary-50 cursor-pointer transition-colors mx-2 mt-0 rounded-2xl border border-transparent hover:border-primary-100 group"
-                     [class.bg-indigo-50]="child.id === activeChildId()">
+                     [class.bg-indigo-50]="child.id === activeChildId()"
+                     [attr.aria-selected]="child.id === activeChildId()">
                   <img [src]="child.avatarUrl"
+                       [alt]="child.name"
                        class="w-12 h-12 rounded-full border border-gray-200 shadow-sm" />
                   <div class="flex flex-col flex-1 min-w-0">
                     <span class="font-extrabold text-gray-800 group-hover:text-primary-700 transition-colors truncate">{{ child.name }}</span>
@@ -110,7 +116,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                     </span>
                   </div>
                   @if (child.id === activeChildId()) {
-                    <lucide-icon name="check" class="text-inherit"></lucide-icon>
+                    <lucide-icon name="check" class="text-inherit" aria-hidden="true"></lucide-icon>
                   }
                 </div>
               }
@@ -118,17 +124,17 @@ import { I18nService } from '../core/i18n/i18n.service';
               <!-- Action buttons -->
               @if (hasChildren()) {
                 <div class="px-4 pt-2 pb-1 mt-2 border-t border-gray-100">
-                  <button (click)="onSwitchChild()"
+                  <button type="button" (click)="onSwitchChild()"
                           class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-primary-50 hover:bg-primary-100 text-primary-700 font-bold transition-colors border border-primary-200">
-                    <lucide-icon name="arrow-left-right" class="text-inherit"></lucide-icon>
+                    <lucide-icon name="arrow-left-right" class="text-inherit" aria-hidden="true"></lucide-icon>
                     {{ i18n.t()['header.switchChild'] }}
                   </button>
                 </div>
               }
               <div class="px-4 pt-2 mt-1">
-                <button (click)="onAddNewMember()"
+                <button type="button" (click)="onAddNewMember()"
                         class="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-colors border border-slate-200 hover:border-slate-300">
-                  <lucide-icon name="circle-plus" class="text-inherit"></lucide-icon>
+                  <lucide-icon name="circle-plus" class="text-inherit" aria-hidden="true"></lucide-icon>
                   {{ i18n.t()['header.addNewMember'] }}
                 </button>
               </div>
@@ -139,16 +145,17 @@ import { I18nService } from '../core/i18n/i18n.service';
         <!-- Parent welcome block (desktop only, app view) -->
         @if (viewState === 'app' && dataService.getParentName()) {
           <div class="hidden lg:flex items-center gap-2 text-sm text-gray-500 font-medium">
-            <lucide-icon name="hand" class="text-inherit"></lucide-icon>
+            <lucide-icon name="hand" class="text-inherit" aria-hidden="true"></lucide-icon>
             <span>{{ i18n.t()['welcome.loggedIn'] }}, </span>
             <span class="font-bold text-gray-700">{{ dataService.getParentName() }}</span>
           </div>
         }
 
         <!-- Parent avatar -->
-        <div class="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-gradient-to-tr from-primary-500 to-teal-400 p-[2px] shadow-soft cursor-pointer hover:shadow-lg transition-shadow">
+        <div role="button" tabindex="0" class="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-gradient-to-tr from-primary-500 to-teal-400 p-[2px] shadow-soft cursor-pointer hover:shadow-lg transition-shadow"
+             aria-label="{{ i18n.t()['nav.settings'] }}">
           <div class="w-full h-full bg-white rounded-full flex items-center justify-center border-2 border-white">
-            <lucide-icon name="settings" class="text-inherit"></lucide-icon>
+            <lucide-icon name="settings" class="text-inherit" aria-hidden="true"></lucide-icon>
           </div>
         </div>
       </div>

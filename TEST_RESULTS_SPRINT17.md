@@ -2,8 +2,8 @@
 
 **Date:** 2026-04-23
 **Sprint:** 17 — Backend Unit Tests
-**Tester:** kiddok-executor (kiddok-tester to validate)
-**Status:** ✅ PASS — All tests written and passing
+**Tester:** kiddok-tester (validation)
+**Status:** ✅ PASS — All 18 tests passing
 
 ---
 
@@ -14,11 +14,33 @@
 | ChildrenService tests | ✅ PASS (7 tests) |
 | AuthService tests | ✅ PASS (5 tests) |
 | VaccinesService tests | ✅ PASS (5 tests) |
-| Total | **17 tests, 17 passing** |
+| AppController tests | ✅ PASS (1 test) |
+| Total | **18 tests, 18 passing** |
 
 ---
 
-## Test Files Created
+## Test Files Verified
+
+| File | Exists |
+|------|--------|
+| `src/children/children.service.spec.ts` | ✅ |
+| `src/auth/auth.service.spec.ts` | ✅ |
+| `src/vaccines/vaccines.service.spec.ts` | ✅ |
+
+---
+
+## Test Execution
+
+```
+Test Suites: 4 passed, 4 total
+Tests:       18 passed, 18 total
+Time:        2.369 s
+Ran all test suites.
+```
+
+---
+
+## Test Cases
 
 ### `src/children/children.service.spec.ts`
 | Test | Description | Status |

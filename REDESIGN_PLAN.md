@@ -1,837 +1,883 @@
-# KidDok Redesign Plan
+# KidDok — 50-Sprint Redesign Roadmap
 
-**Version:** 1.0  
-**Date:** 2026-04-21  
+**Version:** 2.0  
+**Date:** 2026-04-22  
 **Status:** Draft — Ready for Sprint Execution  
+**Architect:** kiddok-architect
 
 ---
 
-## 1. Vision & Design Language
+## Executive Summary
 
-### 1.1 Overall Feel
+KidDok is a bilingual (SQ/EN) digital health diary for parents of young children. The application is built with Angular 21 (frontend, signals, Tailwind CSS) and NestJS + Prisma + PostgreSQL (backend, Dockerized). The first two sprints (Temperature Diary, Growth Tracking) are complete. The remaining 13 sprints from the original plan are incomplete, and the codebase carries ~30 issues across security, clean code, performance, and translation quality.
 
-KidDok is a **warm, trustworthy digital health companion** for busy moms. It should feel like a beautifully designed parenting journal — not a cold medical portal. Think: soft gradients, friendly illustrations, tactile micro-interactions, and an interface that a tired mom can navigate in 30 seconds while holding a sick toddler.
+This document supersedes the previous `REDESIGN_PLAN.md` and `SPRINT_REGISTRY.md`. It provides a complete, prioritized backlog for **50 sprints** — covering: bug fix sprints, feature completion sprints, infrastructure sprints, tech-debt sprints, and future feature sprints.
 
-**Emotional goals:**
-- Calm and reassuring when everything is fine
-- Clear and actionable when something is wrong
-- Delightful enough that moms actually want to use it
+### Project Health Snapshot
 
-### 1.2 Color Palette
-
-| Role | Name | Hex | Usage |
-|------|------|-----|-------|
-| Primary | Warm Indigo | `#6366F1` | CTAs, active states, brand accent |
-| Primary Dark | Deep Indigo | `#4F46E5` | Hover states, emphasis |
-| Secondary | Soft Teal | `#14B8A6` | Success states, health positive indicators |
-| Accent Warm | Coral | `#F97316` | Fever indicators, warnings, alerts |
-| Background | Warm White | `#FAFAF9` | Page background |
-| Surface | Pure White | `#FFFFFF` | Cards, modals |
-| Text Primary | Charcoal | `#1C1917` | Headings, primary text |
-| Text Secondary | Stone | `#78716C` | Labels, secondary text |
-| Border | Soft Gray | `#E7E5E4` | Card borders, dividers |
-| Danger | Rose | `#E11D48` | Delete actions, critical alerts |
-
-### 1.3 Typography
-
-| Element | Font | Size | Weight |
-|---------|------|------|--------|
-| App Logo | Inter | 28px | 800 (Extrabold) |
-| Page Heading | Inter | 32px | 800 |
-| Card Heading | Inter | 20px | 700 |
-| Body | Inter | 16px | 400 |
-| Label | Inter | 12px | 600 |
-| Nav Item | Inter | 15px | 600 |
-| Badge | Inter | 11px | 700 |
-
-**Google Fonts import:** `Inter` (weights: 400, 500, 600, 700, 800)
-
-### 1.4 Spacing System
-
-- Base unit: **4px**
-- Component padding: **24px** (cards), **20px** (modals)
-- Section gaps: **24px–32px**
-- Border radius: **16px** (buttons), **24px** (cards), **32px** (modals/large surfaces)
-
-### 1.5 Motion Principles
-
-| Type | Duration | Easing | When |
-|------|----------|--------|------|
-| Page transition | 350ms | ease-out | Tab/view switches |
-| Card hover lift | 200ms | ease | Cards, nav items |
-| Modal slide-up | 350ms | cubic-bezier(0.16, 1, 0.3, 1) | Modals, dropdowns |
-| Button press | 100ms | ease | All buttons |
-| Success flash | 600ms | ease-out | Save confirmations |
-| Entry list stagger | 50ms per item | ease-out | List renders |
-
-### 1.6 Visual Assets
-
-- **Icons:** Google Material Symbols (Outlined variant, 24px, weight 300)
-- **Illustrations:** Soft, hand-drawn style SVG illustrations for empty states
-- **Avatars:** DiceBear Notionists API (consistent per child)
-- **Background texture:** Subtle warm gradient, no cold clinical gradients
-- **Glassmorphism:** Reserved for sidebar only — all other cards use solid white surfaces
+| Area | Status |
+|------|--------|
+| Backend API (NestJS + Prisma + PostgreSQL) | Operational; missing DTOs and validation |
+| Frontend (Angular 21 + Tailwind + Signals) | Operational; ~30 known issues |
+| Temperature Diary (Sprint 1) | ✅ Built; 2 pending fixes |
+| Growth Tracking (Sprint 2) | ✅ Built; 3 pending fixes |
+| Child Profile Edit Module (Sprint 7) | ⚠️ Built; 9 known issues |
+| i18n (SQ + EN) | ⚠️ 5+ typo/key gaps |
+| Icon Migration (Material → Lucide) | 🔄 ~50% complete |
+| CI/CD | ❌ Not set up |
+| E2E Tests | ❌ Not started |
+| Docker Build | ⚠️ SIGKILL mid-export issue |
 
 ---
 
-## 2. UI Redesign
+## Icon Migration Status
 
-### 2.1 Sidebar (Desktop)
+**Partially complete (~50%).**
 
-**Current:** Glassmorphic dark sidebar with gradient background, medical image overlay.
+### ✅ Already Migrated to Lucide
+- `diary.component.ts` — fully migrated
+- `growth-tracking.component.ts` — fully migrated
+- `header.component.ts` — mostly migrated (back arrow, menu, globe, user, users, check, arrow-left-right, circle-plus, hand, settings)
+- `vaccine-alert-card.component.ts` — fully migrated
+- `vaccine-schedule.component.ts` — fully migrated
 
-**Proposed:**
-- **Width:** 280px (compact) or 320px (expanded)
-- **Style:** Solid white with left border accent (4px, gradient from Primary to Teal)
-- **Sections:**
-  1. **Brand row:** KidDok logo + locale toggle button (top)
-  2. **Active child mini-card:** Avatar + name + age badge (e.g., "2 vjeç")
-  3. **Navigation items:** Icon + label, active state has indigo background pill
-  4. **Footer:** Settings + Logout
-- **Hover states:** Subtle gray background, smooth 200ms transition
-- **Active state:** Left accent bar (4px indigo) + filled background pill
+### 🔄 Still Using Material Icons/Symbols (must migrate)
 
-**Before → After:**
-```
-BEFORE: Dark glass panel (primary-600/90), white text, medical image overlay, complex layering
-AFTER:  Clean white panel, stone/charcoal text, subtle left gradient border, no images
-```
+| File | Remaining Icons | Type |
+|------|----------------|------|
+| `shell.component.ts` | 1 (search icon in edit modal) | `material-icons` |
+| `sidebar.component.ts` | 3 (person placeholder, nav items, settings, logout) | `material-symbols-outlined` |
+| `bottom-nav.component.ts` | 1 (nav icons container) | `material-symbols-outlined` |
+| `pin-lock.component.ts` | ~15 (child_care, warning, visibility, visibility_off, error_outline, arrow_back, check_circle, sync, etc.) | `material-icons` |
+| `header.component.ts` | 1 (child-switcher chevron — still `material-icons`) | `material-icons` |
+| `health-alert-card.component.ts` | ? | `material-icons` |
+| `quick-actions-grid.component.ts` | ? | `material-icons` |
+| `recent-activity-feed.component.ts` | ? | `material-icons` |
+| `welcome-hero.component.ts` | ? | `material-icons` |
+| `settings-page.component.ts` | ? | `material-icons` |
 
-### 2.2 Navigation Items
-
-| Tab ID | Icon (Material Symbols) | SQ Label | EN Label |
-|--------|-------------------------|----------|---------|
-| home | `home` | Ekrani Kryesor | Dashboard |
-| temperature | `thermostat` | Temperatura | Temperature |
-| growth | `trending_up` | Rritja | Growth |
-| diary | `edit_document` | Ditari | Diary |
-| vaccines | `vaccines` | Vaksinat | Vaccines |
-| settings | `settings` | Konfigurime | Settings |
-
-**New items in this redesign:** `temperature`, `growth`
-
-### 2.3 Child Switcher (Header)
-
-**Current:** Dropdown in header, shows avatar + name + expand chevron.
-
-**Proposed:**
-- **Location:** Header right side
-- **Display:** Avatar (40px) + Name + age chip + chevron
-- **Dropdown:** White rounded panel (max-height scroll), child mini-cards with avatar + name + born date + checkmark if active
-- **Actions:** "Switch Child" button, "Add New Member" button at bottom
-- **Behavior:** Click outside closes dropdown
-
-### 2.4 Child Selector Screen (Empty/Multi State)
-
-**Current:** Grid of child cards with "Open Profile" CTA.
-
-**Proposed — Two states:**
-
-**Empty (0 children):**
-- Large welcome illustration (SVG)
-- Headline: "Mirësevini në KidDok" / "Welcome to KidDok"
-- Subtext: Benefit-oriented, not feature list
-- Single prominent CTA: "Shto Fëmijën e Parë" / "Add Your First Child"
-- Warm coral accent
-
-**With children (2+ children):**
-- Page title: "Zgjidhni Profilin" / "Select a Profile"
-- Grid: 1 col (mobile) / 2 col (tablet) / 3 col (desktop)
-- Card: Avatar + name + age + blood type badge + "Hapni" CTA
-- Add new card: Dashed border, `+` icon, "Shto Pjestar të Ri"
-
-### 2.5 Add/Edit Child Modal
-
-**Current:** Full-screen form, many fields at once, complex modal.
-
-**Proposed:**
-- **Trigger:** Floating `+` button (mobile) or "Add Member" in child switcher dropdown
-- **Style:** Centered overlay modal, rounded-3xl, max-w-lg
-- **Steps approach:**
-  1. **Step 1 — Basics:** Name + DOB + Gender (required)
-  2. **Step 2 — Medical:** Blood type + Birth weight + Allergies (optional, collapsible)
-  3. **Step 3 — Documents:** Medical document upload (optional)
-- **Progress indicator:** Step dots at top
-- **Validation:** Inline, real-time, friendly error messages
-- **Save button:** Full-width gradient, disabled until required fields valid
-
-### 2.6 Modals — General Principles
-
-- **Backdrop:** `bg-black/30` with `backdrop-blur-sm`
-- **Card:** White, rounded-3xl (32px radius), box-shadow `0 32px 80px -12px rgba(0,0,0,0.25)`
-- **Close button:** Top-right, `w-9 h-9`, gray background, hover state
-- **Top accent bar:** 4px gradient bar at very top of modal (brand accent)
-- **Animation:** Slide up 350ms cubic-bezier
+### Notes
+- The `diary.component.ts` still has one inline `material-icons` usage for `type.icon` (diary type icons like fever, cough) — these are dynamic string icons bound to diary entry types, not static nav icons.
+- Icon migration subagent completed: `diary.component.ts`, `growth-tracking.component.ts`, most of `header.component.ts`, both vaccine components.
+- Remaining: shell, sidebar, bottom-nav, pin-lock, and all home sub-components.
+- Icon mapping reference: `home` → `house`, `thermostat` → `thermometer`, `trending_up` → `ruler`/`trending-up`, `edit_document` → `book-open`, `vaccines` → `syringe`, `settings` → `settings`, `arrow_back` → `arrow-left`, `chevron` → `chevron-down`/`chevron-up`.
 
 ---
 
-## 3. Component Architecture
-
-### 3.1 New Component Tree
-
-```
-ShellComponent (unchanged — shell, routing, child management)
-├── SidebarComponent (NEW — extracted from shell, desktop nav)
-│   ├── NavItemComponent (NEW — reusable nav item)
-│   └── ChildMiniCardComponent (NEW — active child in sidebar)
-├── HeaderComponent (NEW — extracted from shell, top bar)
-│   ├── ChildSwitcherComponent (NEW — extracted from shell)
-│   └── LocaleToggleComponent (NEW — language switcher)
-├── BottomNavComponent (NEW — mobile tab bar)
-│
-├── HomePageComponent (REDESIGN — new layout, activity feed, quick actions)
-│   ├── WelcomeHeroComponent (NEW — personalized greeting)
-│   ├── QuickActionsGridComponent (NEW — 4-card grid)
-│   ├── RecentActivityFeedComponent (NEW — timeline)
-│   └── HealthAlertCardComponent (NEW — urgent items)
-│
-├── TemperaturePageComponent (NEW — dedicated page, NOT inside diary)
-│   ├── TempLogFormComponent (NEW — quick temperature entry)
-│   ├── TempGaugeDisplayComponent (NEW — large temp with color indicator)
-│   ├── TempTrendChartComponent (NEW — 7-day / 30-day line chart)
-│   └── TempAlertBadgeComponent (NEW — fever warning)
-│
-├── GrowthPageComponent (NEW)
-│   ├── GrowthChartComponent (NEW — height/weight with percentile lines)
-│   ├── GrowthLogFormComponent (NEW)
-│   └── GrowthStatsCardComponent (NEW — current percentiles)
-│
-├── DiaryPageComponent (REFACTOR — symptoms focus, temperature moved out)
-│
-├── VaccinesPageComponent (REFACTOR — alerts, schedule, notifications)
-│   ├── VaccineScheduleComponent (NEW)
-│   ├── VaccineAlertCardComponent (NEW)
-│   └── VaccineAddFormComponent (REFACTOR)
-│
-└── SettingsPageComponent (MINOR REFACTOR)
-```
-
-### 3.2 What Stays
-
-| Component | Change |
-|----------|--------|
-| `ShellComponent` | Core shell stays; nav items update; routing updates |
-| `DataService` | Signal-based state stays; API methods expand |
-| `I18nService` | Translation structure stays; new keys added |
-| `ChildProfile` interface | Extended with new fields for temp/growth |
-
-### 3.3 What Changes
-
-| Component | What Changes |
-|----------|-------------|
-| `HomeComponent` | New layout: hero → quick actions → recent activity |
-| `DiaryComponent` | Refactor to symptoms-only; temperature moved to dedicated page |
-| `RecordsComponent` | Refactor to vaccines + lab records; alerts added |
-
-### 3.4 New Interfaces
-
-```typescript
-// Temperature
-interface TemperatureEntry {
-  id: string;
-  childId: string;
-  value: number;          // °C, e.g. 38.5
-  measuredAt: string;     // ISO timestamp
-  location?: 'oral' | 'axillary' | 'ear' | 'rectal' | 'forehead';
-  context?: 'fever' | 'normal' | 'post-medication';
-  medicationGiven?: string;
-  medicationDose?: string;
-  medicationEffectiveness?: 'none' | 'mild' | 'good' | 'great';
-  notes?: string;
-}
-
-// Growth
-interface GrowthEntry {
-  id: string;
-  childId: string;
-  date: string;           // yyyy-MM-dd
-  heightCm?: number;
-  weightKg?: number;
-  headCircumferenceCm?: number;
-  notes?: string;
-}
-
-// Vaccine alert
-interface VaccineAlert {
-  id: string;
-  childId: string;
-  vaccineName: string;
-  dueDate: string;
-  status: 'upcoming' | 'due' | 'overdue' | 'completed';
-  completedAt?: string;
-  doseNumber?: number;
-  totalDoses?: number;
-  reminderEnabled: boolean;
-}
-```
+## Complete Sprint Backlog (50 Sprints)
 
 ---
 
-## 4. Module Plans
-
-### 4.1 Temperature Diary
-
-**Priority: HIGH — This is the sprint focus.**
-
-#### Data Model
-
-```typescript
-interface TemperatureReading {
-  id: string;
-  childId: string;
-  value: number;           // Celsius, stored as decimal (e.g., 38.5)
-  measuredAt: string;      // ISO 8601 timestamp
-  location: 'oral' | 'axillary' | 'ear' | 'rectal' | 'forehead';
-  context: 'fever-spike' | 'routine' | 'post-medication' | 'after-sleep';
-  medicationName?: string;
-  medicationDose?: string;
-  medicationGivenAt?: string;
-  effectiveness?: 'none' | 'mild' | 'good' | 'great';
-  feverTriggered?: boolean;   // true if value >= 38.0°C
-  notes?: string;
-}
-```
-
-#### UI Design
-
-**Page Layout (top to bottom):**
-
-1. **Header row:** Page title ("Temperatura" / "Temperature") + current child avatar + Add button
-2. **Current Status Card:**
-   - Large temperature number (48px font, bold)
-   - Color-coded: Green (<37.5°C) | Orange (37.5–38.9°C) | Red (≥39.0°C)
-   - Context label + time of reading
-   - If fever: pulse animation + "Shënoni temperaturën" CTA
-3. **Quick Add Bar:**
-   - Shows last reading summary
-   - "Lexim i Ri" button (primary, prominent)
-4. **7-Day Trend Chart:**
-   - Line chart, temperature on Y-axis, days on X-axis
-   - Color-coded dots (green/orange/red by threshold)
-   - WHO fever threshold line at 38.0°C (dashed red)
-   - Tap dot to see reading details
-5. **Recent Readings List:**
-   - Each entry: time + value + color badge + medication chip (if any)
-   - Swipe-to-delete on mobile
-6. **Active Medications Card (if fever):**
-   - Shows medication name + dose + time given + effectiveness
-
-**Add Reading Modal:**
-- Large number input (48px) with °C suffix
-- Time (defaults to now)
-- Measurement location (segmented control: armpit / mouth / ear / forehead)
-- Context (segmented control: fever check / routine / after medication)
-- Medication section (collapsible, shown when context = "after medication"):
-  - Medication name (autocomplete from recent medications)
-  - Dose
-  - Time given
-  - Effectiveness (after 30 min, prompt: "Si reagoi temperatura?")
-
-**Fever Alert:**
-- When temp ≥ 38.0°C logged, show alert banner at top of page:
-  - Background: `bg-rose-50` with rose border
-  - Text: "Temperatura e lartë u regjistrua" + reading value
-  - Action: "Shiko Trend-in" / "Mark Medication Given"
-- Alert persists for 24h or until a new reading < 38.0°C is logged
-
-#### API Contract
-
-```
-GET    /children/:childId/temperatures?from=&to=&limit=50
-POST   /children/:childId/temperatures
-PATCH  /children/:childId/temperatures/:id
-DELETE /children/:childId/temperatures/:id
-
-Request (POST/PATCH):
-{
-  "value": 38.5,
-  "measuredAt": "2026-04-21T14:30:00.000Z",
-  "location": "axillary",
-  "context": "fever-spike",
-  "medicationName": "Paracetamol",
-  "medicationDose": "5ml",
-  "effectiveness": "good",
-  "notes": "After nap, seemed fine"
-}
-```
-
-#### Edge Cases
-
-| Situation | Behavior |
-|-----------|----------|
-| Temp ≥ 39.5°C | Show urgent banner, suggest calling doctor |
-| Temp logged with medication | Prompt to log effectiveness after 30 min |
-| No readings in 7 days | Show "Sot jeni mirë!" encouraging empty state |
-| Very frequent readings (>5/day) | Warning: "Shumë_lexime" — check if thermometer is faulty |
-| Different measurement locations | Show location label on each reading, chart differentiates |
+### PHASE 1: Critical Bug Fixes (Sprints 1–5)
 
 ---
 
-### 4.2 Growth Tracking
+#### Sprint 1: Child Profile Edit — Critical Fixes
+**Issues addressed:** #1–#9 (all 9 Child Profile Edit Module issues)
 
-**Priority: MEDIUM — Planned for Sprint 2**
+**Status:** Carries 9 known issues from TEST + REVIEW results.
 
-#### Data Model
+| # | Issue | File | Severity |
+|---|-------|------|----------|
+| 1 | `birthWeight` + `deliveryDoctor` missing from Edit Modal | `shell.component.ts` | CRITICAL |
+| 2 | `child.saveProfile` i18n key used but not defined | `shell.component.ts` | CRITICAL |
+| 3 | `documentIssueDate` missing from Edit Modal | `shell.component.ts` | HIGH |
+| 4 | No server-side file size limit | `children.controller.ts` | HIGH |
+| 5 | No backend DTO validation (class-validator) | `children.controller.ts` | HIGH |
+| 6 | IDOR check only in service layer, not controller | `children.controller.ts` | HIGH |
+| 7 | Base64 document re-sent on every PATCH save | `shell.component.ts` | HIGH |
+| 8 | No double-submit guard on `saveEditChild()` | `shell.component.ts` | MEDIUM |
+| 9 | `confirm()` browser dialog for delete | `shell.component.ts` | LOW |
 
-```typescript
-interface GrowthEntry {
-  id: string;
-  childId: string;
-  date: string;              // yyyy-MM-dd
-  heightCm: number;          // stored as decimal, e.g. 85.5
-  weightKg: number;          // stored as decimal, e.g. 12.3
-  headCircumferenceCm?: number;
-  measuredBy?: string;       // "clinic" | "home"
-  notes?: string;
-}
-```
-
-#### UI Design
-
-**Page Layout:**
-
-1. **Header:** Title + child avatar + measurement unit toggle (metric/imperial)
-2. **Latest Stats Row (3 cards):**
-   - Height: value + comparison to last reading (↑ 1.2cm)
-   - Weight: value + comparison arrow
-   - Head circumference (if measured)
-3. **Growth Chart (primary content):**
-   - Dual-axis line chart: height (left Y) + weight (right Y) on same X (age/months)
-   - WHO percentile bands as colored background zones (3rd, 15th, 50th, 85th, 97th)
-   - Toggle between height-only / weight-only / both
-   - Pinch-to-zoom time range: 0–6m, 0–12m, 0–24m, all
-4. **Add Measurement FAB:** Opens bottom sheet (mobile) or side panel (desktop)
-5. **Measurement History:** List with date, values, source badge
-
-**Add Measurement Form:**
-- Date (defaults to today)
-- Height (cm) — large number input
-- Weight (kg) — large number input  
-- Head circumference (optional)
-- Source: "Në shtëpi" / "Në klinikë" (affects display badge)
-
-#### Charts Approach
-
-- **Chart library:** Chart.js with ng2-charts wrapper (or native canvas for performance)
-- **WHO Data:** Embed as static JSON — no external API needed
-- **Percentile calculation:** Client-side using WHO LMS parameters
-- **Mobile:** Horizontal scroll chart, simplified UI
-
-#### API Contract
-
-```
-GET    /children/:childId/growth?from=&to=
-POST   /children/:childId/growth
-PATCH  /children/:childId/growth/:id
-DELETE /children/:childId/growth/:id
-```
+**Deliverables:**
+- `CreateChildDto` + `UpdateChildDto` with class-validator decorators
+- `birthWeight`, `deliveryDoctor`, `documentIssueDate` added to Edit Modal template
+- `child.saveProfile` added to i18n.service.ts
+- Server-side 5MB file size limit on base64 payload
+- `saving = signal(false)` guard on save methods
+- Custom delete confirmation modal replacing `confirm()`
+- Document dirty-flag tracking: only send `medicalDocument` when file actually changed
+- Explicit ownership check at controller level before service call
 
 ---
 
-### 4.3 Vaccination Alerts
+#### Sprint 2: Temperature Diary — Fixes
+**Issues addressed:** #10, #11
 
-**Priority: MEDIUM — Planned for Sprint 3**
+| # | Issue | File | Severity |
+|---|-------|------|----------|
+| 10 | Chart memory leak — `effect()` never destroyed | `temperature-diary.component.ts` | LOW |
+| 11 | Silent save failure — no user feedback on error | `temperature-diary.component.ts` | LOW |
 
-#### Data Model
-
-```typescript
-interface Vaccine {
-  id: string;
-  childId: string;
-  name: string;
-  manufacturer?: string;
-  doseNumber: number;
-  totalDoses: number;
-  dueDate: string;
-  completedAt?: string;
-  administeredBy?: string;
-  batchNumber?: string;
-  site?: string;         // injection site
-  notes?: string;
-}
-
-interface VaccineSchedule {   // embedded reference schedule
-  name: string;
-  doseCount: number;
-  doses: { months: number; label: string }[];
-  country: 'AL' | 'US' | 'UK';
-}
-```
-
-#### UI Design
-
-**Page Layout:**
-
-1. **Alert Banner (if any overdue):**
-   - Coral/orange banner at top: "Keni vaksina të vonuara" + count
-   - Tap to scroll to overdue section
-2. **Vaccination Timeline:**
-   - Vertical timeline with vaccine names
-   - Each node: completed (green check) / upcoming (orange clock) / overdue (red warning)
-   - Expandable nodes show dose details, date, batch number
-3. **Coming Up Card:**
-   - Next 2 upcoming vaccines with due dates
-   - "Shëno si e bërë" quick action
-4. **Full Schedule:**
-   - Grouped by age period (0–6m, 6–12m, 1–2y, etc.)
-   - Collapsible sections
-
-**Add Vaccine Record:**
-- Vaccine name (autocomplete from standard schedule)
-- Dose number (auto-suggested based on previous)
-- Date administered
-- Batch/lot number
-- Injection site (arm/thigh)
-- Doctor/clinic name
-- Notes
-
-**Notification Approach:**
-- In-app alert cards (not push notifications in this sprint)
-- Badge count on vaccines nav item for overdue count
-- Alert card on home page: "Vaksina e ardhshme: [Name] — [Due Date]"
-
-#### Standard Vaccine Schedule (Albania — default)
-
-Based on Albanian national immunization schedule (ISSHP/Albania):
-
-| Age | Vaccine |
-|-----|---------|
-| Birth | BCG, HepB-1 |
-| 2 months | DTaP-1, Hib-1, IPV-1, HepB-2, PCV-1, Rotavirus-1 |
-| 4 months | DTaP-2, Hib-2, IPV-2, PCV-2, Rotavirus-2 |
-| 6 months | DTaP-3, Hib-3, IPV-3, HepB-3, PCV-3 |
-| 12 months | MMR-1, Varicella-1 |
-| 18 months | DTaP-4, Hib-4 |
-| 5–6 years | DTaP-5, IPV-4, MMR-2 |
-| 11 years | Tdap, HPV (catch-up) |
-
-*(English/US schedule available as alternative in i18n)*
+**Deliverables:**
+- `implements OnDestroy`, store effect reference, call `.destroy()` on ngOnDestroy
+- `saveError = signal<string | null>(null)` — display inline error on failed save
+- Extract `tempColor()` helper to deduplicate `tempTextClass`/`tempColorClass`/`tempDotClass`
 
 ---
 
-## 5. Sprint Scope — Sprint 1
+#### Sprint 3: Growth Tracking — Fixes
+**Issues addressed:** #12, #13, #14
 
-**Goal:** Temperature Diary as a standalone page
+| # | Issue | File | Severity |
+|---|-------|------|----------|
+| 12 | `OnDestroy` missing — chart + timeouts never cleaned up | `growth-tracking.component.ts` | MEDIUM |
+| 13 | No typed DTO — `data: any` in controller | `growth-entries.controller.ts` | MEDIUM |
+| 14 | Effect flicker — chart rebuilt on every signal change | `growth-tracking.component.ts` | LOW |
 
-### What's In Scope (Temperature Diary — Sprint 1)
-
-1. **New `TemperaturePageComponent`** — standalone page with:
-   - Current status card (large temp display, color-coded)
-   - 7-day trend line chart (Chart.js)
-   - Quick-add reading modal
-   - Fever alert banner
-   - Recent readings list with medication chips
-   - Effectiveness tracking prompt
-
-2. **New API endpoints (backend):**
-   - `GET /children/:id/temperatures`
-   - `POST /children/:id/temperatures`
-   - `PATCH /children/:id/temperatures/:id`
-   - `DELETE /children/:id/temperatures/:id`
-   - New Prisma model: `TemperatureReading`
-
-3. **i18n expansion:**
-   - All temperature-related strings
-   - New translation keys for all UI elements
-
-4. **Home page minor update:**
-   - Add temperature quick-action card to Home quick actions grid
-
-### Out of Scope for Sprint 1
-
-- Growth tracking (Sprint 2)
-- Vaccination alerts refined UI (Sprint 3)
-- Push notifications (future)
-- Measurement location selection (keep simple, location baked into context)
-- Chart percentile bands (Sprint 2)
-
-### Success Criteria
-
-- [ ] Parent can log a temperature reading in ≤3 taps
-- [ ] Fever ≥ 38.0°C triggers visible alert on page
-- [ ] 7-day trend chart renders correctly
-- [ ] All strings bilingual (SQ + EN)
-- [ ] Backend stores and retrieves temperature data (not localStorage)
+**Deliverables:**
+- Add `OnDestroy`: `chartInstance?.destroy()`, clear `setTimeout` callbacks
+- Create `CreateGrowthEntryDto` with `@IsNumber()`, `@IsOptional()`, `@IsDateString()`
+- Add ValidationPipe to controller
+- Debounce chart re-renders (300ms) or guard with `chartInitialized` flag
+- Add SRI hash to Chart.js CDN script
+- Show `saveError` feedback on failed save (matching temperature pattern)
 
 ---
 
-## 6. Implementation Order
+#### Sprint 4: Translation Fixes Sprint
+**Issues addressed:** #15, #16, #17 + home.alerts.clear missing
 
-> Written for a full-stack Angular developer starting from scratch on this redesign.
+| # | Issue | Location | Severity |
+|---|-------|----------|----------|
+| 15 | "Akzni" typo → "Aktiviteti" in 5 places | `i18n.service.ts` | LOW |
+| 16 | "Seviiteti" typo → "Seviiteti" (severity label) | `i18n.service.ts` | LOW |
+| 17 | `home.alerts.fever` sq/en mismatch (different phrasing) | `i18n.service.ts` | LOW |
+| — | `home.alerts.clear` key missing (blank at runtime) | `i18n.service.ts` | HIGH |
+| — | `home.alerts.clearDesc` missing (inline `i18n.isSq()` ternary) | `health-alert-card.component.ts` | MEDIUM |
+| — | `home.recentActivity.emptyDesc` "Akzni" typo | `i18n.service.ts` | LOW |
+| — | Inline `gender` label hardcoded string in child form | `childForm.gender.label` | LOW |
 
-### Phase 1: Backend Foundation (Day 1)
+**Akzni occurrences to fix (should be "Aktiviteti" or appropriate SQ word):**
+- `settings.noChildren`: `'Akzni s'ka fëmijë të regjistruar.'` → `'Aktivitet s'ka fëmijë të regjistruar.'` or `'Nuk ka fëmijë të regjistruar.'`
+- `header.noChildrenPlaceholder`: `'Akzni s'ka fëmijë'` → `'Nuk ka fëmijë'`
+- `diary.emptyState`: `'Akzni s'ka shënime'` → `'Nuk ka shënime'`
+- `home.recentActivity.empty`: `'Akzni s'ka ende'` → `'Nuk ka aktivitet ende'`
+- `vaccines.emptyState`: `'Akzni s'ka vaksina'` → `'Nuk ka vaksina'`
 
-**Step 1.1 — Prisma Schema Update**
-
-File: `backend/prisma/schema.prisma`
-
-Add new model:
-
-```prisma
-model TemperatureReading {
-  id            String   @id @default(cuid())
-  childId       String
-  child         Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
-  value         Float    // Celsius
-  measuredAt    DateTime
-  location      String   // oral | axillary | ear | rectal | forehead
-  context       String   // fever-spike | routine | post-medication | after-sleep
-  medicationName String?
-  medicationDose  String?
-  medicationGivenAt DateTime?
-  effectiveness String?  // none | mild | good | great
-  notes         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-```
-
-Run: `npx prisma migrate dev --name add_temperature_reading`
-
-**Step 1.2 — Temperature Module (NestJS)**
-
-Create `backend/src/temperatures/`:
-
-- `temperatures.controller.ts` — REST endpoints
-- `temperatures.service.ts` — CRUD logic
-- `temperatures.module.ts`
-
-Register in `backend/src/app.module.ts`.
-
-**Step 1.3 — Update ChildrenService include**
-
-In `children.service.ts` `findOne()`, add `temperatureReadings: true` to the include clause so full child fetch includes temperature history.
+**Deliverables:**
+- All typo corrections in `i18n.service.ts`
+- Add `home.alerts.clear` and `home.alerts.clearDesc` keys
+- Remove inline `i18n.isSq()` ternary in `health-alert-card.component.ts`
+- Add `childForm.gender.label` i18n key; remove hardcoded inline string
 
 ---
 
-### Phase 2: Frontend Foundation (Day 1–2)
+#### Sprint 5: Build-Critical Fixes
+**Issues addressed:** Pre-existing build blockers
 
-**Step 2.1 — i18n Expansion**
+| # | Issue | File | Severity |
+|---|-------|------|----------|
+| — | Stray `return` statement in `data.service.ts` (build-breaker) | `data.service.ts` | CRITICAL |
+| — | Wrong import paths in `sidebar.component.ts` (`../../` → `../`) | `sidebar.component.ts` | CRITICAL |
+| — | `dataService.getParentName()` called but not implemented | `data.service.ts` | CRITICAL |
+| — | Dead `onBloodTypeChange()` no-op in `shell.component.ts` | `shell.component.ts` | LOW |
+| — | Dead `router.navigate([], { queryParams })` in `quick-actions-grid` | `quick-actions-grid.component.ts` | MEDIUM |
+| — | `pin-lock.component.ts` TS2801 error: `Promise<boolean>` always true | `pin-lock.component.ts` | MEDIUM |
+| — | Backend `implicit any` on `req` parameters (multiple controllers) | Backend controllers | MEDIUM |
+| — | `PORT` index signature access in `main.ts` | `main.ts` | LOW |
 
-Add to `i18n.service.ts`:
-
-```typescript
-// Temperature page
-'temp.title': { sq: 'Temperatura', en: 'Temperature' },
-'temp.currentTemp': { sq: 'Temperatura Aktuale', en: 'Current Temperature' },
-'temp.addReading': { sq: 'Lexim i Ri', en: 'New Reading' },
-'temp.feverWarning': { sq: 'Temperatura e lartë!', en: 'Fever Detected!' },
-'temp.sevenDayTrend': { sq: 'Trend 7-Ditor', en: '7-Day Trend' },
-'temp.recentReadings': { sq: 'Leximet e Funta', en: 'Recent Readings' },
-'temp.medicationGiven': { sq: 'Ilaç i Dhënë', en: 'Medication Given' },
-'temp.effectiveness': { sq: 'Efektiviteti', en: 'Effectiveness' },
-'temp.effectivenessPrompt': { sq: 'Si reagoi temperatura pas 30 minutash?', en: 'How did temperature respond after 30 minutes?' },
-'temp.save': { sq: 'Ruaj Leximin', en: 'Save Reading' },
-'temp.cancel': { sq: 'Anulo', en: 'Cancel' },
-'temp.value': { sq: 'Temperatura (°C)', en: 'Temperature (°C)' },
-'temp.time': { sq: 'Ora', en: 'Time' },
-'temp.context': { sq: 'Konteksti', en: 'Context' },
-'temp.contextFever': { sq: 'Kontroll temperature', en: 'Fever Check' },
-'temp.contextRoutine': { sq: 'Rutinore', en: 'Routine' },
-'temp.contextPostMed': { sq: 'Pas ilaçit', en: 'After Medication' },
-'temp.noReadings': { sq: 'Nuk ka lexime', en: 'No readings yet' },
-'temp.allGood': { sq: 'Të gjitha temperaturas mirë! 🎉', en: 'All temperatures normal! 🎉' },
-```
-
-**Step 2.2 — DataService API methods**
-
-Add to `DataService`:
-
-```typescript
-async getTemperatures(childId: string, from?: Date, to?: Date): Promise<TemperatureEntry[]>
-async addTemperature(childId: string, data: Partial<TemperatureEntry>): Promise<TemperatureEntry>
-async updateTemperature(childId: string, id: string, data: Partial<TemperatureEntry>): Promise<TemperatureEntry>
-async deleteTemperature(childId: string, id: string): Promise<void>
-```
-
-**Step 2.3 — Routing Update**
-
-File: `app.routes.ts` (or routing module)
-
-Add new route:
-```typescript
-{ path: 'temperature', component: TemperaturePageComponent }
-```
-
-**Step 2.4 — ShellComponent nav update**
-
-In `shell.component.ts`, add `temperature` to `navItems`:
-
-```typescript
-{ id: 'temperature', icon: 'thermostat', label: t['temp.title'] },
-```
+**Deliverables:**
+- Fix stray `return` in data.service.ts
+- Fix import paths in sidebar.component.ts
+- Add `getParentName()` to DataService
+- Remove dead `onBloodTypeChange()` from shell
+- Remove dead `router.navigate([])` from quick-actions-grid
+- Fix `TS2801` in pin-lock (change `if (somePromise)` to proper await/observable check)
+- Add typed `Request` parameters to backend controllers
+- Fix `process.env['PORT']` in main.ts
 
 ---
 
-### Phase 3: Temperature Page Component (Day 2–3)
-
-**Step 3.1 — Core Signals**
-
-```typescript
-temperatures = signal<TemperatureEntry[]>([]);
-selectedDate = signal<Date>(new Date());
-showAddModal = signal(false);
-currentChildTemp = computed(() => {
-  const temps = this.temperatures();
-  if (!temps.length) return null;
-  return temps.sort((a, b) => new Date(b.measuredAt).getTime() - new Date(a.measuredAt).getTime())[0];
-});
-recentReadings = computed(() => this.temperatures().slice(0, 10));
-weekTemps = computed(() => {
-  const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  return this.temperatures().filter(t => new Date(t.measuredAt) >= weekAgo);
-});
-hasFever = computed(() => {
-  const curr = this.currentChildTemp();
-  return curr ? curr.value >= 38.0 : false;
-});
-```
-
-**Step 3.2 — TempGaugeDisplay Component**
-
-Large temperature display:
-- Font size: 56px (font-black)
-- Color: `text-teal-500` (<37.5) | `text-orange-500` (37.5–38.9) | `text-rose-600` (≥39.0)
-- Subtitle: context label + time
-- Fever state: pulsing ring animation
-
-**Step 3.3 — 7-Day Trend Chart**
-
-Using Chart.js:
-- Type: `line`
-- X-axis: Date (last 7 days)
-- Y-axis: Temperature °C
-- Data points: colored by threshold
-- Horizontal line at 38.0°C (fever threshold, dashed red)
-- Smooth bezier curve
-- On mobile: simplified (no grid lines, larger touch targets)
-
-**Step 3.4 — Add Reading Modal**
-
-- Large number stepper input (38.0–42.0°C, step 0.1)
-- Time picker (defaults to now)
-- Context segmented control
-- Collapsible medication section (shows when context = "after-medication")
-- Effectiveness select (shown for post-medication readings)
-- Save button (disabled if value < 35 or > 45)
-
-**Step 3.5 — Recent Readings List**
-
-- Grouped by date
-- Each row: time (left) + value with color badge + medication chip if given
-- Tap to expand and see notes
-- Swipe left to reveal delete (mobile)
-
-**Step 3.6 — Fever Alert Banner**
-
-```typescript
-// Template
-@if (hasFever()) {
-  <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 flex items-center gap-3 mb-6 animate-slide-up">
-    <span class="material-icons text-rose-500 bg-rose-100 rounded-full p-2">warning</span>
-    <div class="flex-1">
-      <p class="font-bold text-rose-700">{{ i18n.t()['temp.feverWarning'] }}</p>
-      <p class="text-sm text-rose-600">{{ currentChildTemp()?.value }}°C — {{ i18n.t()['temp.feverActionHint'] }}</p>
-    </div>
-    <button (click)="openAddMedModal()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-3 py-1.5 rounded-xl text-sm font-bold transition-colors">
-      {{ i18n.t()['temp.markMedication'] }}
-    </button>
-  </div>
-}
-```
+### PHASE 2: Feature Completion (Sprints 6–13)
 
 ---
 
-### Phase 4: Integration & Polish (Day 3–4)
+#### Sprint 6: Icon Migration — Complete
+**Issues addressed:** #20 (complete remaining ~50%)
 
-**Step 4.1 — Home Page Update**
+**Files still using Material Icons:**
+- `shell.component.ts` — 1 icon (search)
+- `sidebar.component.ts` — 3 icons
+- `bottom-nav.component.ts` — 1 icon set
+- `pin-lock.component.ts` — ~15 icons
+- `header.component.ts` — 1 icon (chevron)
+- `health-alert-card.component.ts`
+- `quick-actions-grid.component.ts`
+- `recent-activity-feed.component.ts`
+- `welcome-hero.component.ts`
+- `settings-page.component.ts`
 
-Add to the Quick Actions grid (HomeComponent):
-```typescript
-// New quick action card
-{ id: 'temperature', icon: 'thermostat', label: t['temp.title'], color: 'orange', description: 'Monitoroni temperaturën' }
+**Also:** `diary.component.ts` has dynamic `type.icon` strings (fever, cough, etc.) bound to `material-icons` — these should map to Lucide equivalents.
+
+**Icon mapping (Material → Lucide):**
+```
+home              → house
+thermostat        → thermometer
+trending_up       → trending-up
+edit_document     → book-open
+vaccines          → syringe (or shield)
+settings          → settings
+arrow_back        → arrow-left
+visibility        → eye
+visibility_off    → eye-off
+warning           → alert-triangle
+error_outline     → alert-circle
+check_circle      → check-circle (or check)
+sync (spinner)    → loader / refresh-cw
+child_care        → baby
+person            → user
+chevron_right     → chevron-right
+chevron_down      → chevron-down
+menu              → menu
+globe             → globe
 ```
 
-**Step 4.2 — Mobile Bottom Nav**
-
-Update `ShellComponent` mobile nav items array:
-```typescript
-{ id: 'home', icon: 'home', label: 'Ballina' },
-{ id: 'temperature', icon: 'thermostat', label: 'Temperatura' },
-{ id: 'diary', icon: 'edit_document', label: 'Ditari' },
-{ id: 'vaccines', icon: 'vaccines', label: 'Vaksinat' },
-{ id: 'settings', icon: 'settings', label: 'Konfigurime' },
-```
-
-**Step 4.3 — Chart.js Integration**
-
-```bash
-npm install chart.js ng2-charts
-```
-
-Add to `app.config.ts` or main.ts:
-```typescript
-import { Chart, registerables } from 'chart.js';
-Chart.register(...registerables);
-```
-
-**Step 4.4 — Testing**
-
-- Log temperature reading → stored in Postgres
-- Fever reading → alert banner appears
-- Chart renders → 7-day trend visible
-- Delete reading → removed from list
-- Locale toggle → all strings switch to EN
-- Mobile bottom nav → temperature tab accessible
+**Deliverables:**
+- All components use `lucide-angular` `<lucide-icon>` exclusively
+- No `material-icons` or `material-symbols-outlined` CSS classes in any template
+- Remove `material-symbols-outlined` from `index.html` / styles if only Lucide remains
+- `diary.typeIcon()` method updated to return Lucide icon names
 
 ---
 
-### Phase 5: Polish & i18n (Day 4)
+#### Sprint 7: Add/Edit Child Modal — Polish (Sprint 7 original)
+**Status:** Built in Sprint 7; needs fixes from REVIEW_CHILDFORM.md
 
-**Step 5.1 — Animation refinements**
+**Pending fixes:**
+- `buildGenderOptions()` called in `ngOnChanges` — move to `ngOnInit` or cache
+- Add `OnDestroy` hook (even no-op)
+- Dead `onBloodTypeChange()` stub in shell (also Sprint 5)
+- Inline gender label hardcoded string (also Sprint 4)
+- `payload: any` in `save()` — type against API DTO
 
-- Add `animate-pulse` to fever alert badge
-- Ensure `animate-slide-up` is on all modals and cards
-- Add staggered list animation for readings list
+**Deliverables:**
+- All issues from REVIEW_RESULTS_CHILDFORM.md resolved
+- 3-step wizard fully functional with all fields
+
+---
+
+#### Sprint 8: Sidebar Component — Extraction + Polish (Sprint 4 original)
+**Status:** Built in Sprint 4; needs fixes from REVIEW_SIDEBAR.md
+
+**Pending fixes:**
+- Import paths fixed (from Sprint 5)
+- `onBloodTypeChange()` no-op removed (from Sprint 5)
+- `getParentName()` added (from Sprint 5)
+- `getChildAge()` stray `return` fixed (from Sprint 5)
+
+**Deliverables:**
+- Desktop sidebar fully extracted from shell
+- Active child mini-card with avatar + name + age badge
+- All nav items with Lucide icons
+- Locale toggle in sidebar footer
+- Settings + Logout at bottom
+
+---
+
+#### Sprint 9: Header Component — Extraction (Sprint 5 original)
+**Status:** Built in Sprint 5; needs remaining icon migration (Sprint 6)
+
+**Deliverables:**
+- Top bar extracted from shell
+- Child switcher with avatar + name + chevron
+- Locale toggle (EN/SQ)
+- Back navigation on inner pages
+- Lucide icons throughout (completed in Sprint 6)
+
+---
+
+#### Sprint 10: HomePage Sub-components (Sprint 14 original)
+**Status:** Built in Sprint 14; needs review fixes
+
+**Components built:**
+- `WelcomeHeroComponent` — personalized greeting + child avatar + add child CTA
+- `QuickActionsGridComponent` — 4-card grid (Temperature, Growth, Diary, Vaccines)
+- `RecentActivityFeedComponent` — merged timeline of temperature + growth entries
+- `HealthAlertCardComponent` — fever/vaccine alert banner
+
+**Pending fixes:**
+- Dead `router.navigate([])` in QuickActionsGrid (Sprint 5)
+- `home.alerts.clear` / `home.alerts.clearDesc` missing (Sprint 4)
+- `home.recentActivity.emptyDesc` "Akzni" typo (Sprint 4)
+- Missing pulse animation on active alerts (per SPEC)
+- Icon migration for all sub-components (Sprint 6)
+
+**Deliverables:**
+- All home sub-components fully migrated to Lucide
+- All i18n keys present and correct
+- Health alerts show with correct all-clear state
+- Activity feed shows merged + sorted entries
+
+---
+
+#### Sprint 11: BottomNav Component — Mobile Tab Bar (Sprint 6 original)
+**Status:** Built in Sprint 6; needs icon migration + polish
+
+**Pending fixes:**
+- Bottom nav icons still using `material-symbols-outlined` (Sprint 6)
+- Active tab indicator needs correct highlighting per current route
+
+**Deliverables:**
+- 5-tab mobile bottom nav: Home, Temperature, Growth, Diary, Vaccines
+- Lucide icons throughout
+- Active state correctly highlights current route
+- Badge count on vaccines tab for overdue count
+
+---
+
+#### Sprint 12: Diary Page — Refactor (Sprint 8 original)
+**Status:** Built; needs review fixes
+
+**Deliverables:**
+- Symptoms-only focus (temperature moved to TemperaturePage in Sprint 1)
+- Quick-add bar with symptom types: fever, cough, vomit, diarrhea, headache, rash, sore throat, tired, stomachache
+- Severity selector: Mild / Moderate / Severe
+- Duration input + description
+- Date-grouped entry list
+- Swipe-to-delete on mobile
+- All Lucide icons (completed in Sprint 6)
+
+---
+
+#### Sprint 13: Vaccines Page — Full Redesign (Sprints 9–11 original)
+**Status:** Partially built; needs completion
+
+**Deliverables:**
+- `VaccineScheduleComponent` — full Albanian national immunization schedule timeline
+- `VaccineAlertCardComponent` — overdue/due alert cards with CTAs
+- `VaccineAddFormComponent` — add vaccine record with dose tracking, batch number, injection site, doctor
+- Vertical timeline UI: completed (green check) / upcoming (orange clock) / overdue (red warning)
+- Expandable vaccine nodes with dose details
+- Badge count on nav item for overdue vaccines
+- Alert card on home page for next upcoming vaccine
+- All Lucide icons (vaccine components already migrated in Sprint 6)
+- Albanian + English schedule data embedded (SQ default, EN alternative)
+
+---
+
+#### Sprint 13b: Settings Page — Full Implementation (Sprint 13 original)
+**Status:** Partial; needs i18n audit + data management
+
+**Deliverables:**
+- Parent profile: name, surname, phone
+- Language toggle (already in header/sidebar)
+- Children management: list, edit, delete
+- Data export (JSON download of all child data)
+- Data clear with confirmation modal
+- About/version info
+- Lucide icons throughout
+
+---
+
+### PHASE 3: Infrastructure & Quality (Sprints 14–20)
+
+---
+
+#### Sprint 14: Docker Build Fix + Backend Hardening
+**Issues addressed:** #18, #19
+
+| # | Issue | Severity |
+|---|-------|----------|
+| 18 | Dockerfile missing `prisma generate` step | HIGH |
+| 19 | Docker image build keeps getting SIGKILL'd mid-export | HIGH |
+
+**Deliverables:**
+- Verify `prisma generate` is in Dockerfile (schema claims it was fixed — verify)
+- Investigate SIGKILL: likely OOM during `docker build`. Solutions:
+  - Multi-stage build to reduce final image size
+  - `--compress` flag for build context
+  - Split `npm install` and `prisma generate` across layers
+  - Use `docker build --progress=plain` to identify exact step
+- Docker Compose with health checks for Postgres
+- `.dockerignore` to exclude `node_modules`, `.git`, `dist`, `.angular`
+
+---
+
+#### Sprint 15: CI/CD Pipeline
+**Status:** Not started
+
+**Deliverables:**
+- GitHub Actions workflow (or equivalent):
+  - `lint` job: ESLint + Prettier check
+  - `test` job: Jest for backend, Karma/Jasmine for frontend
+  - `build` job: `ng build` + `docker build`
+  - `e2e` job: Playwright or Cypress tests
+- Branch protection: PR required for merge to main
+- Secrets management for `DATABASE_URL`, `JWT_SECRET`, etc.
+- Docker image push to registry on main merge
+- Preview environments for PRs (optional)
+
+---
+
+#### Sprint 16: E2E Testing Setup
+**Status:** Not started
+
+**Deliverables:**
+- Install Playwright or Cypress
+- Test coverage for critical flows:
+  - Login (PIN + credentials)
+  - Add child profile
+  - Log temperature reading
+  - Log growth measurement
+  - Switch between children
+  - Language toggle (SQ ↔ EN)
+  - Delete child profile
+- CI integration (from Sprint 15)
+- Test reports in CI
+
+---
+
+#### Sprint 17: Unit Testing — Backend
+**Status:** Not started
+
+**Deliverables:**
+- Jest configured for NestJS backend
+- Unit tests for all service methods:
+  - ChildrenService: CRUD + ownership checks
+  - TemperatureEntriesService: validation (future date, ranges)
+  - GrowthEntriesService: validation (height/weight ranges, at-least-one)
+  - AuthService: login/logout
+- Coverage goal: 80%+
+- Tests run in CI (Sprint 15)
+
+---
+
+#### Sprint 18: Unit Testing — Frontend
+**Status:** Not started
+
+**Deliverables:**
+- Jest configured for Angular (with Jest preset)
+- Component-level tests for:
+  - ShellComponent: navigation, child switching
+  - TemperatureDiaryComponent: signal state, chart rendering
+  - GrowthTrackingComponent: signal state, chart rendering
+  - I18nService: locale switching, key resolution
+- Service mocks for DataService API calls
+- Coverage goal: 70%+
+
+---
+
+#### Sprint 19: Performance Audit + Fixes
+**Deliverables:**
+- Audit all `data: any` usages → typed DTOs throughout backend
+- Add pagination to all `findMany` queries (temperatures, growth, health records)
+- Add `ChangeDetectionStrategy.OnPush` to all components that don't use ViewContainerRef
+- Replace `CommonModule` with selective imports in components
+- Audit `async/await` without `try/catch` — add structured error handling
+- Remove all `console.error` with full error objects in production code
+- Audit no-op/dangling methods across all components
+- Add `take: 50` to all `include: { healthRecords, vaccines }` in children service
+
+---
+
+#### Sprint 20: Security Audit + Hardening
+**Deliverables:**
+- Implement proper JWT in HTTP-only cookie (not localStorage) — migration
+- Add Rate limiting (`@nestjs/throttler`) to auth endpoints
+- Add CORS configuration for production domain
+- Audit all XSS vectors: sanitise avatar URLs, document URLs
+- Add ` helmet` for security headers
+- Audit IDOR across all endpoints (ensure every controller has explicit ownership guard)
+- Content Security Policy (CSP) headers
+- Add `generated_at` / `version` to all API responses for cache busting
+
+---
+
+### PHASE 4: Polish & UX (Sprints 21–30)
+
+---
+
+#### Sprint 21: Empty States — All Pages
+**Deliverables:**
+- Each page (Home, Temperature, Growth, Diary, Vaccines, Settings) has a illustrated empty state
+- Empty state includes: friendly SVG illustration + headline + CTA button
+- All empty states have SQ + EN translations
+
+---
+
+#### Sprint 22: Animation & Motion Audit
+**Deliverables:**
+- Page transitions: 350ms ease-out (or Angular route animations)
+- Card hover lift: 200ms ease on all cards
+- Modal slide-up: 350ms cubic-bezier(0.16, 1, 0.3, 1)
+- Button press: 100ms ease
+- Success flash: 600ms ease-out on save
+- List stagger: 50ms per item on entry lists
+- Fever alert pulse animation (repeating, not one-shot)
 - Chart data points animate in on load
-
-**Step 5.2 — Empty states**
-
-- No readings: friendly illustration + "Shtoni leximin e parë" CTA
-- All readings normal: positive empty state ("Të gjitha temperaturas mirë!")
-
-**Step 5.3 — Final i18n audit**
-
-- Verify every label, placeholder, error message, empty state has SQ + EN
-- Check date formats (DD/MM/YYYY for SQ, MM/DD/YYYY for EN)
+- Loading skeleton screens instead of spinners where appropriate
 
 ---
 
-## Appendix: File Changes Summary
-
-| File | Action | Description |
-|------|--------|-------------|
-| `REDESIGN_PLAN.md` | CREATE | This document |
-| `backend/prisma/schema.prisma` | EDIT | Add `TemperatureReading` model |
-| `backend/src/temperatures/` | CREATE | New controller/service/module |
-| `backend/src/app.module.ts` | EDIT | Register TemperatureModule |
-| `backend/src/children/children.service.ts` | EDIT | Include temperatureReadings in findOne |
-| `src/app/core/i18n/i18n.service.ts` | EDIT | Add temperature translation keys |
-| `src/app/services/data.service.ts` | EDIT | Add temperature API methods |
-| `src/app/components/temperature.component.ts` | CREATE | New temperature page |
-| `src/app/components/home.component.ts` | EDIT | Add temp quick action card |
-| `src/app/components/shell.component.ts` | EDIT | Add temp nav item, update routing |
-| `src/app/app.routes.ts` (or routing module) | EDIT | Add temperature route |
-| `tailwind.config.js` | CHECK | Ensure chart.js colors work with custom palette |
-| `package.json` | EDIT | Add `chart.js`, `ng2-charts` dependencies |
+#### Sprint 23: Error States + Toast System
+**Deliverables:**
+- Global toast notification system (success/error/info)
+- Inline field errors on all forms (not just browser validation)
+- Network error state: "Nuk u lidh dot me serverin" / "Could not connect to server"
+- 404/403 error pages with friendly illustrations
+- Retry buttons on failed API calls
+- Save error → toast: "Ruajtja dështoi. Provo përsëri."
 
 ---
 
-## Notes for Executor
+#### Sprint 24: Responsive Design Audit
+**Deliverables:**
+- Mobile-first audit of all pages
+- Sidebar collapses to bottom nav on mobile (already planned)
+- Desktop: 3-column child grid; Tablet: 2-column; Mobile: 1-column
+- Charts responsive (Chart.js responsive: true)
+- Modal full-screen on mobile, centered overlay on desktop
+- Touch targets minimum 44x44px
+- No horizontal scroll on any page
 
-- The existing `DiaryComponent` tracks temperature alongside symptoms — **do not delete that functionality yet**. The temperature page in Sprint 1 operates independently. After Sprint 2, we will consolidate.
-- The current `records.component.ts` handles vaccines — the vaccine schedule system will build on top of the existing structure.
-- All new components use **standalone Angular components** (no NgModule).
-- API calls go to `http://localhost:3000` (backend). Do not use localStorage for temperature data in this sprint.
-- Use the `I18nService` for all user-facing strings — never hardcode SQ or EN text.
+---
+
+#### Sprint 25: Date/Time Formatting Audit
+**Deliverables:**
+- Fix `onDateInput()` locale-aware formatting (DD/MM/YYYY for SQ, MM/DD/YYYY for EN)
+- Fix `toIso()` locale-aware parsing
+- Relative time display: "5 minuta më parë" / "5 minutes ago"
+- Calendar widget uses locale-appropriate first day of week (Monday for SQ, Sunday for EN)
+- Date inputs use native `<input type="date">` with locale formatting
+
+---
+
+#### Sprint 26: Accessibility (a11y) Audit
+**Deliverables:**
+- All images have `alt` text
+- All form inputs have associated `<label>` elements
+- Color contrast: all text meets WCAG AA (4.5:1 for body, 3:1 for large text)
+- Focus indicators visible on all interactive elements
+- `aria-label` on icon-only buttons
+- `role` attributes on custom components (tabs, modals, accordions)
+- Keyboard navigation: Tab, Enter, Escape all work
+- Screen reader announcements for dynamic content (aria-live regions)
+
+---
+
+#### Sprint 27: PWA Setup
+**Deliverables:**
+- Service worker for offline capability
+- Web app manifest with icons, theme color, display: standalone
+- Offline fallback page
+- Cache strategies: App Shell cached, API responses network-first
+- Push notification infrastructure (token storage, service worker registration)
+- "Add to Home Screen" prompt
+
+---
+
+#### Sprint 28: Push Notifications — Temperature Fever Alerts
+**Deliverables:**
+- Browser push notification on fever ≥ 38.5°C
+- Notification: "Temperatura e lartë! 38.7°C — {{ child name }}"
+- Permission request flow (gentle, not blocking)
+- Notification click → opens temperature page
+- Do Not Disturb hours setting (don't notify 10pm–7am)
+
+---
+
+#### Sprint 29: Push Notifications — Vaccine Reminders
+**Deliverables:**
+- Browser push notification 3 days before vaccine due date
+- Notification: "{{ vaccine name }} — për shkak më {{ date }}"
+- Notification click → opens vaccines page
+- Overdue notification (fires once, then daily reminder)
+
+---
+
+#### Sprint 30: Data Export + Backup
+**Deliverables:**
+- Export all child data as JSON (via Settings page)
+- PDF report generation per child (temperature history, growth chart, vaccine status)
+- Include date range selector for export
+- Email backup option (future: SendGrid/integration)
+
+---
+
+### PHASE 5: Future Features (Sprints 31–50)
+
+---
+
+#### Sprint 31: Medication Tracking Module
+**Description:** Log medications (name, dose, frequency, start/end date) with reminders.
+**Deliverables:**
+- New `MedicationEntry` model + API
+- Medication log list per child
+- Add/edit medication form
+- Reminder scheduling (in-app at first, push later)
+- Medication history in child profile
+
+---
+
+#### Sprint 32: Appointment Scheduling
+**Description:** Track pediatrician appointments, checkups, lab visits.
+**Deliverables:**
+- `Appointment` model + API
+- Calendar view of upcoming appointments
+- Appointment types: routine checkup, sick visit, vaccination, lab work
+- Reminder 24h before
+- Notes field per appointment
+
+---
+
+#### Sprint 33: Lab Results Module
+**Description:** Attach and track lab results (blood tests, urine tests, etc.)
+**Deliverables:**
+- `LabResult` model + API
+- File upload for PDF/image results
+- Reference range display (with high/low indicators)
+- Date + test type categorization
+- Historical trend charts for recurring tests (e.g., hemoglobin)
+
+---
+
+#### Sprint 34: Growth — WHO Percentile Integration
+**Description:** Add WHO growth chart percentile bands to the growth chart.
+**Deliverables:**
+- Embed WHO LMS data as static JSON (0–5 years for height/weight)
+- Chart.js shaded percentile bands (3rd, 15th, 50th, 85th, 97th)
+- Percentile calculation client-side using WHO LMS formula
+- Toggle: absolute values vs percentile view
+- Alerts if child falls outside 3rd/97th percentile
+
+---
+
+#### Sprint 35: Growth — Dual-Metric Chart
+**Description:** Height + weight on same chart with dual Y-axes (already in spec, needs implementation).
+**Deliverables:**
+- Single Chart.js instance with `y` and `y1` axes
+- Toggle: height-only / weight-only / both
+- Smooth bezier curves
+- Pinch-to-zoom time range selector: 0–6m, 0–12m, 0–24m, all
+
+---
+
+#### Sprint 36: Doctor/Nurse Access — Read-Only Sharing
+**Description:** Generate a time-limited read-only link to share a child's health summary.
+**Deliverables:**
+- `ShareLink` model: token, childId, expiresAt, createdByUserId
+- API: POST /share/:childId (generate), GET /share/:token (view), DELETE /share/:id (revoke)
+- Public read-only view (no login required)
+- Summary page: last 30 days temperature, growth chart snapshot, vaccine status
+- Optional: QR code generation
+
+---
+
+#### Sprint 37: Multi-Parent Support
+**Description:** Allow two parents to share access to the same child profile.
+**Deliverables:**
+- `FamilyMember` model: userId, childId, role (parent, grandparent, nanny, doctor)
+- Invite flow: email/SMS link to join family
+- Role-based permissions (parent = full access, doctor = read-only)
+- Family settings page showing all members
+
+---
+
+#### Sprint 38: Vaccination — International Schedules
+**Description:** Support US/UK/WHO vaccine schedules alongside Albanian.
+**Deliverables:**
+- Schedule data structure supports multiple countries
+- User selects country during onboarding
+- Schedule comparison view: Albanian default vs selected country
+- Visual diff: which vaccines are unique to which schedule
+- Toggle between schedules in Vaccines page
+
+---
+
+#### Sprint 39: Dashboard — Customizable Widgets
+**Description:** Allow parents to reorder and customize home page widgets.
+**Deliverables:**
+- Drag-and-drop widget reordering
+- Widget visibility toggles
+- Preferred child selector (which child's data shows on home by default)
+- Persist preferences in localStorage + backend
+
+---
+
+#### Sprint 40: Sleep Tracking Module
+**Description:** Dedicated sleep log (bedtime, wake time, quality, interruptions).
+**Deliverables:**
+- `SleepEntry` model + API
+- Sleep quality: 1–5 stars
+- Night interruptions log
+- Weekly sleep summary chart
+- Average bedtime/wake time calculation
+- Sleep goals (optional)
+
+---
+
+#### Sprint 41: Meal/Nutrition Tracking
+**Description:** Log meals, breastfeeding, formula, solid foods.
+**Deliverables:**
+- `MealEntry` model + API
+- Food type: breastfeeding / formula / solid
+- Portion size estimation
+- Photo attachment (optional)
+- Daily nutrition summary
+- Allergy flagging against child's `criticalAllergies`
+
+---
+
+#### Sprint 42: Development Milestones
+**Description:** Track developmental milestones (first words, walking, potty training, etc.)
+**Deliverables:**
+- `Milestone` model + API
+- Pre-populated list of age-appropriate milestones (0–6y, based on CDC/Albanian pediatric guidelines)
+- Date achieved + optional notes/photo
+- Timeline view: "First walked on {{ date }}"
+- Reminder: "Approaching milestone age — watch for X"
+
+---
+
+#### Sprint 43: Health Report — PDF Generation
+**Description:** Generate a formatted health report for doctor visits.
+**Deliverables:**
+- Select date range + child
+- Auto-generate PDF including:
+  - Growth chart (pct. bands)
+  - Recent temperature readings
+  - Vaccination status
+  - Medication log
+  - Allergy summary
+- Print-optimized CSS
+- Email report option
+
+---
+
+#### Sprint 44: Mood/Behavior Tracking
+**Description:** Log mood and behavioral observations over time.
+**Deliverables:**
+- `MoodEntry` model + API
+- Mood options: happy, calm, fussy, tantrum, anxious, tired, sick
+- Behavior notes (free text)
+- Daily mood chart
+- Correlation hints: "Mood tends to be worse on fever days"
+
+---
+
+#### Sprint 45: Firebase/Analytics Integration
+**Description:** Add analytics to understand usage patterns (opt-in).
+**Deliverables:**
+- Firebase Analytics or Plausible for:
+  - Page views, time on page
+  - Feature usage (temperature logged, growth added)
+  - Error tracking (Sentry)
+- Privacy-first: no PII sent, IP anonymized
+- Dashboard for product team (usage metrics)
+
+---
+
+#### Sprint 46: Localization — Full i18n Audit
+**Description:** Comprehensive audit and improvement of all translation strings.
+**Deliverables:**
+- Every user-facing string in i18n.service.ts (no hardcoded SQ/EN anywhere)
+- Pluralization support for SQ (Albanian has complex plural rules)
+- Date/time formatting fully locale-aware
+- Currency formatting for any future billing features
+- RTL language preparation (future Arabic support)
+- Professional translation review (human translator for SQ)
+
+---
+
+#### Sprint 47: Performance — Lazy Loading + Code Splitting
+**Deliverables:**
+- Lazy load all feature pages (Temperature, Growth, Diary, Vaccines) via Angular routes
+- Defer Chart.js loading until page is visible
+- Preload upcoming routes on hover (router预加载)
+- Bundle size audit: target <200KB initial load
+- Skeleton screens for lazy-loaded routes
+
+---
+
+#### Sprint 48: Performance — Service Worker + Caching
+**Deliverables:**
+- HTTP caching headers on API responses (static assets: 1 year, API: no-cache)
+- IndexedDB for offline-first temperature/growth entry (queue and sync)
+- Background sync when connection restored
+- App update notification ("New version available — refresh")
+
+---
+
+#### Sprint 49: Production Hardening
+**Deliverables:**
+- Environment-specific configuration (dev/staging/prod)
+- PostgreSQL connection pooling (PgBouncer or equivalent)
+- Redis session store (for JWT blacklist / refresh tokens)
+- Database backups: daily automated pg_dump
+- Uptime monitoring (external service like Better Uptime)
+- Error tracking (Sentry)
+- Log aggregation (structured JSON logging → log service)
+
+---
+
+#### Sprint 50: v1.0 Release + Launch Checklist
+**Deliverables:**
+- All sprints 1–49 completed and merged
+- E2E test suite passing
+- Performance benchmarks met (Lighthouse score ≥ 90)
+- Security penetration test (basic)
+- Privacy policy + terms of service published
+- Parent onboarding flow tested
+- App Store / Play Store listing (if PWA → installable)
+- Announcement post / social media
+- v1.0 tag + GitHub release
+
+---
+
+## Issue Index
+
+| # | Issue | Sprint |
+|---|-------|--------|
+| 1 | birthWeight + deliveryDoctor missing from Edit Modal | 1 |
+| 2 | child.saveProfile i18n key missing | 1 |
+| 3 | documentIssueDate missing from Edit Modal | 1 |
+| 4 | No server-side file size limit | 1 |
+| 5 | No backend DTO validation | 1 |
+| 6 | IDOR check only in service layer | 1 |
+| 7 | Base64 document re-sent on every PATCH | 1 |
+| 8 | No double-submit guard on saveEditChild() | 1 |
+| 9 | confirm() browser dialog for delete | 1 |
+| 10 | Temperature chart memory leak | 2 |
+| 11 | Temperature silent save failure | 2 |
+| 12 | Growth OnDestroy missing | 3 |
+| 13 | Growth no typed DTO | 3 |
+| 14 | Growth effect flicker | 3 |
+| 15 | "Akzni" typo in 5 places | 4 |
+| 16 | "Seviiteti" typo in sq translation | 4 |
+| 17 | home.alerts.fever sq/en mismatch | 4 |
+| 18 | Dockerfile missing prisma generate | 14 |
+| 19 | Docker SIGKILL mid-export | 14 |
+| 20 | Icon migration incomplete | 6 |
+
+---
+
+## Team Labels (Permanent)
+
+| Label | Role | Persona |
+|-------|------|---------|
+| `kiddok-architect` | Architect/Planner | Senior architect, specs + roadmap |
+| `kiddok-executor` | Executor/Developer | Full-stack Angular dev, builds from spec |
+| `kiddok-tester` | Tester/QA | Meticulous QA, finds bugs + validation gaps |
+| `kiddok-reviewer` | Reviewer/Refiner | Security + performance expert |
+
+## Operating Rules
+
+```
+User request
+    ↓
+kiddok-architect → creates SPEC.md / REDESIGN_PLAN.md + commits
+    ↓
+kiddok-executor → reads SPEC, builds module, commits
+    ↓
+kiddok-tester → reads code, validates, writes TEST_RESULTS_*.md, commits
+    ↓
+kiddok-reviewer → security + perf audit, writes REVIEW_RESULTS_*.md, commits
+    ↓
+Report to user
+```
+
+---
+
+*Document version 2.0 — Supersedes all prior REDESIGN_PLAN.md and SPRINT_REGISTRY.md*
+*Maintained by: kiddok-architect*

@@ -12,6 +12,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d kiddok_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   api:
     build: ./backend
@@ -21,7 +26,8 @@ services:
       DATABASE_URL: postgresql://admin:admin_password@postgres:5432/kiddok_db
       JWT_SECRET: ${JWT_SECRET:-kiddok-secret-change-in-prod}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:

@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsNotEmpty } from 'classvalidator';
+import { IsOptional, IsString, IsNotEmpty } from '@class-validator';
 
 export class UpdateParentDto {
   @IsOptional()

@@ -171,6 +171,16 @@ export class DataService {
     };
   }
 
+  /** Sanitise avatar URL — only allow https:// DiceBear CDN */
+  private isValidUrl(url: string): boolean {
+    try {
+      const u = new URL(url);
+      return u.protocol === 'https:' && u.hostname === 'api.dicebear.com';
+    } catch {
+      return false;
+    }
+  }
+
   /** Load all children from PostgreSQL via REST */
   async loadChildrenFromApi(): Promise<void> {
     const token = localStorage.getItem(this.AUTH_KEY);
@@ -195,7 +205,9 @@ export class DataService {
         medicalDocument: c.medicalDocument ?? undefined,
         documentIssueDate: c.documentIssueDate ?? undefined,
         medicalNotes: c.medicalNotes ?? undefined,
-        avatarUrl: c.avatarUrl ?? `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(c.name)}`,
+        avatarUrl: c.avatarUrl && this.isValidUrl(c.avatarUrl)
+          ? c.avatarUrl
+          : `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(c.name)}`,
       }));
 
       this.children.set(profiles);
@@ -237,7 +249,9 @@ export class DataService {
         birthWeight: created.birthWeight ?? undefined,
         deliveryDoctor: created.deliveryDoctor ?? undefined,
         criticalAllergies: created.criticalAllergies ?? undefined,
-        avatarUrl: created.avatarUrl ?? `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(created.name)}`,
+        avatarUrl: created.avatarUrl && this.isValidUrl(created.avatarUrl)
+          ? created.avatarUrl
+          : `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(created.name)}`,
       };
 
       const updated = [...this.children(), profile];
@@ -291,7 +305,9 @@ export class DataService {
         medicalDocument: updated.medicalDocument ?? undefined,
         documentIssueDate: updated.documentIssueDate ?? undefined,
         medicalNotes: updated.medicalNotes ?? undefined,
-        avatarUrl: updated.avatarUrl ?? `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(updated.name)}`,
+        avatarUrl: updated.avatarUrl && this.isValidUrl(updated.avatarUrl)
+          ? updated.avatarUrl
+          : `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(updated.name)}`,
       };
 
       const current = this.children().map(c => c.id === id ? profile : c);

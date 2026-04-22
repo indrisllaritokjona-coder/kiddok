@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -12,9 +13,28 @@ import { GrowthEntriesModule } from './growth-entries/growth-entries.module';
 import { ParentModule } from './parent/parent.module';
 import { DiaryModule } from './diary/diary.module';
 import { IllnessesModule } from './illnesses/illnesses.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, ChildrenModule, HealthRecordsModule, VaccinesModule, TemperatureEntriesModule, GrowthEntriesModule, ParentModule, DiaryModule, IllnessesModule],
+  imports: [
+    PrismaModule,
+    UsersModule,
+    AuthModule,
+    ChildrenModule,
+    HealthRecordsModule,
+    VaccinesModule,
+    TemperatureEntriesModule,
+    GrowthEntriesModule,
+    ParentModule,
+    DiaryModule,
+    IllnessesModule,
+    // Global rate limiting: 100 requests per minute per IP
+    ThrottlerModule.forRoot([{
+      name: 'short',
+      ttl: 60000,
+      limit: 100,
+    }]),
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

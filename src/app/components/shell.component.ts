@@ -1,4 +1,4 @@
-﻿import { Component, inject, signal, computed, OnDestroy } from '@angular/core';
+﻿import { Component, inject, signal, computed, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
 import { DataService, ChildProfile } from '../services/data.service';
@@ -19,6 +19,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
 
 @Component({
     selector: 'app-shell',
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [CommonModule, FormsModule, LucideAngularModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent],
     template: `
 

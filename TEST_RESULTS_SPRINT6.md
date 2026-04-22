@@ -1,40 +1,43 @@
-# TEST_RESULTS_SPRINT6.md — Compile Error Fixes
+# TEST_RESULTS_SPRINT6.md — Compile Error Fixes (Independent QA)
 
 **Sprint:** 6 (Emergency compile fixes)
 **Date:** 2026-04-23
-**Tester:** kiddok-executor (self-test)
+**Tester:** kiddok-tester (independent QA)
 **Repo:** C:\Users\g_gus\Desktop\jona\kiddok
 
 ---
 
-## Issues Found & Fixed
+## Verification Tasks
 
-### Issue 1: Missing `chartInitialized` property (TS2339)
+### Task 1: Build — No TypeScript compile errors
+**Command:** `cd C:\Users\g_gus\Desktop\jona\kiddok; npx ng build --configuration development 2>&1 | Select-String -Pattern "error TS" | Select-Object -First 10`
+**Result:** ✓ PASS — No `error TS` output. Clean build confirmed.
+
+### Task 2: `chartInitialized` property declared in temperature-diary.component.ts
 **File:** `src/app/components/temperature-diary.component.ts`
-**Problem:** The effect in `ngAfterViewInit` referenced `this.chartInitialized` but no such property existed, causing TS2339 at compile time.
-**Fix:** Added `private chartInitialized = false;` as a class field (line ~199). It's set to `true` inside `buildChart()` after the chart is fully constructed, correctly guarding the effect from premature re-renders.
+**Findings:**
+- Line 263: `private chartInitialized = false;` — declared as a class field ✓
+- Line 304: `if (entries && this.chartInitialized)` — correctly guards the chart effect ✓
+- Line 547: `this.chartInitialized = true;` — set after chart construction ✓
+**Result:** ✓ PASS — Property exists and is used correctly.
 
-### Issue 2: Duplicate i18n keys (TS1117)
+### Task 3: No duplicate i18n keys in i18n.service.ts
 **File:** `src/app/core/i18n/i18n.service.ts`
-**Problem:** Object literal `translations` had duplicate keys — `diary.hasEntries` appeared on lines 127 and 146, and `diary.severity.label` appeared on lines 128 and 149. TypeScript `as const` with duplicate keys is a compile error.
-**Fix:** Removed the second (duplicate) occurrences of `diary.hasEntries` (line 146) and `diary.severity.label` (line 149) — kept the first definitions, removed duplicates.
+**Findings:**
+- `diary.hasEntries` — appears once at line 127 ✓
+- `diary.severity.label` — appears once at line 128 ✓
+**Result:** ✓ PASS — No duplicate keys found.
 
 ---
 
-## Verification
+## Summary
 
-```
-cd C:\Users\g_gus\Desktop\jona\kiddok; npx ng build --configuration development
-→ No errors, clean build ✓
-```
+| Check | Status |
+|-------|--------|
+| Build clean (no `error TS`) | ✓ PASS |
+| `chartInitialized` declared | ✓ PASS |
+| `chartInitialized` correctly used | ✓ PASS |
+| `diary.hasEntries` no duplicate | ✓ PASS |
+| `diary.severity.label` no duplicate | ✓ PASS |
 
----
-
-## Changes Committed
-
-| File | Change |
-|------|--------|
-| `temperature-diary.component.ts` | Added `private chartInitialized = false;` field |
-| `i18n.service.ts` | Removed duplicate `diary.hasEntries` and `diary.severity.label` entries |
-
-**Commit:** `fix: temperature-diary compile errors + duplicate i18n keys`
+**All checks PASSED. Ready for merge.**

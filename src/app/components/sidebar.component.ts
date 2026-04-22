@@ -83,6 +83,11 @@ interface NavItem {
       flex-shrink: 0;
     }
 
+    .dark .sidebar {
+      background: #1e293b;
+      border-image: linear-gradient(to bottom, #7c3aed, #0d9488) 1;
+    }
+
     .sidebar__brand {
       display: flex;
       align-items: center;
@@ -98,6 +103,10 @@ interface NavItem {
       letter-spacing: -0.5px;
     }
 
+    .dark .sidebar__logo {
+      color: #a78bfa;
+    }
+
     .locale-toggle {
       font-family: 'Inter', sans-serif;
       font-size: 11px;
@@ -111,9 +120,19 @@ interface NavItem {
       transition: background 0.2s ease, color 0.2s ease;
     }
 
+    .dark .locale-toggle {
+      background: #334155;
+      color: #94a3b8;
+    }
+
     .locale-toggle:hover {
       background: #e7e5e4;
       color: #44403c;
+    }
+
+    .dark .locale-toggle:hover {
+      background: #475569;
+      color: #e2e8f0;
     }
 
     .sidebar__child-card {
@@ -127,9 +146,19 @@ interface NavItem {
       border: 2px solid #c7d2fe;
     }
 
+    .dark .sidebar__child-card {
+      background: #1e293b;
+      border-color: #4338ca;
+    }
+
     .sidebar__child-card--empty {
       border: 2px dashed #e7e5e4;
       background: #fafaf9;
+    }
+
+    .dark .sidebar__child-card--empty {
+      border-color: #334155;
+      background: #0f172a;
     }
 
     .sidebar__avatar {
@@ -138,6 +167,10 @@ interface NavItem {
       border-radius: 9999px;
       border: 2px solid #c7d2fe;
       flex-shrink: 0;
+    }
+
+    .dark .sidebar__avatar {
+      border-color: #4338ca;
     }
 
     .sidebar__child-info {
@@ -157,6 +190,10 @@ interface NavItem {
       text-overflow: ellipsis;
     }
 
+    .dark .sidebar__child-name {
+      color: #f1f5f9;
+    }
+
     .sidebar__age-badge {
       font-family: 'Inter', sans-serif;
       font-size: 11px;
@@ -166,6 +203,11 @@ interface NavItem {
       background: #eef2ff;
       color: #4338ca;
       width: fit-content;
+    }
+
+    .dark .sidebar__age-badge {
+      background: #312e81;
+      color: #c4b5fd;
     }
 
     .sidebar__child-placeholder {
@@ -180,11 +222,19 @@ interface NavItem {
       color: #a8a29e;
     }
 
+    .dark .sidebar__placeholder-icon {
+      color: #64748b;
+    }
+
     .sidebar__placeholder-text {
       font-family: 'Inter', sans-serif;
       font-size: 13px;
       font-weight: 500;
       color: #a8a29e;
+    }
+
+    .dark .sidebar__placeholder-text {
+      color: #64748b;
     }
 
     .sidebar__nav {
@@ -218,10 +268,20 @@ interface NavItem {
       background: #f5f5f4;
     }
 
+    .dark .sidebar__nav-item:hover {
+      background: #1e293b;
+    }
+
     .sidebar__nav-item--active {
       background: #eef2ff;
       color: #6366F1;
       box-shadow: inset 4px 0 0 #6366F1;
+    }
+
+    .dark .sidebar__nav-item--active {
+      background: #312e81;
+      color: #a78bfa;
+      box-shadow: inset 4px 0 0 #a78bfa;
     }
 
     .sidebar__nav-icon {
@@ -234,6 +294,10 @@ interface NavItem {
       display: flex;
       flex-direction: column;
       gap: 2px;
+    }
+
+    .dark .sidebar__footer {
+      border-top-color: #334155;
     }
 
     .sidebar__footer-item {
@@ -259,6 +323,11 @@ interface NavItem {
       color: #44403c;
     }
 
+    .dark .sidebar__footer-item:hover {
+      background: #1e293b;
+      color: #e2e8f0;
+    }
+
     .sidebar__footer-item--logout {
       color: #f43f5e;
     }
@@ -266,6 +335,15 @@ interface NavItem {
     .sidebar__footer-item--logout:hover {
       background: #fff1f2;
       color: #e11d48;
+    }
+
+    .dark .sidebar__footer-item--logout {
+      color: #fb7185;
+    }
+
+    .dark .sidebar__footer-item--logout:hover {
+      background: #4c0519;
+      color: #fb7185;
     }
   `]
 })

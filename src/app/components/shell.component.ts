@@ -11,6 +11,8 @@ import { GrowthTrackingComponent } from './growth-tracking.component';
 import { RecordsComponent } from './records.component';
 import { VaccinesComponent } from './vaccines.component';
 import { MedicationsComponent } from './medications/medications.component';
+import { AppointmentsComponent } from './appointments/appointments.component';
+import { LabResultsComponent } from './lab-results/lab-results.component';
 import { SidebarComponent } from './sidebar.component';
 import { HeaderComponent } from './header.component';
 import { BottomNavComponent } from './bottom-nav.component';
@@ -21,7 +23,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
 @Component({
     selector: 'app-shell',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, FormsModule, LucideAngularModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, MedicationsComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent],
+    imports: [CommonModule, FormsModule, LucideAngularModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, MedicationsComponent, AppointmentsComponent, LabResultsComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent],
     template: `
 
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
@@ -267,6 +269,8 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                 @case ('records') { <app-records /> }
                 @case ('vaccines') { <app-vaccines /> }
                 @case ('medications') { <app-medications /> }
+                @case ('appointments') { <app-appointments /> }
+                @case ('lab-results') { <app-lab-results /> }
                 @case ('settings') {
                   <app-settings-page
                     (openEditChild)="openEditModal($event)"

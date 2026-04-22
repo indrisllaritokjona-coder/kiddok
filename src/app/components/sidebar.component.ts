@@ -283,6 +283,8 @@ export class SidebarComponent {
     { id: 'diary', icon: 'book-open', labelKey: 'sidebar.nav.diary' },
     { id: 'vaccines', icon: 'syringe', labelKey: 'sidebar.nav.vaccines' },
     { id: 'medications', icon: 'pill', labelKey: 'sidebar.nav.medications' },
+    { id: 'appointments', icon: 'calendar-check', labelKey: 'sidebar.nav.appointments' },
+    { id: 'lab-results', icon: 'flask-conical', labelKey: 'sidebar.nav.labResults' },
   ];
 
   readonly activeChild = computed(() => {

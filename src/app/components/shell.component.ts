@@ -10,6 +10,7 @@ import { TemperatureDiaryComponent } from './temperature-diary.component';
 import { GrowthTrackingComponent } from './growth-tracking.component';
 import { RecordsComponent } from './records.component';
 import { VaccinesComponent } from './vaccines.component';
+import { MedicationsComponent } from './medications/medications.component';
 import { SidebarComponent } from './sidebar.component';
 import { HeaderComponent } from './header.component';
 import { BottomNavComponent } from './bottom-nav.component';
@@ -20,7 +21,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
 @Component({
     selector: 'app-shell',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, FormsModule, LucideAngularModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent],
+    imports: [CommonModule, FormsModule, LucideAngularModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, MedicationsComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent],
     template: `
 
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
@@ -55,7 +56,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                 <h2 class="text-3xl lg:text-4xl font-extrabold text-gray-800 mb-4 tracking-tight">{{ i18n.t()['child.welcome'] }}</h2>
                 <p class="text-gray-500 text-lg mb-10 leading-relaxed">{{ i18n.t()['child.welcomeSub'] }}</p>
                 <button (click)="isAddingChild.set(true)" class="bg-slate-900 hover:bg-primary-600 text-white px-10 py-5 rounded-2xl font-bold shadow-[0_10px_20px_rgba(0,0,0,0.1)] transition-all transform hover:-translate-y-1 flex items-center gap-3 text-lg w-full sm:w-auto justify-center">
-                  <lucide-icon name="plus" class="bg-white/20 rounded-full p-1"></lucide-icon> {{ i18n.t()['child.addNew'] }}
+                  <lucide-icon name="plus" class="bg-white/20 rounded-full p-1" aria-hidden="true"></lucide-icon> {{ i18n.t()['child.addNew'] }}
                 </button>
               </div>
             } @else {
@@ -66,8 +67,9 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                   @for (child of dataService.children(); track child.id) {
                     <div class="bg-white rounded-[2rem] p-8 shadow-md border border-slate-100 hover:shadow-xl hover:border-primary-200 transition-all group relative card-hover">
                       <button (click)="openEditModal(child)"
-                              class="absolute top-5 right-5 w-9 h-9 rounded-xl bg-slate-50 hover:bg-primary-50 border border-slate-200 hover:border-primary-300 flex items-center justify-center text-slate-400 hover:text-primary-600 transition-all shadow-sm">
-                        <lucide-icon name="pencil" class="text-base"></lucide-icon>
+                              class="absolute top-5 right-5 w-9 h-9 rounded-xl bg-slate-50 hover:bg-primary-50 border border-slate-200 hover:border-primary-300 flex items-center justify-center text-slate-400 hover:text-primary-600 transition-all shadow-sm"
+                              [attr.aria-label]="i18n.t()['child.editProfile']">
+                        <lucide-icon name="pencil" class="text-base" aria-hidden="true"></lucide-icon>
                       </button>
                       <div (click)="selectChild(child.id)" class="cursor-pointer">
                         <div class="flex items-center gap-5 mb-5">
@@ -90,15 +92,15 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                       </div>
                     </div>
                   }
-                  <div (click)="isAddingChild.set(true)"
-                       class="bg-slate-50 rounded-[2rem] p-8 shadow-md border-2 border-dashed border-slate-200 hover:border-primary-300 hover:bg-primary-50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 text-center group">
+                  <button type="button" (click)="isAddingChild.set(true)"
+                          class="bg-slate-50 rounded-[2rem] p-8 shadow-md border-2 border-dashed border-slate-200 hover:border-primary-300 hover:bg-primary-50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 text-center group w-full text-left">
                     <div class="w-16 h-16 rounded-full bg-slate-100 group-hover:bg-primary-100 flex items-center justify-center transition-all">
-                      <lucide-icon name="plus" class="text-3xl text-slate-400 group-hover:text-primary-500 transition-colors"></lucide-icon>
+                      <lucide-icon name="plus" class="text-3xl text-slate-400 group-hover:text-primary-500 transition-colors" aria-hidden="true"></lucide-icon>
                     </div>
                     <p class="font-bold text-slate-500 group-hover:text-primary-600 transition-colors text-base">
                       {{ i18n.t()['child.addNewBtn'] }}
                     </p>
-                  </div>
+                  </button>
                 </div>
               </div>
             }
@@ -108,7 +110,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
           @else if (isAddingChild()) {
             <div class="glass max-w-3xl mx-auto rounded-[2rem] p-10 lg:p-14 animate-slide-up shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white">
               <h2 class="text-3xl font-extrabold text-gray-800 mb-10 flex items-center gap-4">
-                <lucide-icon name="user-plus" class="text-primary-500 bg-primary-50 p-3 rounded-2xl"></lucide-icon>
+                <lucide-icon name="user-plus" class="text-primary-500 bg-primary-50 p-3 rounded-2xl" aria-hidden="true"></lucide-icon>
                 {{ i18n.t()['child.addNew'] }}
               </h2>
               <div class="space-y-8">
@@ -207,7 +209,8 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                 <div>
                   <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.medicalDocument'] }}</label>
                   <input type="file" accept=".pdf,image/*" (change)="onNewChildDocumentSelected($event)"
-                    class="w-full file:mr-4 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-primary-50 file:text-primary-700 file:font-bold file:cursor-pointer text-sm text-gray-500 cursor-pointer">
+                    class="w-full file:mr-4 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-primary-50 file:text-primary-700 file:font-bold file:cursor-pointer text-sm text-gray-500 cursor-pointer"
+                    [attr.aria-label]="i18n.t()['child.medicalDocument']">
                   @if (newChildDocumentError()) {
                     <p class="text-red-500 text-xs mt-1">{{ newChildDocumentError() }}</p>
                   }
@@ -231,12 +234,12 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                          [placeholder]="i18n.t()['placeholder.deliveryDoctor']">
                 </div>
                 <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-100 mt-4">
-                  <button (click)="submitNewChild()"
+                  <button type="button" (click)="submitNewChild()"
                           class="flex-1 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white py-4.5 rounded-2xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-lg shadow-md"
                           [disabled]="addNameInvalid() && newChildName.length > 0">
-                    <lucide-icon name="save" class="text-inherit"></lucide-icon> {{ i18n.t()['child.saveProfile'] }}
+                    <lucide-icon name="save" class="text-inherit" aria-hidden="true"></lucide-icon> {{ i18n.t()['child.saveProfile'] }}
                   </button>
-                  <button (click)="cancelAddChild()"
+                  <button type="button" (click)="cancelAddChild()"
                           class="px-8 py-4.5 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-colors text-lg hover:-translate-y-0.5">{{ i18n.t()['child.cancel'] }}</button>
                 </div>
               </div>
@@ -253,6 +256,7 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                 @case ('growth') { <app-growth-tracking /> }
                 @case ('records') { <app-records /> }
                 @case ('vaccines') { <app-vaccines /> }
+                @case ('medications') { <app-medications /> }
                 @case ('settings') {
                   <app-settings-page
                     (openEditChild)="openEditModal($event)"
@@ -284,9 +288,9 @@ import { SettingsPageComponent } from './settings/settings-page.component';
            EDIT CHILD MODAL (Overlay)
            ══════════════════════════════════════════ -->
       @if (editingChild()) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" [attr.aria-labelledby]="'edit-child-title'">
           <!-- Backdrop -->
-          <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" (click)="closeEditModal()"></div>
+          <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" (click)="closeEditModal()" aria-hidden="true"></div>
 
           <!-- Modal Card -->
           <div class="relative z-10 w-full max-w-md bg-white rounded-[2rem] shadow-[0_32px_80px_-12px_rgba(0,0,0,0.25)] border border-slate-100 overflow-hidden animate-slide-up">
@@ -298,13 +302,14 @@ import { SettingsPageComponent } from './settings/settings-page.component';
 
               <!-- Header -->
               <div class="flex items-center justify-between mb-8">
-                <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3">
-                  <lucide-icon name="pencil" class="text-inherit"></lucide-icon>
+                <h2 id="edit-child-title" class="text-2xl font-black text-gray-800 flex items-center gap-3">
+                  <lucide-icon name="pencil" class="text-inherit" aria-hidden="true"></lucide-icon>
                   {{ i18n.t()['child.editProfile'] }}
                 </h2>
-                <button (click)="closeEditModal()"
-                        class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all shadow-sm border border-slate-200">
-                  <lucide-icon name="x" class="text-inherit"></lucide-icon>
+                <button type="button" (click)="closeEditModal()"
+                        class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all shadow-sm border border-slate-200"
+                        aria-label="{{ i18n.t()['child.cancel'] }}">
+                  <lucide-icon name="x" class="text-inherit" aria-hidden="true"></lucide-icon>
                 </button>
               </div>
 
@@ -441,7 +446,8 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                 <div>
                   <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.medicalDocument'] }}</label>
                   <input type="file" accept=".pdf,image/*" (change)="onDocumentSelected($event)"
-                    class="w-full file:mr-4 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-primary-50 file:text-primary-700 file:font-bold file:cursor-pointer text-sm text-gray-500 cursor-pointer">
+                    class="w-full file:mr-4 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-primary-50 file:text-primary-700 file:font-bold file:cursor-pointer text-sm text-gray-500 cursor-pointer"
+                    [attr.aria-label]="i18n.t()['child.medicalDocument']">
                   @if (documentError()) {
                     <p class="text-red-500 text-xs mt-1">{{ documentError() }}</p>
                   }
@@ -468,20 +474,20 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                       {{ i18n.isSq() ? 'Ndryshimet u ruajtën!' : 'Changes saved!' }}
                     </div>
                   }
-                  <button (click)="saveEditChild()"
+                  <button type="button" (click)="saveEditChild()"
                           class="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white py-4 rounded-2xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-base shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                           [disabled]="editNameInvalid() || saving()">
                     @if (saving()) {
-                      <lucide-icon name="loader" class="text-inherit"></lucide-icon>
-                      {{ i18n.isSq() ? 'Duke ruajtur...' : 'Saving...' }}
+                      <lucide-icon name="loader" class="text-inherit" aria-hidden="true"></lucide-icon>
+                      <span>{{ i18n.isSq() ? 'Duke ruajtur...' : 'Saving...' }}</span>
                     } @else {
-                      <lucide-icon name="save" class="text-inherit"></lucide-icon>
+                      <lucide-icon name="save" class="text-inherit" aria-hidden="true"></lucide-icon>
                       {{ i18n.t()['sidebar.saveChanges'] }}
                     }
                   </button>
-                  <button (click)="showDeleteConfirm.set(true)"
+                  <button type="button" (click)="showDeleteConfirm.set(true)"
                           class="w-full border-2 border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 py-3.5 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 text-sm">
-                    <lucide-icon name="trash-2" class="text-inherit"></lucide-icon>
+                    <lucide-icon name="trash-2" class="text-inherit" aria-hidden="true"></lucide-icon>
                     {{ i18n.t()['sidebar.deleteProfile'] }}
                   </button>
                 </div>
@@ -499,13 +505,13 @@ import { SettingsPageComponent } from './settings/settings-page.component';
                     </div>
                     <p class="text-sm text-gray-600 mb-5">{{ i18n.isSq() ? 'Ky veprim nuk mund të kthehet. Të gjitha të dhënat do të fshihen përgjithmonë.' : 'This action cannot be undone. All data will be permanently deleted.' }}</p>
                     <div class="flex gap-3">
-                      <button (click)="showDeleteConfirm.set(false)"
+                      <button type="button" (click)="showDeleteConfirm.set(false)"
                               class="flex-1 py-3 rounded-xl border-2 border-slate-200 text-gray-600 font-bold hover:bg-slate-100 transition-all text-sm">
                         {{ i18n.isSq() ? 'Anulo' : 'Cancel' }}
                       </button>
-                      <button (click)="confirmDeleteChild()"
+                      <button type="button" (click)="confirmDeleteChild()"
                               class="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-500 to-red-400 text-white font-bold hover:from-red-400 hover:to-red-300 transition-all text-sm shadow-sm flex items-center justify-center gap-2">
-                        <lucide-icon name="trash" class="text-inherit"></lucide-icon>
+                        <lucide-icon name="trash" class="text-inherit" aria-hidden="true"></lucide-icon>
                         {{ i18n.isSq() ? 'Fshi' : 'Delete' }}
                       </button>
                     </div>
@@ -680,6 +686,7 @@ export class ShellComponent {
       { id: 'temperature', icon: 'thermostat', label: t['nav.temperatureDiary'] },
       { id: 'growth', icon: 'show_chart', label: t['nav.growthTracking'] },
       { id: 'records', icon: 'vaccines', label: t['nav.records'] },
+      { id: 'medications', icon: 'pill', label: t['nav.medications'] },
       { id: 'settings', icon: 'settings', label: t['nav.settings'] },
     ];
   }

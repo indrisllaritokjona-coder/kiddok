@@ -280,6 +280,7 @@ export class SidebarComponent {
     { id: 'growth', icon: 'trending-up', labelKey: 'sidebar.nav.growth' },
     { id: 'diary', icon: 'book-open', labelKey: 'sidebar.nav.diary' },
     { id: 'vaccines', icon: 'syringe', labelKey: 'sidebar.nav.vaccines' },
+    { id: 'medications', icon: 'pill', labelKey: 'sidebar.nav.medications' },
   ];
 
   readonly activeChild = computed(() => {

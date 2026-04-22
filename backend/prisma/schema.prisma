@@ -39,6 +39,7 @@ model Child {
   growthEntries       GrowthEntry[]
   diaryEntries        DiaryEntry[]
   illnessEpisodes     IllnessEpisode[]
+  medications          Medication[]
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 }
@@ -138,4 +139,20 @@ model IllnessEpisode {
   loggedAt    DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Medication {
+  id           String   @id @default(uuid())
+  childId      String
+  child        Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  name         String
+  dosage       String
+  frequency    String
+  startDate    DateTime
+  endDate      DateTime?
+  prescribedBy  String?
+  notes        String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

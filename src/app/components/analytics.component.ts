@@ -99,7 +99,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                   </div>
                   <div class="flex-1">
                     <p class="font-bold text-emerald-700 text-sm">{{ t()['analytics.upToDate'] }}</p>
-                    <p class="text-xs text-emerald-500 font-medium">{{ vaccineSummary().upToDate }} {{ t()['analytics.ofTotal'].replace('{n}', vaccineSummary().total) }}</p>
+                    <p class="text-xs text-emerald-500 font-medium">{{ vaccineSummary().upToDate }} {{ ofTotalLabel(vaccineSummary().total) }}</p>
                   </div>
                   <span class="text-2xl font-black text-emerald-600">{{ vaccineSummary().upToDate }}</span>
                 </div>
@@ -110,7 +110,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                   </div>
                   <div class="flex-1">
                     <p class="font-bold text-rose-700 text-sm">{{ t()['analytics.overdue'] }}</p>
-                    <p class="text-xs text-rose-500 font-medium">{{ vaccineSummary().overdue }} {{ t()['analytics.ofTotal'].replace('{n}', vaccineSummary().total) }}</p>
+                    <p class="text-xs text-rose-500 font-medium">{{ vaccineSummary().overdue }} {{ ofTotalLabel(vaccineSummary().total) }}</p>
                   </div>
                   <span class="text-2xl font-black text-rose-600">{{ vaccineSummary().overdue }}</span>
                 </div>
@@ -121,7 +121,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                   </div>
                   <div class="flex-1">
                     <p class="font-bold text-amber-700 text-sm">{{ t()['analytics.upcoming'] }}</p>
-                    <p class="text-xs text-amber-500 font-medium">{{ vaccineSummary().upcoming }} {{ t()['analytics.ofTotal'].replace('{n}', vaccineSummary().total) }}</p>
+                    <p class="text-xs text-amber-500 font-medium">{{ vaccineSummary().upcoming }} {{ ofTotalLabel(vaccineSummary().total) }}</p>
                   </div>
                   <span class="text-2xl font-black text-amber-600">{{ vaccineSummary().upcoming }}</span>
                 </div>

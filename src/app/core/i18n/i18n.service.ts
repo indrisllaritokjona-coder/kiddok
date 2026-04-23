@@ -67,6 +67,7 @@ const translations = {
   'nav.growthTracking': { sq: 'Rritja', en: 'Growth' },
   'nav.medications': { sq: 'Medikamentet', en: 'Medications' },
   // Sidebar
+  'sidebar.refresh': { sq: 'Rifresko', en: 'Refresh' },
   'sidebar.logout': { sq: 'Dil nga Sistemi', en: 'Sign Out' },
   // Language
   'language.label': { sq: 'Gjuha', en: 'Language' },

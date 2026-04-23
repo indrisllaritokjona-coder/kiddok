@@ -341,6 +341,9 @@ export class GrowthChartComponent implements OnDestroy {
     const heightLabel = this.i18n.t()['growthChart.heightLabel'];
     const weightLabel = this.i18n.t()['growthChart.weightLabel'];
 
+    // TODO (B1): WHO percentile bands — when backend provides height/weight-for-age z-scores,
+    // add shaded area bands per percentile (3rd, 15th, 50th, 85th, 97th) via Chart.js annotation
+    // plugin or a custom canvas overlay drawn before the line datasets.
     this.chartInstance = new Chart(ctx, {
       type: 'line',
       data: {

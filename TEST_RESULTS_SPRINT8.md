@@ -1,111 +1,145 @@
-# TEST_RESULTS_SPRINT8.md
+# TEST_RESULTS_SPRINT8 — UI Polish & Accessibility
 
-**Sprint:** 8 — Records Page Polish + Sidebar Extraction + E2E Setup  
-**Date:** 2026-04-23  
-**Tester:** kiddok-tester  
-**Commit:** 203f8e5  
-**Status:** ✅ All Checks Pass
-
----
-
-## Verification Checklist
-
-### 1. `records.component.ts` — `standalone: true`
-
-| Check | Result |
-|-------|--------|
-| `standalone: true` present at line 10 | ✅ Pass |
-
-No further action needed.
+**Sprint:** 8 of N
+**Date:** 2026-04-23
+**Build:** `ng build --configuration development` ✅ exits 0
+**Commit tested:** HEAD (after 7352e4e)
 
 ---
 
-### 2. `records.component.ts` — Invalid Lucide Icon Names
+## Validation Summary
 
-| Check | Result |
-|-------|--------|
-| `check-circle-2` NOT present | ✅ Pass |
-| `hourglass` NOT present | ✅ Pass |
-| `calendar-clock` NOT present | ✅ Pass |
-
-No occurrences found — icons were correctly replaced in Sprint 8.
-
----
-
-### 3. `records.component.ts` — i18n Keys in `i18n.service.ts`
-
-| Key | Result |
-|-----|--------|
-| `records.title` | ✅ Found (line 366) |
-| `records.subtitle` | ✅ Found (line 367) |
-| `records.addRecord` | ✅ Found (line 368) |
-| `records.formTitle` | ✅ Found (line 369) |
-| `records.nameLabel` | ✅ Found (line 370) |
-| `records.namePlaceholder` | ✅ Found (line 371) |
-| `records.statusLabel` | ✅ Found (line 372) |
-| `records.completed` | ✅ Found (line 373) |
-| `records.pending` | ✅ Found (line 374) |
-| `records.dateLabel` | ✅ Found (line 375) |
-| `records.updateButton` | ✅ Found (line 376) |
-| `records.emptyTitle` | ✅ Found (line 377) |
-| `records.emptyHint` | ✅ Found (line 378) |
-| `records.status.done` | ✅ Found (line 379) |
-| `records.status.planned` | ✅ Found (line 380) |
-
-**All 15 i18n keys accounted for** (records.title through records.status.planned).
+| Category | Status | Notes |
+|----------|--------|-------|
+| i18n audit — shell.component.ts | ✅ PASS | 8 hardcoded strings replaced with i18n keys |
+| i18n audit — header.component.ts | ✅ PASS | Hamburger + "Aktiv" use i18n keys |
+| Empty state — temperature-diary CTA | ✅ PASS | `<p>` → `<button>` with `formTemp.set(null)` |
+| Empty state — growth-tracking CTA | ✅ PASS | `<p>` → `<button>` with `openAddForm()` scroll |
+| Empty state — diary CTA | ✅ PASS | CTA button added in both empty state locations |
+| Loading skeleton — temperature-diary | ⚠️ PARTIAL | Template added, but `loading` signal never set `true` |
+| Loading skeleton — growth-tracking | ⚠️ PARTIAL | Template added, but `loading` signal never set `true` |
+| Loading skeleton — diary | ⚠️ PARTIAL | Template added, but `loading` signal never set `true` |
+| Loading skeleton — shell children | ⚠️ PARTIAL | Template added, but `childrenLoading` never set `true` |
+| aria-label — sidebar logout/settings | ✅ PASS | Both buttons have `[attr.aria-label]` |
+| aria-label — header hamburger | ✅ PASS | Uses `[attr.aria-label]="i18n.t()['nav.menu']"` |
+| Toast service — auto-dismiss | ✅ PASS | `duration` param, defaults (3s/5s/3s), `setTimeout` in toast component |
+| Toast overlay — fixed position | ✅ PASS | `fixed bottom-4 right-4 z-[200]` in `toast.component.ts` |
+| Toast in app.component | ✅ PASS | `<app-toast />` in `app.component.ts` |
+| Mobile sidebar — hamburger wired | ✅ PASS | `menuToggleRequested` EventEmitter + `mobileSidebarOpen` signal |
+| Focus trap — role="dialog" | ✅ PASS | AddEditChildModal, export modal, shell edit modal all have it |
+| Focus trap — Escape key handler | ❌ FAIL | No `@HostListener('document:keydown.escape')` in any modal |
+| Build | ✅ PASS | `ng build --configuration development` exits 0 |
 
 ---
 
-### 4. `sidebar.component.ts` — `font-variation-settings` Removed
+## Detailed Findings
 
-| Check | Result |
-|-------|--------|
-| `font-variation-settings` NOT present in CSS | ✅ Pass |
+### ✅ PASS — i18n Audit
 
-The Material Icons CSS property (`font-variation-settings: 'FILL' 0, 'wght' 300...`) has been successfully removed from `.sidebar__nav-icon`. Lucide Angular uses SVG elements and does not use icon font variation settings.
+**shell.component.ts** — All 8 hardcoded Albanian/English strings replaced:
 
----
+| Key | Used at |
+|-----|---------|
+| `child.saveSuccess` | Live region + edit form success banner |
+| `child.saving` | Edit form save button while saving |
+| `child.deleteConfirmTitle` | Delete confirmation dialog |
+| `child.deleteConfirmBody` | Delete confirmation body text |
+| `child.cancel` | Cancel button in delete dialog |
+| `child.delete` | Delete button in delete dialog |
+| `childForm.gender.male` | Gender select options (add + edit) |
+| `childForm.gender.female` | Gender select options (add + edit) |
 
-### 5. `playwright.config.ts` — File Exists
+Grep confirmed no remaining `i18n.isSq()` or hardcoded Albanian strings in shell.component.ts.
 
-| Check | Result |
-|-------|--------|
-| File exists at repo root | ✅ Pass |
-
----
-
-### 6. `e2e/app.spec.ts` — 9 Tests Present
-
-| Check | Result |
-|-------|--------|
-| File exists (189 lines) | ✅ Pass |
-| `test(` / `it(` count | ✅ 9 tests confirmed |
-
-Confirmed 9 Playwright tests covering:
-- Login flow (3 tests)
-- Child profile add (2 tests)
-- Navigation (2 tests)
-- Records page (2 tests)
+**header.component.ts** — Both hardcoded strings replaced:
+- Hamburger: `[attr.aria-label]="i18n.t()['nav.menu']"`
+- Active badge: `{{ i18n.t()['child.activeBadge'] }}`
 
 ---
 
-## Summary
+### ✅ PASS — Empty State CTA Buttons
 
-| Area | Status |
-|------|--------|
-| `standalone: true` in records.component.ts | ✅ Pass |
-| Invalid icon names removed | ✅ Pass |
-| All 15 i18n keys in i18n.service.ts | ✅ Pass |
-| `font-variation-settings` removed from sidebar | ✅ Pass |
-| `playwright.config.ts` exists | ✅ Pass |
-| `e2e/app.spec.ts` with 9 tests | ✅ Pass |
-
-**Overall Sprint 8 Status: ✅ VALIDATED**
+- **temperature-diary**: `<button (click)="formTemp.set(null)">` — sets form to null (opens add form)
+- **growth-tracking**: `<button (click)="openAddForm()">` — scrolls to add measurement form
+- **diary**: `<button (click)="openAddEntry()">` at 2 empty state locations (filtered + recent)
 
 ---
 
-## Notes
+### ⚠️ PARTIAL — Loading Skeletons (Wiring Gap)
 
-- All verifications performed against commit `203f8e5`
-- i18n key `records.status.planned` exists — the REDESIGN_PLAN listed `records.status.planned` but summary listed `records.status.plan`; confirmed actual key is `records.status.planned`
-- E2E tests require running backend on port 3000 and Angular dev server on port 4200
+Templates added correctly for all 4 modules:
+- `temperature-diary.component.ts`: chart card + week grid + list skeletons ✅
+- `growth-tracking.component.ts`: stats + chart + list skeletons ✅
+- `diary.component.ts`: calendar + entries skeletons ✅
+- `shell.component.ts`: 2-row children list skeleton ✅
+
+**BUT** — `loading` signal (diary, temperature-diary, growth-tracking) and `childrenLoading` (shell) are initialized to `signal(false)` and **never set to `true`** anywhere in the codebase.
+
+```typescript
+// Defined but never triggered:
+loading = signal(false);           // diary, temperature-diary, growth-tracking
+childrenLoading = signal(false);   // shell
+```
+
+Grep for `.set(true)` on these signals returned no results. The skeleton `@if (loading())` blocks are dead code — they will never render.
+
+**Impact**: Skeletons exist as UI but are not wired to data loading lifecycle. Users will see content flash in directly without a loading state.
+
+---
+
+### ✅ PASS — Toast Service Upgrade
+
+`toast.service.ts`:
+```typescript
+show(message: string, type: ..., duration?: number) {
+  const d = duration ?? (type === 'success' ? 3000 : type === 'error' ? 5000 : 3000);
+  this.listeners.forEach(l => l(message, type, d));
+}
+```
+
+`toast.component.ts`:
+- Fixed position `fixed bottom-4 right-4 z-[200]`
+- Auto-dismiss via `setTimeout` in `addToast()`
+- Manual dismiss via `dismiss()` method
+- Success/error/info color classes
+- `role="alert" aria-live="polite"`
+
+`<app-toast />` present in `app.component.ts` ✅
+
+---
+
+### ✅ PASS — Mobile Sidebar
+
+- `header.component.ts`: `@Output() menuToggleRequested = new EventEmitter<void>()` wired to hamburger button
+- `shell.component.ts`: `mobileSidebarOpen = signal(false)` + `toggleSidebar()` connected to `(menuToggleRequested)`
+- Mobile overlay template with backdrop + `w-72` sidebar panel
+- Desktop sidebar remains `hidden lg:block`
+
+---
+
+### ❌ FAIL — Focus Trap Escape Handler
+
+All modals have `role="dialog" aria-modal="true"` ✅ and most have `aria-labelledby` ✅:
+
+| Modal | role=dialog | aria-labelledby | Escape Handler |
+|-------|------------|-----------------|----------------|
+| AddEditChildModal | ✅ | ✅ | ❌ MISSING |
+| ExportModal | ✅ | ✅ | ❌ MISSING |
+| Shell edit modal (inline) | ✅ | ✅ | ❌ MISSING |
+
+Grep for `@HostListener`, `Escape`, `keydown` in modal components returned no results. None of the 3 modal implementations respond to the Escape key.
+
+---
+
+## Verdict
+
+**6/9 categories fully pass. 4 partial (loading skeletons wired but never triggered). 1 fail (Escape handler).**
+
+Build passes cleanly. No TypeScript errors. The sprint implements substantial UI improvements but has 2 notable gaps:
+1. Loading skeletons are visually complete but never triggered (loading signals always `false`)
+2. Escape key does not close any modal — users must click the close button or backdrop
+
+### Recommended Fixes (Post-Sprint)
+1. Wire `loading.set(true)` before data fetch and `loading.set(false)` after in `loadData()` / `ngOnInit` for each module
+2. Wire `childrenLoading.set(true/false)` in `ngOnInit` of shell component
+3. Add `@HostListener('document:keydown.escape')` to each modal component calling `close()` / `cancelled.emit()`

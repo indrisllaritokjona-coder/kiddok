@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExportModule = void 0;
 const common_1 = require("@nestjs/common");
 const export_controller_1 = require("./export.controller");
+const export_service_1 = require("./export.service");
 const children_module_1 = require("../children/children.module");
 const temperature_entries_module_1 = require("../temperature-entries/temperature-entries.module");
 const growth_entries_module_1 = require("../growth-entries/growth-entries.module");
@@ -19,6 +20,7 @@ exports.ExportModule = ExportModule;
 exports.ExportModule = ExportModule = __decorate([
     (0, common_1.Module)({
         controllers: [export_controller_1.ExportController],
+        providers: [export_service_1.ExportService],
         imports: [
             children_module_1.ChildrenModule,
             temperature_entries_module_1.TemperatureEntriesModule,

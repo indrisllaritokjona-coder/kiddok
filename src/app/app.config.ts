@@ -17,7 +17,8 @@ import {
   Baby, Database, Download, Heart, CalendarDays, CalendarCheck,
   Activity, FileCheck, Bell, ThermometerSun, FilePlus,
   ClipboardList, LayoutList, Shield, Scale, HeartPulse, Stethoscope,
-  Pill, Target, ChartBar, Waves, Palette, Info, CircleHelp, WifiOff
+  Pill, Target, ChartBar, Waves, Palette, Info, CircleHelp, WifiOff,
+  Key, Eye, EyeOff, ArrowRight, Lock
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -47,7 +48,8 @@ export const appConfig: ApplicationConfig = {
         Baby, Database, Download, Heart, CalendarDays, CalendarCheck,
         Activity, FileCheck, Bell, ThermometerSun, FilePlus,
         ClipboardList, LayoutList, Shield, Scale, HeartPulse, Stethoscope,
-        Pill, Target, ChartBar, Waves, Palette, Info, CircleHelp, WifiOff
+        Pill, Target, ChartBar, Waves, Palette, Info, CircleHelp, WifiOff,
+        Key, Eye, EyeOff, ArrowRight, Lock
       })
     ),
   ]

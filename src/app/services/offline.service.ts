@@ -31,7 +31,20 @@ export class OfflineService {
   private dataService = inject(DataService);
   private toast = inject(ToastService);
   private ngZone = inject(NgZone);
-  private syncService = inject(SyncService);
+  private _syncService: import('./sync.service').SyncService | null = null;
+
+  private async getSyncServiceAsync(): Promise<import('./sync.service').SyncService> {
+    if (this._syncService) return this._syncService;
+    const injector = (window as any).__angularInjector__;
+    if (injector) {
+      const { SyncService } = await import('./sync.service');
+      this._syncService = injector.get(SyncService);
+    }
+    if (!this._syncService) {
+      throw new Error('SyncService not available — ensure __angularInjector__ is set');
+    }
+    return this._syncService!;
+  }
 
   isOnline = signal(navigator.onLine);
   hasPendingSync = signal(false);
@@ -339,7 +352,7 @@ export class OfflineService {
 
     // Call the new SyncService with batch sync
     try {
-      const result = await this.syncService.triggerFullSync(syncEntries);
+      const result = await (await this.getSyncServiceAsync()).triggerFullSync(syncEntries);
 
       if (result.success || result.conflicts.length > 0) {
         // Clear processed entries from queue

@@ -1,4 +1,4 @@
-ï»¿import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 
 export type Locale = 'sq' | 'en';
 
@@ -543,6 +543,20 @@ const translations = {
   'tooltip.vaccineOverdue': { sq: 'Vaksina është e vonuar — contactoni mjekun', en: 'Vaccine is overdue — contact your doctor' },
   'tooltip.vaccineUpcoming': { sq: 'Vaksina është planifikuar së shpejti', en: 'Vaccine is scheduled coming up' },
   'tooltip.percentile': { sq: 'Përqindja në grafikun e rritjes së OMS — tregon krahasimin me fëmijët e tjerë të moshës së njëjtë', en: 'Percentile on WHO growth chart — shows comparison with other children the same age' },
+  // Growth Chart
+  'growthChart.title': { sq: 'Grafiku i Rritjes', en: 'Growth Chart' },
+  'growthChart.child': { sq: 'Fëmija', en: 'Child' },
+  'growthChart.dateFrom': { sq: 'Nga data', en: 'From date' },
+  'growthChart.dateTo': { sq: 'Deri në datën', en: 'To date' },
+  'growthChart.noData': { sq: "S'mund të vizualizohet — shtoni të paktën 2 matje", en: "Can't visualize — add at least 2 measurements" },
+  'growthChart.singleEntry': { sq: 'Vetëm një matje — nevojiten të paktën 2 për grafikun', en: 'Only one measurement — at least 2 needed for chart' },
+  'growthChart.noChild': { sq: 'Zgjidhni fëmijën për të parë grafikun', en: 'Select a child to view the chart' },
+  'growthChart.heightLabel': { sq: 'Gjatësia (cm)', en: 'Height (cm)' },
+  'growthChart.weightLabel': { sq: 'Pesha (kg)', en: 'Weight (kg)' },
+  'growthChart.heightLabelImperial': { sq: 'Gjatësia (in)', en: 'Height (in)' },
+  'growthChart.weightLabelImperial': { sq: 'Pesha (lb)', en: 'Weight (lb)' },
+  'growthChart.clearFilter': { sq: 'Fshi filtrin', en: 'Clear filter' },
+
   // Sync Status
   'sync.conflictPanelTitle': { sq: 'Konflikt i të Dhënave', en: 'Data Conflict' },
   'sync.conflictPanelSubtitle': { sq: 'Të dhëna që kërkojnë rishikim manual', en: 'Data requiring manual review' },

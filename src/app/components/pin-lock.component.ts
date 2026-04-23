@@ -85,7 +85,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                            [placeholder]="passwordPlaceholder()">
                     <button type="button" (click)="showPassword.set(!showPassword())"
                             class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
-                      <lucide-icon [name]="showPassword() ? 'eye-off' : 'eye'" class="text-xl"></lucide-icon>
+                      <lucide-icon [name]="showPassword() ? 'eyeOff' : 'eye'" class="text-xl"></lucide-icon>
                     </button>
                   </div>
                   @if (passwordError()) {
@@ -120,7 +120,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                     <lucide-icon name="refresh-cw" class="text-xl animate-spin"></lucide-icon>
                     {{ loadingText() }}
                   } @else {
-                    <lucide-icon name="arrow-right" class="text-xl"></lucide-icon>
+                    <lucide-icon name="arrowRight" class="text-xl"></lucide-icon>
                     {{ submitText() }}
                   }
                 </button>
@@ -223,7 +223,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                     <lucide-icon name="refresh-cw" class="text-xl animate-spin"></lucide-icon>
                     {{ loadingText() }}
                   } @else {
-                    <lucide-icon name="arrow-right" class="text-xl"></lucide-icon>
+                    <lucide-icon name="arrowRight" class="text-xl"></lucide-icon>
                     {{ submitText() }}
                   }
                 </button>

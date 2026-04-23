@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { OfflineService } from './offline.service';
+import { SyncQueueReader } from './sync-queue-reader.interface';
 
 export interface SyncEntry {
   entityType: 'temperature' | 'growth' | 'vaccine' | 'diary';
@@ -36,9 +36,13 @@ export interface ConflictResolution {
 }
 
 @Injectable({ providedIn: 'root' })
-export class SyncService {
+export class SyncService implements SyncQueueReader {
   private http = inject(HttpClient);
-  private offline = inject(OfflineService);
+  private offline: SyncQueueReader | null = null;
+
+  setOfflineService(service: SyncQueueReader): void {
+    this.offline = service;
+  }
 
   conflicts = signal<SyncConflict[]>(this.loadConflictsFromStorage());
 
@@ -49,8 +53,25 @@ export class SyncService {
     };
   }
 
+  async getSyncQueueEntries(): Promise<import('./offline.service').SyncQueueEntry[]> {
+    if (!this.offline) {
+      // Lazy initialization: resolve the actual OfflineService from the injector
+      // This avoids circular dependency at construction time
+      const { OfflineService } = await import('./offline.service');
+      const injector = (window as any).__angularInjector__;
+      if (injector) {
+        this.offline = injector.get(OfflineService);
+      }
+    }
+    if (!this.offline) {
+      // Fallback: return empty queue if injector not available
+      return [];
+    }
+    return this.offline.getSyncQueueEntries();
+  }
+
   async syncPendingEntries(): Promise<SyncResult> {
-    const queueEntries = await this.offline.getSyncQueueEntries();
+    const queueEntries = await this.getSyncQueueEntries();
     const entries: SyncEntry[] = queueEntries.map(entry => ({
       entityType: entry.entity as any,
       action: entry.action as any,

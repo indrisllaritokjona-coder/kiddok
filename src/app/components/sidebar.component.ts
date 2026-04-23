@@ -1,4 +1,5 @@
 ﻿import { Component, inject, computed } from '@angular/core'
+import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
 import { CommonModule } from '@angular/common';
@@ -350,6 +351,7 @@ interface NavItem {
 export class SidebarComponent {
   protected dataService = inject(DataService);
   protected i18n = inject(I18nService);
+  private router = inject(Router);
 
   readonly t = this.i18n.t;
   readonly currentTab = this.dataService.currentTab;
@@ -392,5 +394,6 @@ export class SidebarComponent {
 
   logout(): void {
     this.dataService.logout();
+    this.router.navigate(['/login']);
   }
 }

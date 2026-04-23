@@ -1,4 +1,10 @@
 import {
+  DataService,
+  I18nService,
+  NotificationService,
+  OfflineService
+} from "./chunk-GXWKIRAT.js";
+import {
   APP_BOOTSTRAP_LISTENER,
   APP_ID,
   ApplicationModule,
@@ -14,7 +20,6 @@ import {
   ContentChildren,
   DEFAULT_CURRENCY_CODE,
   DOCUMENT,
-  DataService,
   DestroyRef,
   Directive,
   DomAdapter,
@@ -28,7 +33,6 @@ import {
   Host,
   HostAttributeToken,
   HostListener,
-  I18nService,
   IMAGE_CONFIG,
   IMAGE_CONFIG_DEFAULTS,
   INJECTOR_SCOPE,
@@ -49,9 +53,7 @@ import {
   NgModuleFactory$1,
   NgModuleRef$1,
   NgZone,
-  NotificationService,
   Observable,
-  OfflineService,
   Optional,
   Output,
   PLATFORM_ID,
@@ -226,7 +228,7 @@ import {
   ɵɵtwoWayListener,
   ɵɵtwoWayProperty,
   ɵɵviewQuery
-} from "./chunk-FBGUSFTV.js";
+} from "./chunk-C7WIKZ6K.js";
 
 // node_modules/@angular/common/fesm2022/_location-chunk.mjs
 /**
@@ -12349,6 +12351,13 @@ var ArrowLeft = [["path", {
   d: "M19 12H5",
   key: "x3x0zl"
 }]];
+var ArrowRight = [["path", {
+  d: "M5 12h14",
+  key: "1ays0h"
+}], ["path", {
+  d: "m12 5 7 7-7 7",
+  key: "xquz4c"
+}]];
 var Baby = [["path", {
   d: "M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5",
   key: "1u7htd"
@@ -12687,6 +12696,28 @@ var Dumbbell = [["path", {
   d: "m9.6 14.4 4.8-4.8",
   key: "6umqxw"
 }]];
+var EyeOff = [["path", {
+  d: "M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49",
+  key: "ct8e1f"
+}], ["path", {
+  d: "M14.084 14.158a3 3 0 0 1-4.242-4.242",
+  key: "151rxh"
+}], ["path", {
+  d: "M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143",
+  key: "13bj9a"
+}], ["path", {
+  d: "m2 2 20 20",
+  key: "1ooewy"
+}]];
+var Eye = [["path", {
+  d: "M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0",
+  key: "1nclc0"
+}], ["circle", {
+  cx: "12",
+  cy: "12",
+  r: "3",
+  key: "1v7zrd"
+}]];
 var FileCheck = [["path", {
   d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
   key: "1oefj6"
@@ -12808,6 +12839,18 @@ var Info = [["circle", {
   d: "M12 8h.01",
   key: "e9boi3"
 }]];
+var Key = [["path", {
+  d: "m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4",
+  key: "g0fldk"
+}], ["path", {
+  d: "m21 2-9.6 9.6",
+  key: "1j0ho8"
+}], ["circle", {
+  cx: "7.5",
+  cy: "15.5",
+  r: "5.5",
+  key: "yqb3hr"
+}]];
 var LayoutList = [["rect", {
   width: "7",
   height: "7",
@@ -12859,6 +12902,18 @@ var Loader = [["path", {
 }], ["path", {
   d: "m4.9 4.9 2.9 2.9",
   key: "giyufr"
+}]];
+var Lock = [["rect", {
+  width: "18",
+  height: "11",
+  x: "3",
+  y: "11",
+  rx: "2",
+  ry: "2",
+  key: "1w4ew1"
+}], ["path", {
+  d: "M7 11V7a5 5 0 0 1 10 0v4",
+  key: "fwvmzm"
 }]];
 var LogIn = [["path", {
   d: "m10 17 5-5-5-5",
@@ -14748,40 +14803,6 @@ var RecentActivityFeedComponent = class _RecentActivityFeedComponent {
 })();
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(RecentActivityFeedComponent, { className: "RecentActivityFeedComponent", filePath: "src/app/components/home/recent-activity-feed.component.ts", lineNumber: 115 });
-})();
-
-// src/app/components/home.component.ts
-var HomeComponent = class _HomeComponent {
-  static {
-    this.\u0275fac = function HomeComponent_Factory(__ngFactoryType__) {
-      return new (__ngFactoryType__ || _HomeComponent)();
-    };
-  }
-  static {
-    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _HomeComponent, selectors: [["app-home"]], decls: 5, vars: 0, consts: [[1, "px-2", "max-w-6xl", "mx-auto"]], template: function HomeComponent_Template(rf, ctx) {
-      if (rf & 1) {
-        \u0275\u0275elementStart(0, "div", 0);
-        \u0275\u0275element(1, "app-welcome-hero")(2, "app-quick-actions-grid")(3, "app-health-alert-card")(4, "app-recent-activity-feed");
-        \u0275\u0275elementEnd();
-      }
-    }, dependencies: [CommonModule, LucideAngularModule, WelcomeHeroComponent, QuickActionsGridComponent, HealthAlertCardComponent, RecentActivityFeedComponent], styles: ["\n[_nghost-%COMP%] {\n  display: block;\n}\n/*# sourceMappingURL=home.component.css.map */"] });
-  }
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HomeComponent, [{
-    type: Component,
-    args: [{ selector: "app-home", imports: [CommonModule, LucideAngularModule, WelcomeHeroComponent, QuickActionsGridComponent, HealthAlertCardComponent, RecentActivityFeedComponent], template: `
-    <div class="px-2 max-w-6xl mx-auto">
-      <app-welcome-hero />
-      <app-quick-actions-grid />
-      <app-health-alert-card />
-      <app-recent-activity-feed />
-    </div>
-  `, styles: ["/* angular:styles/component:css;4edade868300c889bf3186ff41a82f8dc02abd53db4197e6f0acdbebcee4f2ee;C:/Users/g_gus/Desktop/jona/kiddok/src/app/components/home.component.ts */\n:host {\n  display: block;\n}\n/*# sourceMappingURL=home.component.css.map */\n"] }]
-  }], null, null);
-})();
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HomeComponent, { className: "HomeComponent", filePath: "src/app/components/home.component.ts", lineNumber: 25 });
 })();
 
 // node_modules/@angular/forms/fesm2022/forms.mjs
@@ -19413,9 +19434,732 @@ var ReactiveFormsModule = class _ReactiveFormsModule {
   }], null, null);
 })();
 
+// src/app/components/growth-chart/growth-chart.component.ts
+var _c02 = ["chartCanvas"];
+var _forTrack04 = ($index, $item) => $item.value;
+var _forTrack1 = ($index, $item) => $item.id;
+function GrowthChartComponent_Conditional_6_For_2_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "option", 20);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const child_r3 = ctx.$implicit;
+    \u0275\u0275property("value", child_r3.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(child_r3.name);
+  }
+}
+function GrowthChartComponent_Conditional_6_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r1 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "select", 19);
+    \u0275\u0275twoWayListener("ngModelChange", function GrowthChartComponent_Conditional_6_Template_select_ngModelChange_0_listener($event) {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectedChildId, $event) || (ctx_r1.selectedChildId = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("ngModelChange", function GrowthChartComponent_Conditional_6_Template_select_ngModelChange_0_listener($event) {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.onChildChange($event));
+    });
+    \u0275\u0275repeaterCreate(1, GrowthChartComponent_Conditional_6_For_2_Template, 2, 2, "option", 20, _forTrack1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedChildId);
+    \u0275\u0275advance();
+    \u0275\u0275repeater(ctx_r1.children());
+  }
+}
+function GrowthChartComponent_For_22_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r4 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 21);
+    \u0275\u0275listener("click", function GrowthChartComponent_For_22_Template_button_click_0_listener() {
+      const range_r5 = \u0275\u0275restoreView(_r4).$implicit;
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.selectRange(range_r5.value));
+    });
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const range_r5 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275property("ngClass", ctx_r1.activeRange() === range_r5.value ? "bg-primary-600 text-white shadow-sm" : "bg-white text-slate-500 border border-slate-200 hover:border-primary-300 hover:text-primary-600");
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", range_r5.label, " ");
+  }
+}
+function GrowthChartComponent_Conditional_24_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 16)(1, "div", 22);
+    \u0275\u0275element(2, "lucide-icon", 23);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "p", 24);
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["growthChart.noChild"]);
+  }
+}
+function GrowthChartComponent_Conditional_25_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 16)(1, "div", 22);
+    \u0275\u0275element(2, "lucide-icon", 25);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "p", 24);
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["growthChart.noData"]);
+  }
+}
+function GrowthChartComponent_Conditional_26_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 16)(1, "div", 22);
+    \u0275\u0275element(2, "lucide-icon", 26);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "p", 24);
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(ctx_r1.i18n.t()["growthChart.singleEntry"]);
+  }
+}
+function GrowthChartComponent_Conditional_27_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "canvas", 17, 0);
+  }
+}
+function GrowthChartComponent_Conditional_28_Conditional_12_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r7 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 33);
+    \u0275\u0275listener("click", function GrowthChartComponent_Conditional_28_Conditional_12_Template_button_click_0_listener() {
+      \u0275\u0275restoreView(_r7);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.clearFilters());
+    });
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r1.i18n.t()["growthChart.clearFilter"], " ");
+  }
+}
+function GrowthChartComponent_Conditional_28_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r6 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 18)(1, "div", 5);
+    \u0275\u0275element(2, "div", 27);
+    \u0275\u0275elementStart(3, "span", 28);
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(5, "div", 5);
+    \u0275\u0275element(6, "div", 29);
+    \u0275\u0275elementStart(7, "span", 28);
+    \u0275\u0275text(8);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(9, "div", 30)(10, "button", 31);
+    \u0275\u0275listener("click", function GrowthChartComponent_Conditional_28_Template_button_click_10_listener() {
+      \u0275\u0275restoreView(_r6);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.toggleUnit());
+    });
+    \u0275\u0275text(11);
+    \u0275\u0275elementEnd();
+    \u0275\u0275conditionalCreate(12, GrowthChartComponent_Conditional_28_Conditional_12_Template, 2, 1, "button", 32);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(ctx_r1.heightLabel());
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(ctx_r1.weightLabel());
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r1.useMetric() ? "kg/cm" : "lb/in", " ");
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.hasActiveFilters() ? 12 : -1);
+  }
+}
+var GrowthChartComponent = class _GrowthChartComponent {
+  // ── Lifecycle ─────────────────────────────────────────────────
+  constructor() {
+    this.dataService = inject(DataService);
+    this.i18n = inject(I18nService);
+    this.selectedChildId = signal("", ...ngDevMode ? [{ debugName: "selectedChildId" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.dateFrom = signal("", ...ngDevMode ? [{ debugName: "dateFrom" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.dateTo = signal("", ...ngDevMode ? [{ debugName: "dateTo" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.activeRange = signal("all", ...ngDevMode ? [{ debugName: "activeRange" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.useMetric = signal(true, ...ngDevMode ? [{ debugName: "useMetric" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.chartInstance = null;
+    this.chartEffect = null;
+    this.chartInitialized = false;
+    this.dateRanges = [
+      { value: "1m", label: "1M" },
+      { value: "3m", label: "3M" },
+      { value: "6m", label: "6M" },
+      { value: "1y", label: "1Y" },
+      { value: "all", label: "All" }
+    ];
+    this.children = this.dataService.children;
+    this.filteredEntries = computed(() => {
+      const entries = this.dataService.growthEntries();
+      const from2 = this.dateFrom();
+      const to = this.dateTo();
+      return [...entries].filter((e) => {
+        const d = new Date(e.measuredAt);
+        return (!from2 || d >= new Date(from2)) && (!to || d <= new Date(to));
+      }).sort((a, b) => new Date(a.measuredAt).getTime() - new Date(b.measuredAt).getTime());
+    }, ...ngDevMode ? [{ debugName: "filteredEntries" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.state = computed(() => {
+      if (!this.selectedChildId())
+        return "no-child";
+      const entries = this.filteredEntries();
+      if (entries.length === 0)
+        return "no-data";
+      if (entries.length === 1)
+        return "single";
+      return "ok";
+    }, ...ngDevMode ? [{ debugName: "state" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.heightLabel = computed(() => this.useMetric() ? this.i18n.t()["growthChart.heightLabel"] : this.i18n.t()["growthChart.heightLabelImperial"], ...ngDevMode ? [{ debugName: "heightLabel" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.weightLabel = computed(() => this.useMetric() ? this.i18n.t()["growthChart.weightLabel"] : this.i18n.t()["growthChart.weightLabelImperial"], ...ngDevMode ? [{ debugName: "weightLabel" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.hasActiveFilters = computed(() => !!this.dateFrom() || !!this.dateTo() || this.activeRange() !== "all", ...ngDevMode ? [{ debugName: "hasActiveFilters" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    effect(() => {
+      const activeId = this.dataService.activeChildId();
+      const children = this.dataService.children();
+      if (activeId) {
+        this.selectedChildId.set(activeId);
+      } else if (children.length > 0) {
+        this.selectedChildId.set(children[0].id);
+      }
+    });
+    this.chartEffect = effect(() => {
+      const _entries = this.dataService.growthEntries();
+      const _childId = this.selectedChildId();
+      if (this.chartInitialized) {
+        this.renderChart();
+      }
+    }, ...ngDevMode ? [{ debugName: "chartEffect" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+  }
+  ngOnDestroy() {
+    this.chartEffect?.destroy();
+    this.chartEffect = null;
+    if (this.chartInstance) {
+      this.chartInstance.destroy();
+      this.chartInstance = null;
+    }
+  }
+  // ── Actions ──────────────────────────────────────────────────
+  onChildChange(childId) {
+    this.selectedChildId.set(childId);
+    this.dataService.switchChild(childId);
+    this.dataService.loadGrowthEntries(childId);
+  }
+  refresh() {
+    const cid = this.selectedChildId();
+    if (cid) {
+      this.dataService.loadGrowthEntries(cid);
+      setTimeout(() => this.renderChart(), 200);
+    }
+  }
+  onDateRangeChange() {
+    this.activeRange.set(this.dateFrom() || this.dateTo() ? "all" : "all");
+    this.renderChart();
+  }
+  selectRange(range) {
+    this.activeRange.set(range);
+    const now = /* @__PURE__ */ new Date();
+    let from2 = "";
+    if (range === "1m") {
+      from2 = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()).toISOString().split("T")[0];
+    } else if (range === "3m") {
+      from2 = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate()).toISOString().split("T")[0];
+    } else if (range === "6m") {
+      from2 = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate()).toISOString().split("T")[0];
+    } else if (range === "1y") {
+      from2 = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()).toISOString().split("T")[0];
+    } else {
+      from2 = "";
+    }
+    this.dateFrom.set(from2);
+    this.dateTo.set("");
+    this.renderChart();
+  }
+  clearFilters() {
+    this.dateFrom.set("");
+    this.dateTo.set("");
+    this.activeRange.set("all");
+    this.renderChart();
+  }
+  toggleUnit() {
+    this.useMetric.set(!this.useMetric());
+    this.renderChart();
+  }
+  // ── Chart ────────────────────────────────────────────────────
+  renderChart() {
+    if (this.state() !== "ok")
+      return;
+    if (this.chartInstance) {
+      this.chartInstance.destroy();
+      this.chartInstance = null;
+      this.chartInitialized = false;
+    }
+    if (!this.chartCanvasRef)
+      return;
+    const canvas = this.chartCanvasRef.nativeElement;
+    const ctx = canvas.getContext("2d");
+    if (!ctx)
+      return;
+    if (typeof window.Chart === "undefined") {
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js";
+      script.onload = () => this.buildChart(ctx);
+      document.head.appendChild(script);
+    } else {
+      this.buildChart(ctx);
+    }
+  }
+  buildChart(ctx) {
+    const Chart = window.Chart;
+    const entries = this.filteredEntries();
+    const metric = this.useMetric();
+    const labels = entries.map((e) => this.formatDate(e.measuredAt));
+    const heightData = entries.map((e) => {
+      if (e.height === null)
+        return null;
+      return metric ? e.height : parseFloat((e.height * 0.393701).toFixed(1));
+    });
+    const weightData = entries.map((e) => {
+      if (e.weight === null)
+        return null;
+      return metric ? e.weight : parseFloat((e.weight * 2.20462).toFixed(2));
+    });
+    const heightUnit = metric ? "cm" : "in";
+    const weightUnit = metric ? "kg" : "lb";
+    const heightLabel = this.i18n.t()["growthChart.heightLabel"];
+    const weightLabel = this.i18n.t()["growthChart.weightLabel"];
+    this.chartInstance = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: heightLabel,
+            data: heightData,
+            borderColor: "rgba(99, 102, 241, 0.9)",
+            backgroundColor: "rgba(99, 102, 241, 0.1)",
+            borderWidth: 2.5,
+            pointBackgroundColor: "rgba(99, 102, 241, 0.9)",
+            pointBorderColor: "#fff",
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            fill: true,
+            tension: 0.4,
+            yAxisID: "y"
+          },
+          {
+            label: weightLabel,
+            data: weightData,
+            borderColor: "rgba(20, 184, 166, 0.9)",
+            backgroundColor: "rgba(20, 184, 166, 0.1)",
+            borderWidth: 2.5,
+            pointBackgroundColor: "rgba(20, 184, 166, 0.9)",
+            pointBorderColor: "#fff",
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            fill: true,
+            tension: 0.4,
+            yAxisID: "y1"
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: {
+            display: false
+            // We use custom legend below canvas
+          },
+          tooltip: {
+            backgroundColor: "rgba(255,255,255,0.95)",
+            titleColor: "#1c1917",
+            bodyColor: "#78716c",
+            borderColor: "#e7e5e4",
+            borderWidth: 1,
+            padding: 12,
+            callbacks: {
+              label: (ctx2) => {
+                const v = ctx2.parsed.y;
+                if (v === null)
+                  return null;
+                const unit = ctx2.datasetIndex === 0 ? heightUnit : weightUnit;
+                return ` ${ctx2.dataset.label}: ${v} ${unit}`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            type: "linear",
+            display: true,
+            position: "left",
+            title: {
+              display: true,
+              text: heightLabel + ` (${heightUnit})`,
+              color: "rgba(99, 102, 241, 0.8)",
+              font: { size: 11, weight: "600" }
+            },
+            grid: { color: "rgba(0,0,0,0.05)" },
+            ticks: {
+              callback: (v) => v + ` ${heightUnit}`,
+              color: "#a8a29e",
+              font: { size: 10 }
+            }
+          },
+          y1: {
+            type: "linear",
+            display: true,
+            position: "right",
+            title: {
+              display: true,
+              text: weightLabel + ` (${weightUnit})`,
+              color: "rgba(20, 184, 166, 0.8)",
+              font: { size: 11, weight: "600" }
+            },
+            grid: { drawOnChartArea: false },
+            ticks: {
+              callback: (v) => v + ` ${weightUnit}`,
+              color: "#a8a29e",
+              font: { size: 10 }
+            }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: "#a8a29e", font: { size: 9 }, maxTicksLimit: 8 }
+          }
+        }
+      }
+    });
+    this.chartInitialized = true;
+  }
+  formatDate(iso) {
+    const locale = this.i18n.locale() === "sq" ? "sq-AL" : "en-US";
+    return new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "short" });
+  }
+  static {
+    this.\u0275fac = function GrowthChartComponent_Factory(__ngFactoryType__) {
+      return new (__ngFactoryType__ || _GrowthChartComponent)();
+    };
+  }
+  static {
+    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _GrowthChartComponent, selectors: [["app-growth-chart"]], viewQuery: function GrowthChartComponent_Query(rf, ctx) {
+      if (rf & 1) {
+        \u0275\u0275viewQuery(_c02, 5);
+      }
+      if (rf & 2) {
+        let _t;
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.chartCanvasRef = _t.first);
+      }
+    }, decls: 29, vars: 10, consts: [["chartCanvas", ""], [1, "bg-white", "rounded-[2rem]", "shadow-md", "border", "border-slate-100", "overflow-hidden"], [1, "px-6", "py-5", "flex", "items-center", "justify-between", "border-b", "border-slate-100"], [1, "text-lg", "font-extrabold", "text-gray-800", "flex", "items-center", "gap-2"], ["name", "trending-up", 1, "text-inherit"], [1, "flex", "items-center", "gap-2"], [1, "text-sm", "font-semibold", "px-3", "py-2", "rounded-xl", "border-2", "border-slate-200", "bg-slate-50", "outline-none", "focus:ring-2", "focus:ring-primary-500/10", "focus:border-primary-500", "text-gray-700", "cursor-pointer", 3, "ngModel"], [1, "w-9", "h-9", "rounded-xl", "bg-slate-50", "hover:bg-primary-50", "border", "border-slate-200", "hover:border-primary-300", "flex", "items-center", "justify-center", "text-slate-400", "hover:text-primary-600", "transition-all", "shadow-sm", 3, "click"], ["name", "rotate-cw", 1, "text-inherit", 3, "size"], [1, "px-6", "py-3", "flex", "flex-wrap", "items-center", "gap-3", "border-b", "border-slate-100", "bg-slate-50/50"], [1, "text-xs", "font-bold", "text-slate-500", "uppercase", "tracking-wider"], ["type", "date", 1, "text-sm", "px-3", "py-2", "rounded-xl", "border-2", "border-slate-200", "bg-white", "outline-none", "focus:ring-2", "focus:ring-primary-500/10", "focus:border-primary-500", "text-gray-700", 3, "ngModelChange", "ngModel"], [1, "text-slate-300", "font-bold"], [1, "flex", "items-center", "gap-1", "ml-auto"], [1, "px-3", "py-1.5", "rounded-lg", "text-xs", "font-bold", "transition-all", 3, "ngClass"], [1, "px-6", "py-5", 2, "height", "300px", "position", "relative"], [1, "h-full", "flex", "flex-col", "items-center", "justify-center", "text-center"], [1, "w-full", "h-full", 2, "display", "block"], [1, "px-6", "pb-5", "flex", "flex-wrap", "items-center", "gap-4"], [1, "text-sm", "font-semibold", "px-3", "py-2", "rounded-xl", "border-2", "border-slate-200", "bg-slate-50", "outline-none", "focus:ring-2", "focus:ring-primary-500/10", "focus:border-primary-500", "text-gray-700", "cursor-pointer", 3, "ngModelChange", "ngModel"], [3, "value"], [1, "px-3", "py-1.5", "rounded-lg", "text-xs", "font-bold", "transition-all", 3, "click", "ngClass"], [1, "w-14", "h-14", "bg-slate-100", "rounded-full", "flex", "items-center", "justify-center", "mb-3"], ["name", "user-x", 1, "text-inherit"], [1, "text-slate-500", "font-semibold", "text-sm"], ["name", "bar-chart-2", 1, "text-inherit"], ["name", "alert-circle", 1, "text-inherit"], [1, "w-3", "h-3", "rounded-full", "bg-indigo-500", "flex-shrink-0"], [1, "text-xs", "font-semibold", "text-slate-600"], [1, "w-3", "h-3", "rounded-full", "bg-teal-500", "flex-shrink-0"], [1, "ml-auto", "flex", "items-center", "gap-3"], [1, "px-3", "py-1.5", "rounded-xl", "text-xs", "font-bold", "border-2", "border-slate-200", "text-slate-500", "hover:border-primary-300", "hover:text-primary-600", "transition-all", "bg-white", 3, "click"], [1, "px-3", "py-1.5", "rounded-xl", "text-xs", "font-bold", "bg-slate-100", "text-slate-400", "hover:bg-red-50", "hover:text-red-500", "border", "border-slate-200", "hover:border-red-200", "transition-all"], [1, "px-3", "py-1.5", "rounded-xl", "text-xs", "font-bold", "bg-slate-100", "text-slate-400", "hover:bg-red-50", "hover:text-red-500", "border", "border-slate-200", "hover:border-red-200", "transition-all", 3, "click"]], template: function GrowthChartComponent_Template(rf, ctx) {
+      if (rf & 1) {
+        \u0275\u0275elementStart(0, "div", 1)(1, "div", 2)(2, "h3", 3);
+        \u0275\u0275element(3, "lucide-icon", 4);
+        \u0275\u0275text(4);
+        \u0275\u0275elementEnd();
+        \u0275\u0275elementStart(5, "div", 5);
+        \u0275\u0275conditionalCreate(6, GrowthChartComponent_Conditional_6_Template, 3, 1, "select", 6);
+        \u0275\u0275elementStart(7, "button", 7);
+        \u0275\u0275listener("click", function GrowthChartComponent_Template_button_click_7_listener() {
+          return ctx.refresh();
+        });
+        \u0275\u0275element(8, "lucide-icon", 8);
+        \u0275\u0275elementEnd()()();
+        \u0275\u0275elementStart(9, "div", 9)(10, "div", 5)(11, "label", 10);
+        \u0275\u0275text(12);
+        \u0275\u0275elementEnd();
+        \u0275\u0275elementStart(13, "input", 11);
+        \u0275\u0275twoWayListener("ngModelChange", function GrowthChartComponent_Template_input_ngModelChange_13_listener($event) {
+          \u0275\u0275twoWayBindingSet(ctx.dateFrom, $event) || (ctx.dateFrom = $event);
+          return $event;
+        });
+        \u0275\u0275listener("ngModelChange", function GrowthChartComponent_Template_input_ngModelChange_13_listener() {
+          return ctx.onDateRangeChange();
+        });
+        \u0275\u0275elementEnd()();
+        \u0275\u0275elementStart(14, "span", 12);
+        \u0275\u0275text(15, "\u2192");
+        \u0275\u0275elementEnd();
+        \u0275\u0275elementStart(16, "div", 5)(17, "label", 10);
+        \u0275\u0275text(18);
+        \u0275\u0275elementEnd();
+        \u0275\u0275elementStart(19, "input", 11);
+        \u0275\u0275twoWayListener("ngModelChange", function GrowthChartComponent_Template_input_ngModelChange_19_listener($event) {
+          \u0275\u0275twoWayBindingSet(ctx.dateTo, $event) || (ctx.dateTo = $event);
+          return $event;
+        });
+        \u0275\u0275listener("ngModelChange", function GrowthChartComponent_Template_input_ngModelChange_19_listener() {
+          return ctx.onDateRangeChange();
+        });
+        \u0275\u0275elementEnd()();
+        \u0275\u0275elementStart(20, "div", 13);
+        \u0275\u0275repeaterCreate(21, GrowthChartComponent_For_22_Template, 2, 2, "button", 14, _forTrack04);
+        \u0275\u0275elementEnd()();
+        \u0275\u0275elementStart(23, "div", 15);
+        \u0275\u0275conditionalCreate(24, GrowthChartComponent_Conditional_24_Template, 5, 1, "div", 16)(25, GrowthChartComponent_Conditional_25_Template, 5, 1, "div", 16)(26, GrowthChartComponent_Conditional_26_Template, 5, 1, "div", 16)(27, GrowthChartComponent_Conditional_27_Template, 2, 0, "canvas", 17);
+        \u0275\u0275elementEnd();
+        \u0275\u0275conditionalCreate(28, GrowthChartComponent_Conditional_28_Template, 13, 4, "div", 18);
+        \u0275\u0275elementEnd();
+      }
+      if (rf & 2) {
+        \u0275\u0275advance(4);
+        \u0275\u0275textInterpolate1(" ", ctx.i18n.t()["growthChart.title"], " ");
+        \u0275\u0275advance(2);
+        \u0275\u0275conditional(ctx.children().length > 0 ? 6 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275attribute("aria-label", ctx.i18n.t()["sidebar.refresh"] || "Refresh");
+        \u0275\u0275advance();
+        \u0275\u0275property("size", 15);
+        \u0275\u0275advance(4);
+        \u0275\u0275textInterpolate(ctx.i18n.t()["growthChart.dateFrom"]);
+        \u0275\u0275advance();
+        \u0275\u0275twoWayProperty("ngModel", ctx.dateFrom);
+        \u0275\u0275advance(5);
+        \u0275\u0275textInterpolate(ctx.i18n.t()["growthChart.dateTo"]);
+        \u0275\u0275advance();
+        \u0275\u0275twoWayProperty("ngModel", ctx.dateTo);
+        \u0275\u0275advance(2);
+        \u0275\u0275repeater(ctx.dateRanges);
+        \u0275\u0275advance(3);
+        \u0275\u0275conditional(ctx.state() === "no-child" ? 24 : ctx.state() === "no-data" || ctx.state() === "empty" ? 25 : ctx.state() === "single" ? 26 : 27);
+        \u0275\u0275advance(4);
+        \u0275\u0275conditional(ctx.state() === "ok" ? 28 : -1);
+      }
+    }, dependencies: [CommonModule, NgClass, FormsModule, NgSelectOption, \u0275NgSelectMultipleOption, DefaultValueAccessor, SelectControlValueAccessor, NgControlStatus, NgModel, LucideAngularModule, LucideAngularComponent], styles: ["\n[_nghost-%COMP%] {\n  display: block;\n}\n/*# sourceMappingURL=growth-chart.component.css.map */"], changeDetection: 0 });
+  }
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(GrowthChartComponent, [{
+    type: Component,
+    args: [{ selector: "app-growth-chart", standalone: true, imports: [CommonModule, FormsModule, LucideAngularModule], changeDetection: ChangeDetectionStrategy.OnPush, template: `
+    <div class="bg-white rounded-[2rem] shadow-md border border-slate-100 overflow-hidden">
+
+      <!-- Card Header -->
+      <div class="px-6 py-5 flex items-center justify-between border-b border-slate-100">
+        <h3 class="text-lg font-extrabold text-gray-800 flex items-center gap-2">
+          <lucide-icon name="trending-up" class="text-inherit"></lucide-icon>
+          {{ i18n.t()['growthChart.title'] }}
+        </h3>
+        <div class="flex items-center gap-2">
+          <!-- Child selector -->
+          @if (children().length > 0) {
+            <select
+              [(ngModel)]="selectedChildId"
+              (ngModelChange)="onChildChange($event)"
+              class="text-sm font-semibold px-3 py-2 rounded-xl border-2 border-slate-200 bg-slate-50 outline-none focus:ring-2 focus:ring-primary-500/10 focus:border-primary-500 text-gray-700 cursor-pointer">
+              @for (child of children(); track child.id) {
+                <option [value]="child.id">{{ child.name }}</option>
+              }
+            </select>
+          }
+          <!-- Refresh -->
+          <button
+            (click)="refresh()"
+            class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-primary-50 border border-slate-200 hover:border-primary-300 flex items-center justify-center text-slate-400 hover:text-primary-600 transition-all shadow-sm"
+            [attr.aria-label]="i18n.t()['sidebar.refresh'] || 'Refresh'">
+            <lucide-icon name="rotate-cw" [size]="15" class="text-inherit"></lucide-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Date Range + Unit Filter Bar -->
+      <div class="px-6 py-3 flex flex-wrap items-center gap-3 border-b border-slate-100 bg-slate-50/50">
+        <div class="flex items-center gap-2">
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ i18n.t()['growthChart.dateFrom'] }}</label>
+          <input type="date" [(ngModel)]="dateFrom"
+                 (ngModelChange)="onDateRangeChange()"
+                 class="text-sm px-3 py-2 rounded-xl border-2 border-slate-200 bg-white outline-none focus:ring-2 focus:ring-primary-500/10 focus:border-primary-500 text-gray-700">
+        </div>
+        <span class="text-slate-300 font-bold">\u2192</span>
+        <div class="flex items-center gap-2">
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ i18n.t()['growthChart.dateTo'] }}</label>
+          <input type="date" [(ngModel)]="dateTo"
+                 (ngModelChange)="onDateRangeChange()"
+                 class="text-sm px-3 py-2 rounded-xl border-2 border-slate-200 bg-white outline-none focus:ring-2 focus:ring-primary-500/10 focus:border-primary-500 text-gray-700">
+        </div>
+
+        <!-- Quick range chips -->
+        <div class="flex items-center gap-1 ml-auto">
+          @for (range of dateRanges; track range.value) {
+            <button
+              (click)="selectRange(range.value)"
+              class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+              [ngClass]="activeRange() === range.value
+                ? 'bg-primary-600 text-white shadow-sm'
+                : 'bg-white text-slate-500 border border-slate-200 hover:border-primary-300 hover:text-primary-600'">
+              {{ range.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Chart Area -->
+      <div class="px-6 py-5" style="height: 300px; position: relative;">
+        @if (state() === 'no-child') {
+          <div class="h-full flex flex-col items-center justify-center text-center">
+            <div class="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mb-3">
+              <lucide-icon name="user-x" class="text-inherit"></lucide-icon>
+            </div>
+            <p class="text-slate-500 font-semibold text-sm">{{ i18n.t()['growthChart.noChild'] }}</p>
+          </div>
+        } @else if (state() === 'no-data' || state() === 'empty') {
+          <div class="h-full flex flex-col items-center justify-center text-center">
+            <div class="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mb-3">
+              <lucide-icon name="bar-chart-2" class="text-inherit"></lucide-icon>
+            </div>
+            <p class="text-slate-500 font-semibold text-sm">{{ i18n.t()['growthChart.noData'] }}</p>
+          </div>
+        } @else if (state() === 'single') {
+          <div class="h-full flex flex-col items-center justify-center text-center">
+            <div class="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mb-3">
+              <lucide-icon name="alert-circle" class="text-inherit"></lucide-icon>
+            </div>
+            <p class="text-slate-500 font-semibold text-sm">{{ i18n.t()['growthChart.singleEntry'] }}</p>
+          </div>
+        } @else {
+          <canvas #chartCanvas class="w-full h-full" style="display: block;"></canvas>
+        }
+      </div>
+
+      <!-- Legend -->
+      @if (state() === 'ok') {
+        <div class="px-6 pb-5 flex flex-wrap items-center gap-4">
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-indigo-500 flex-shrink-0"></div>
+            <span class="text-xs font-semibold text-slate-600">{{ heightLabel() }}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-teal-500 flex-shrink-0"></div>
+            <span class="text-xs font-semibold text-slate-600">{{ weightLabel() }}</span>
+          </div>
+          <div class="ml-auto flex items-center gap-3">
+            <button
+              (click)="toggleUnit()"
+              class="px-3 py-1.5 rounded-xl text-xs font-bold border-2 border-slate-200 text-slate-500 hover:border-primary-300 hover:text-primary-600 transition-all bg-white">
+              {{ useMetric() ? 'kg/cm' : 'lb/in' }}
+            </button>
+            @if (hasActiveFilters()) {
+              <button
+                (click)="clearFilters()"
+                class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-500 border border-slate-200 hover:border-red-200 transition-all">
+                {{ i18n.t()['growthChart.clearFilter'] }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  `, styles: ["/* angular:styles/component:css;239657c732bfd36205d0b60d0c3c630c7c77adaaccb59693b759836aabe365d3;C:/Users/g_gus/Desktop/jona/kiddok/src/app/components/growth-chart/growth-chart.component.ts */\n:host {\n  display: block;\n}\n/*# sourceMappingURL=growth-chart.component.css.map */\n"] }]
+  }], () => [], { chartCanvasRef: [{
+    type: ViewChild,
+    args: ["chartCanvas"]
+  }] });
+})();
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(GrowthChartComponent, { className: "GrowthChartComponent", filePath: "src/app/components/growth-chart/growth-chart.component.ts", lineNumber: 147 });
+})();
+
+// src/app/components/home.component.ts
+var HomeComponent = class _HomeComponent {
+  static {
+    this.\u0275fac = function HomeComponent_Factory(__ngFactoryType__) {
+      return new (__ngFactoryType__ || _HomeComponent)();
+    };
+  }
+  static {
+    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _HomeComponent, selectors: [["app-home"]], decls: 6, vars: 0, consts: [[1, "px-2", "max-w-6xl", "mx-auto"]], template: function HomeComponent_Template(rf, ctx) {
+      if (rf & 1) {
+        \u0275\u0275elementStart(0, "div", 0);
+        \u0275\u0275element(1, "app-welcome-hero")(2, "app-quick-actions-grid")(3, "app-health-alert-card")(4, "app-growth-chart")(5, "app-recent-activity-feed");
+        \u0275\u0275elementEnd();
+      }
+    }, dependencies: [CommonModule, LucideAngularModule, WelcomeHeroComponent, QuickActionsGridComponent, HealthAlertCardComponent, RecentActivityFeedComponent, GrowthChartComponent], styles: ["\n[_nghost-%COMP%] {\n  display: block;\n}\n/*# sourceMappingURL=home.component.css.map */"] });
+  }
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HomeComponent, [{
+    type: Component,
+    args: [{ selector: "app-home", imports: [CommonModule, LucideAngularModule, WelcomeHeroComponent, QuickActionsGridComponent, HealthAlertCardComponent, RecentActivityFeedComponent, GrowthChartComponent], template: `
+    <div class="px-2 max-w-6xl mx-auto">
+      <app-welcome-hero />
+      <app-quick-actions-grid />
+      <app-health-alert-card />
+      <app-growth-chart />
+      <app-recent-activity-feed />
+    </div>
+  `, styles: ["/* angular:styles/component:css;4edade868300c889bf3186ff41a82f8dc02abd53db4197e6f0acdbebcee4f2ee;C:/Users/g_gus/Desktop/jona/kiddok/src/app/components/home.component.ts */\n:host {\n  display: block;\n}\n/*# sourceMappingURL=home.component.css.map */\n"] }]
+  }], null, null);
+})();
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HomeComponent, { className: "HomeComponent", filePath: "src/app/components/home.component.ts", lineNumber: 27 });
+})();
+
 // src/app/components/diary.component.ts
-var _forTrack04 = ($index, $item) => $item.type;
-var _forTrack1 = ($index, $item) => $item.value;
+var _forTrack05 = ($index, $item) => $item.type;
+var _forTrack12 = ($index, $item) => $item.value;
 var _forTrack2 = ($index, $item) => $item.date.toISOString();
 var _forTrack3 = ($index, $item) => $item.id;
 var _forTrack4 = ($index, $item) => $item.key;
@@ -19765,7 +20509,7 @@ function DiaryComponent_Conditional_61_Conditional_18_Template(rf, ctx) {
     \u0275\u0275text(8);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(9, "div", 77);
-    \u0275\u0275repeaterCreate(10, DiaryComponent_Conditional_61_Conditional_18_For_11_Template, 4, 10, "button", 7, _forTrack1);
+    \u0275\u0275repeaterCreate(10, DiaryComponent_Conditional_61_Conditional_18_For_11_Template, 4, 10, "button", 7, _forTrack12);
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(12, "div")(13, "label", 69);
     \u0275\u0275text(14);
@@ -19824,7 +20568,7 @@ function DiaryComponent_Conditional_61_Template(rf, ctx) {
     \u0275\u0275element(9, "lucide-icon", 66);
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(10, "div", 67);
-    \u0275\u0275repeaterCreate(11, DiaryComponent_Conditional_61_For_12_Template, 4, 5, "button", 7, _forTrack1);
+    \u0275\u0275repeaterCreate(11, DiaryComponent_Conditional_61_For_12_Template, 4, 5, "button", 7, _forTrack12);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(13, "div", 68)(14, "div")(15, "label", 69);
     \u0275\u0275text(16);
@@ -20271,10 +21015,10 @@ var DiaryComponent = class _DiaryComponent {
         \u0275\u0275text(9);
         \u0275\u0275elementEnd()();
         \u0275\u0275elementStart(10, "div", 6);
-        \u0275\u0275repeaterCreate(11, DiaryComponent_For_12_Template, 5, 6, "button", 7, _forTrack04);
+        \u0275\u0275repeaterCreate(11, DiaryComponent_For_12_Template, 5, 6, "button", 7, _forTrack05);
         \u0275\u0275elementEnd();
         \u0275\u0275elementStart(13, "div", 8);
-        \u0275\u0275repeaterCreate(14, DiaryComponent_For_15_Template, 2, 4, "button", 7, _forTrack1);
+        \u0275\u0275repeaterCreate(14, DiaryComponent_For_15_Template, 2, 4, "button", 7, _forTrack12);
         \u0275\u0275elementEnd();
         \u0275\u0275elementStart(16, "div", 9)(17, "div", 10)(18, "div", 11)(19, "button", 12);
         \u0275\u0275listener("click", function DiaryComponent_Template_button_click_19_listener() {
@@ -20844,9 +21588,9 @@ var TooltipDirective = class _TooltipDirective {
 })();
 
 // src/app/components/temperature-diary.component.ts
-var _c02 = ["chartCanvas"];
-var _forTrack05 = ($index, $item) => $item.value;
-var _forTrack12 = ($index, $item) => $item.id;
+var _c03 = ["chartCanvas"];
+var _forTrack06 = ($index, $item) => $item.value;
+var _forTrack13 = ($index, $item) => $item.id;
 function TemperatureDiaryComponent_Conditional_5_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p", 4);
@@ -21089,7 +21833,7 @@ function TemperatureDiaryComponent_Conditional_66_For_2_Template(rf, ctx) {
 function TemperatureDiaryComponent_Conditional_66_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 37);
-    \u0275\u0275repeaterCreate(1, TemperatureDiaryComponent_Conditional_66_For_2_Template, 11, 6, "div", 63, _forTrack12);
+    \u0275\u0275repeaterCreate(1, TemperatureDiaryComponent_Conditional_66_For_2_Template, 11, 6, "div", 63, _forTrack13);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -21416,7 +22160,7 @@ var TemperatureDiaryComponent = class _TemperatureDiaryComponent {
   static {
     this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _TemperatureDiaryComponent, selectors: [["app-temperature-diary"]], viewQuery: function TemperatureDiaryComponent_Query(rf, ctx) {
       if (rf & 1) {
-        \u0275\u0275viewQuery(_c02, 5);
+        \u0275\u0275viewQuery(_c03, 5);
       }
       if (rf & 2) {
         let _t;
@@ -21475,7 +22219,7 @@ var TemperatureDiaryComponent = class _TemperatureDiaryComponent {
         \u0275\u0275text(39);
         \u0275\u0275elementEnd();
         \u0275\u0275elementStart(40, "div", 23);
-        \u0275\u0275repeaterCreate(41, TemperatureDiaryComponent_For_42_Template, 2, 4, "button", 24, _forTrack05);
+        \u0275\u0275repeaterCreate(41, TemperatureDiaryComponent_For_42_Template, 2, 4, "button", 24, _forTrack06);
         \u0275\u0275elementEnd()();
         \u0275\u0275elementStart(43, "div")(44, "label", 17);
         \u0275\u0275text(45);
@@ -21796,8 +22540,8 @@ var TemperatureDiaryComponent = class _TemperatureDiaryComponent {
 })();
 
 // src/app/components/growth-tracking.component.ts
-var _c03 = ["chartCanvas"];
-var _forTrack06 = ($index, $item) => $item.id;
+var _c04 = ["chartCanvas"];
+var _forTrack07 = ($index, $item) => $item.id;
 function GrowthTrackingComponent_Conditional_5_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p", 4);
@@ -22098,7 +22842,7 @@ function GrowthTrackingComponent_Conditional_60_For_2_Template(rf, ctx) {
 function GrowthTrackingComponent_Conditional_60_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 34);
-    \u0275\u0275repeaterCreate(1, GrowthTrackingComponent_Conditional_60_For_2_Template, 13, 4, "div", 53, _forTrack06);
+    \u0275\u0275repeaterCreate(1, GrowthTrackingComponent_Conditional_60_For_2_Template, 13, 4, "div", 53, _forTrack07);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -22429,7 +23173,7 @@ var GrowthTrackingComponent = class _GrowthTrackingComponent {
   static {
     this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _GrowthTrackingComponent, selectors: [["app-growth-tracking"]], viewQuery: function GrowthTrackingComponent_Query(rf, ctx) {
       if (rf & 1) {
-        \u0275\u0275viewQuery(_c03, 5);
+        \u0275\u0275viewQuery(_c04, 5);
       }
       if (rf & 2) {
         let _t;
@@ -22820,7 +23564,7 @@ var GrowthTrackingComponent = class _GrowthTrackingComponent {
 })();
 
 // src/app/components/records.component.ts
-var _forTrack07 = ($index, $item) => $item.id;
+var _forTrack08 = ($index, $item) => $item.id;
 function RecordsComponent_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
     const _r1 = \u0275\u0275getCurrentView();
@@ -23013,7 +23757,7 @@ function RecordsComponent_Conditional_14_For_2_Template(rf, ctx) {
 function RecordsComponent_Conditional_14_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 10);
-    \u0275\u0275repeaterCreate(1, RecordsComponent_Conditional_14_For_2_Template, 13, 10, "div", 29, _forTrack07);
+    \u0275\u0275repeaterCreate(1, RecordsComponent_Conditional_14_For_2_Template, 13, 10, "div", 29, _forTrack08);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -23253,10 +23997,10 @@ var VACCINE_SCHEDULE = [
 ];
 
 // src/app/components/vaccines/vaccine-schedule.component.ts
-var _c04 = (a0) => ({ entry: a0 });
+var _c05 = (a0) => ({ entry: a0 });
 var _c1 = () => ({ "animation": "pulse-dot 1.5s ease-in-out infinite" });
 var _c2 = () => ({});
-var _forTrack08 = ($index, $item) => $item.scheduleEntry.code + $item.doseIndex;
+var _forTrack09 = ($index, $item) => $item.scheduleEntry.code + $item.doseIndex;
 function VaccineScheduleComponent_Conditional_21_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 13);
@@ -23279,7 +24023,7 @@ function VaccineScheduleComponent_Conditional_22_For_6_Template(rf, ctx) {
     const entry_r1 = ctx.$implicit;
     \u0275\u0275nextContext(2);
     const timelineRow_r2 = \u0275\u0275reference(28);
-    \u0275\u0275property("ngTemplateOutlet", timelineRow_r2)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c04, entry_r1));
+    \u0275\u0275property("ngTemplateOutlet", timelineRow_r2)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c05, entry_r1));
   }
 }
 function VaccineScheduleComponent_Conditional_22_Template(rf, ctx) {
@@ -23289,7 +24033,7 @@ function VaccineScheduleComponent_Conditional_22_Template(rf, ctx) {
     \u0275\u0275text(3);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(4, "div", 20);
-    \u0275\u0275repeaterCreate(5, VaccineScheduleComponent_Conditional_22_For_6_Template, 1, 4, "ng-container", null, _forTrack08);
+    \u0275\u0275repeaterCreate(5, VaccineScheduleComponent_Conditional_22_For_6_Template, 1, 4, "ng-container", null, _forTrack09);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -23313,7 +24057,7 @@ function VaccineScheduleComponent_Conditional_23_For_5_Template(rf, ctx) {
     const entry_r4 = ctx.$implicit;
     \u0275\u0275nextContext(2);
     const timelineRow_r2 = \u0275\u0275reference(28);
-    \u0275\u0275property("ngTemplateOutlet", timelineRow_r2)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c04, entry_r4));
+    \u0275\u0275property("ngTemplateOutlet", timelineRow_r2)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c05, entry_r4));
   }
 }
 function VaccineScheduleComponent_Conditional_23_Template(rf, ctx) {
@@ -23322,7 +24066,7 @@ function VaccineScheduleComponent_Conditional_23_Template(rf, ctx) {
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(3, "div", 20);
-    \u0275\u0275repeaterCreate(4, VaccineScheduleComponent_Conditional_23_For_5_Template, 1, 4, "ng-container", null, _forTrack08);
+    \u0275\u0275repeaterCreate(4, VaccineScheduleComponent_Conditional_23_For_5_Template, 1, 4, "ng-container", null, _forTrack09);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -23346,7 +24090,7 @@ function VaccineScheduleComponent_Conditional_24_For_5_Template(rf, ctx) {
     const entry_r5 = ctx.$implicit;
     \u0275\u0275nextContext(2);
     const timelineRow_r2 = \u0275\u0275reference(28);
-    \u0275\u0275property("ngTemplateOutlet", timelineRow_r2)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c04, entry_r5));
+    \u0275\u0275property("ngTemplateOutlet", timelineRow_r2)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c05, entry_r5));
   }
 }
 function VaccineScheduleComponent_Conditional_24_Template(rf, ctx) {
@@ -23355,7 +24099,7 @@ function VaccineScheduleComponent_Conditional_24_Template(rf, ctx) {
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(3, "div", 20);
-    \u0275\u0275repeaterCreate(4, VaccineScheduleComponent_Conditional_24_For_5_Template, 1, 4, "ng-container", null, _forTrack08);
+    \u0275\u0275repeaterCreate(4, VaccineScheduleComponent_Conditional_24_For_5_Template, 1, 4, "ng-container", null, _forTrack09);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -23379,7 +24123,7 @@ function VaccineScheduleComponent_Conditional_25_For_5_Template(rf, ctx) {
     const entry_r6 = ctx.$implicit;
     \u0275\u0275nextContext(2);
     const timelineRow_r2 = \u0275\u0275reference(28);
-    \u0275\u0275property("ngTemplateOutlet", timelineRow_r2)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c04, entry_r6));
+    \u0275\u0275property("ngTemplateOutlet", timelineRow_r2)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c05, entry_r6));
   }
 }
 function VaccineScheduleComponent_Conditional_25_Template(rf, ctx) {
@@ -23388,7 +24132,7 @@ function VaccineScheduleComponent_Conditional_25_Template(rf, ctx) {
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(3, "div", 20);
-    \u0275\u0275repeaterCreate(4, VaccineScheduleComponent_Conditional_25_For_5_Template, 1, 4, "ng-container", null, _forTrack08);
+    \u0275\u0275repeaterCreate(4, VaccineScheduleComponent_Conditional_25_For_5_Template, 1, 4, "ng-container", null, _forTrack09);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -23412,7 +24156,7 @@ function VaccineScheduleComponent_Conditional_26_For_5_Template(rf, ctx) {
     const entry_r7 = ctx.$implicit;
     \u0275\u0275nextContext(2);
     const timelineRow_r2 = \u0275\u0275reference(28);
-    \u0275\u0275property("ngTemplateOutlet", timelineRow_r2)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c04, entry_r7));
+    \u0275\u0275property("ngTemplateOutlet", timelineRow_r2)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c05, entry_r7));
   }
 }
 function VaccineScheduleComponent_Conditional_26_Template(rf, ctx) {
@@ -23421,7 +24165,7 @@ function VaccineScheduleComponent_Conditional_26_Template(rf, ctx) {
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(3, "div", 26);
-    \u0275\u0275repeaterCreate(4, VaccineScheduleComponent_Conditional_26_For_5_Template, 1, 4, "ng-container", null, _forTrack08);
+    \u0275\u0275repeaterCreate(4, VaccineScheduleComponent_Conditional_26_For_5_Template, 1, 4, "ng-container", null, _forTrack09);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -24270,7 +25014,7 @@ var VaccineScheduleComponent = class _VaccineScheduleComponent {
 })();
 
 // src/app/components/vaccines/vaccine-alert-card.component.ts
-var _c05 = () => ({ "animation": "pulse-dot 1.5s ease-in-out infinite" });
+var _c06 = () => ({ "animation": "pulse-dot 1.5s ease-in-out infinite" });
 var _c12 = () => ({});
 function VaccineAlertCardComponent_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
@@ -24506,7 +25250,7 @@ var VaccineAlertCardComponent = class _VaccineAlertCardComponent {
         \u0275\u0275advance();
         \u0275\u0275conditional(ctx.swipeOffset() > 0 ? 1 : -1);
         \u0275\u0275advance(3);
-        \u0275\u0275property("ngClass", ctx.dotClass())("ngStyle", ctx.alert.status === "overdue" ? \u0275\u0275pureFunction0(15, _c05) : \u0275\u0275pureFunction0(16, _c12));
+        \u0275\u0275property("ngClass", ctx.dotClass())("ngStyle", ctx.alert.status === "overdue" ? \u0275\u0275pureFunction0(15, _c06) : \u0275\u0275pureFunction0(16, _c12));
         \u0275\u0275advance();
         \u0275\u0275property("ngClass", ctx.iconBgClass());
         \u0275\u0275advance();
@@ -24613,8 +25357,8 @@ var VaccineAlertCardComponent = class _VaccineAlertCardComponent {
 })();
 
 // src/app/components/vaccines.component.ts
-var _c06 = () => [1, 2, 3];
-var _forTrack09 = ($index, $item) => $item.id;
+var _c07 = () => [1, 2, 3];
+var _forTrack010 = ($index, $item) => $item.id;
 function VaccinesComponent_Conditional_9_For_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 12)(1, "div", 13);
@@ -24632,7 +25376,7 @@ function VaccinesComponent_Conditional_9_Template(rf, ctx) {
   }
   if (rf & 2) {
     \u0275\u0275advance();
-    \u0275\u0275repeater(\u0275\u0275pureFunction0(0, _c06));
+    \u0275\u0275repeater(\u0275\u0275pureFunction0(0, _c07));
   }
 }
 function VaccinesComponent_Conditional_10_Template(rf, ctx) {
@@ -24691,7 +25435,7 @@ function VaccinesComponent_Conditional_11_For_2_Template(rf, ctx) {
 function VaccinesComponent_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 9);
-    \u0275\u0275repeaterCreate(1, VaccinesComponent_Conditional_11_For_2_Template, 1, 1, "app-vaccine-alert-card", 29, _forTrack09);
+    \u0275\u0275repeaterCreate(1, VaccinesComponent_Conditional_11_For_2_Template, 1, 1, "app-vaccine-alert-card", 29, _forTrack010);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -25832,9 +26576,9 @@ var VaccinesComponent = class _VaccinesComponent {
 })();
 
 // src/app/components/medications/medications.component.ts
-var _c07 = () => [1, 2, 3];
-var _forTrack010 = ($index, $item) => $item.id;
-var _forTrack13 = ($index, $item) => $item.value;
+var _c08 = () => [1, 2, 3];
+var _forTrack011 = ($index, $item) => $item.id;
+var _forTrack14 = ($index, $item) => $item.value;
 function MedicationsComponent_Conditional_6_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p", 4);
@@ -25885,7 +26629,7 @@ function MedicationsComponent_Conditional_11_Template(rf, ctx) {
   }
   if (rf & 2) {
     \u0275\u0275advance();
-    \u0275\u0275repeater(\u0275\u0275pureFunction0(0, _c07));
+    \u0275\u0275repeater(\u0275\u0275pureFunction0(0, _c08));
   }
 }
 function MedicationsComponent_Conditional_12_Template(rf, ctx) {
@@ -26045,7 +26789,7 @@ function MedicationsComponent_Conditional_13_For_2_Template(rf, ctx) {
 function MedicationsComponent_Conditional_13_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 8);
-    \u0275\u0275repeaterCreate(1, MedicationsComponent_Conditional_13_For_2_Template, 30, 14, "div", 31, _forTrack010);
+    \u0275\u0275repeaterCreate(1, MedicationsComponent_Conditional_13_For_2_Template, 30, 14, "div", 31, _forTrack011);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -26158,7 +26902,7 @@ function MedicationsComponent_Conditional_14_Template(rf, ctx) {
     \u0275\u0275text(18);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(19, "div", 61);
-    \u0275\u0275repeaterCreate(20, MedicationsComponent_Conditional_14_For_21_Template, 2, 2, "button", 62, _forTrack13);
+    \u0275\u0275repeaterCreate(20, MedicationsComponent_Conditional_14_For_21_Template, 2, 2, "button", 62, _forTrack14);
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(22, "div")(23, "label", 58);
     \u0275\u0275text(24);
@@ -26987,8 +27731,8 @@ var MedicationsComponent = class _MedicationsComponent {
 })();
 
 // src/app/components/appointments/appointments.component.ts
-var _c08 = () => [1, 2, 3];
-var _forTrack011 = ($index, $item) => $item.id;
+var _c09 = () => [1, 2, 3];
+var _forTrack012 = ($index, $item) => $item.id;
 function AppointmentsComponent_Conditional_6_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p", 4);
@@ -27039,7 +27783,7 @@ function AppointmentsComponent_Conditional_11_Template(rf, ctx) {
   }
   if (rf & 2) {
     \u0275\u0275advance();
-    \u0275\u0275repeater(\u0275\u0275pureFunction0(0, _c08));
+    \u0275\u0275repeater(\u0275\u0275pureFunction0(0, _c09));
   }
 }
 function AppointmentsComponent_Conditional_12_Template(rf, ctx) {
@@ -27197,7 +27941,7 @@ function AppointmentsComponent_Conditional_13_For_2_Template(rf, ctx) {
 function AppointmentsComponent_Conditional_13_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 8);
-    \u0275\u0275repeaterCreate(1, AppointmentsComponent_Conditional_13_For_2_Template, 24, 15, "div", 34, _forTrack011);
+    \u0275\u0275repeaterCreate(1, AppointmentsComponent_Conditional_13_For_2_Template, 24, 15, "div", 34, _forTrack012);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -28010,8 +28754,8 @@ var AppointmentsComponent = class _AppointmentsComponent {
 })();
 
 // src/app/components/lab-results/lab-results.component.ts
-var _c09 = () => [1, 2, 3];
-var _forTrack012 = ($index, $item) => $item.id;
+var _c010 = () => [1, 2, 3];
+var _forTrack013 = ($index, $item) => $item.id;
 function LabResultsComponent_Conditional_6_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p", 4);
@@ -28042,7 +28786,7 @@ function LabResultsComponent_Conditional_10_Template(rf, ctx) {
   }
   if (rf & 2) {
     \u0275\u0275advance();
-    \u0275\u0275repeater(\u0275\u0275pureFunction0(0, _c09));
+    \u0275\u0275repeater(\u0275\u0275pureFunction0(0, _c010));
   }
 }
 function LabResultsComponent_Conditional_11_Template(rf, ctx) {
@@ -28197,7 +28941,7 @@ function LabResultsComponent_Conditional_12_For_2_Template(rf, ctx) {
 function LabResultsComponent_Conditional_12_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 7);
-    \u0275\u0275repeaterCreate(1, LabResultsComponent_Conditional_12_For_2_Template, 25, 9, "div", 24, _forTrack012);
+    \u0275\u0275repeaterCreate(1, LabResultsComponent_Conditional_12_For_2_Template, 25, 9, "div", 24, _forTrack013);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -29204,7 +29948,7 @@ var LabResultsComponent = class _LabResultsComponent {
 })();
 
 // src/app/components/sidebar.component.ts
-var _forTrack013 = ($index, $item) => $item.id;
+var _forTrack014 = ($index, $item) => $item.id;
 function SidebarComponent_Conditional_7_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "img", 13);
@@ -29268,6 +30012,7 @@ var SidebarComponent = class _SidebarComponent {
   constructor() {
     this.dataService = inject(DataService);
     this.i18n = inject(I18nService);
+    this.router = inject(Router);
     this.t = this.i18n.t;
     this.currentTab = this.dataService.currentTab;
     this.navItems = [
@@ -29306,6 +30051,7 @@ var SidebarComponent = class _SidebarComponent {
   }
   logout() {
     this.dataService.logout();
+    this.router.navigate(["/login"]);
   }
   static {
     this.\u0275fac = function SidebarComponent_Factory(__ngFactoryType__) {
@@ -29328,7 +30074,7 @@ var SidebarComponent = class _SidebarComponent {
         \u0275\u0275conditionalCreate(7, SidebarComponent_Conditional_7_Template, 6, 4)(8, SidebarComponent_Conditional_8_Template, 4, 1, "div", 5);
         \u0275\u0275elementEnd();
         \u0275\u0275elementStart(9, "nav", 6);
-        \u0275\u0275repeaterCreate(10, SidebarComponent_For_11_Template, 4, 5, "button", 7, _forTrack013);
+        \u0275\u0275repeaterCreate(10, SidebarComponent_For_11_Template, 4, 5, "button", 7, _forTrack014);
         \u0275\u0275elementEnd();
         \u0275\u0275elementStart(12, "div", 8)(13, "button", 9);
         \u0275\u0275listener("click", function SidebarComponent_Template_button_click_13_listener() {
@@ -29428,11 +30174,11 @@ var SidebarComponent = class _SidebarComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(SidebarComponent, { className: "SidebarComponent", filePath: "src/app/components/sidebar.component.ts", lineNumber: 350 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(SidebarComponent, { className: "SidebarComponent", filePath: "src/app/components/sidebar.component.ts", lineNumber: 351 });
 })();
 
 // src/app/components/header.component.ts
-var _forTrack014 = ($index, $item) => $item.id;
+var _forTrack015 = ($index, $item) => $item.id;
 function HeaderComponent_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
     const _r1 = \u0275\u0275getCurrentView();
@@ -29601,7 +30347,7 @@ function HeaderComponent_Conditional_17_Template(rf, ctx) {
     \u0275\u0275text(4);
     \u0275\u0275elementEnd()();
     \u0275\u0275conditionalCreate(5, HeaderComponent_Conditional_17_Conditional_5_Template, 3, 1, "div", 35);
-    \u0275\u0275repeaterCreate(6, HeaderComponent_Conditional_17_For_7_Template, 8, 9, "div", 36, _forTrack014);
+    \u0275\u0275repeaterCreate(6, HeaderComponent_Conditional_17_For_7_Template, 8, 9, "div", 36, _forTrack015);
     \u0275\u0275conditionalCreate(8, HeaderComponent_Conditional_17_Conditional_8_Template, 4, 1, "div", 37);
     \u0275\u0275elementStart(9, "div", 38)(10, "button", 39);
     \u0275\u0275listener("click", function HeaderComponent_Conditional_17_Template_button_click_10_listener() {
@@ -29730,7 +30476,7 @@ function HeaderComponent_Conditional_22_Template(rf, ctx) {
     \u0275\u0275element(10, "lucide-icon", 59);
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(11, "div", 60);
-    \u0275\u0275repeaterCreate(12, HeaderComponent_Conditional_22_For_13_Template, 10, 20, "button", 61, _forTrack014);
+    \u0275\u0275repeaterCreate(12, HeaderComponent_Conditional_22_For_13_Template, 10, 20, "button", 61, _forTrack015);
     \u0275\u0275elementStart(14, "button", 62);
     \u0275\u0275listener("click", function HeaderComponent_Conditional_22_Template_button_click_14_listener() {
       \u0275\u0275restoreView(_r8);
@@ -30229,7 +30975,7 @@ var HeaderComponent = class _HeaderComponent {
 })();
 
 // src/app/components/bottom-nav.component.ts
-var _forTrack015 = ($index, $item) => $item.id;
+var _forTrack016 = ($index, $item) => $item.id;
 function BottomNavComponent_For_3_Template(rf, ctx) {
   if (rf & 1) {
     const _r1 = \u0275\u0275getCurrentView();
@@ -30283,7 +31029,7 @@ var BottomNavComponent = class _BottomNavComponent {
     this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _BottomNavComponent, selectors: [["app-bottom-nav"]], decls: 4, vars: 0, consts: [["aria-label", "Main navigation", 1, "lg:hidden", "fixed", "bottom-0", "w-full", "bg-white", "dark:bg-slate-800", "border-t", "border-stone-200", "dark:border-slate-700", "z-50", "h-16", 2, "padding-bottom", "env(safe-area-inset-bottom)"], [1, "flex", "flex-row", "h-full"], ["type", "button", 1, "flex", "flex-col", "items-center", "justify-center", "gap-1", "flex-1", "h-full", "py-2", "px-1", "transition-colors", "duration-200", "appearance-none", "bg-transparent", "border-none", "cursor-pointer", 3, "text-indigo-600", "dark:text-purple-400", "text-stone-500", "dark:text-slate-400"], ["type", "button", 1, "flex", "flex-col", "items-center", "justify-center", "gap-1", "flex-1", "h-full", "py-2", "px-1", "transition-colors", "duration-200", "appearance-none", "bg-transparent", "border-none", "cursor-pointer", 3, "click"], ["aria-hidden", "true", 1, "text-2xl", 3, "name"], [1, "text-xs", "font-semibold", "leading-none"]], template: function BottomNavComponent_Template(rf, ctx) {
       if (rf & 1) {
         \u0275\u0275elementStart(0, "nav", 0)(1, "div", 1);
-        \u0275\u0275repeaterCreate(2, BottomNavComponent_For_3_Template, 4, 12, "button", 2, _forTrack015);
+        \u0275\u0275repeaterCreate(2, BottomNavComponent_For_3_Template, 4, 12, "button", 2, _forTrack016);
         \u0275\u0275elementEnd()();
       }
       if (rf & 2) {
@@ -30326,9 +31072,9 @@ var BottomNavComponent = class _BottomNavComponent {
 })();
 
 // src/app/features/child/add-edit-child-modal/add-edit-child-modal.component.ts
-var _c010 = () => [1, 2, 3];
-var _forTrack016 = ($index, $item) => $item.value;
-var _forTrack14 = ($index, $item) => $item.name;
+var _c011 = () => [1, 2, 3];
+var _forTrack017 = ($index, $item) => $item.value;
+var _forTrack15 = ($index, $item) => $item.name;
 function AddEditChildModalComponent_For_12_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "lucide-icon", 22);
@@ -30502,7 +31248,7 @@ function AddEditChildModalComponent_Conditional_14_Template(rf, ctx) {
     \u0275\u0275text(14);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(15, "div", 35);
-    \u0275\u0275repeaterCreate(16, AddEditChildModalComponent_Conditional_14_For_17_Template, 2, 3, "button", 36, _forTrack016);
+    \u0275\u0275repeaterCreate(16, AddEditChildModalComponent_Conditional_14_For_17_Template, 2, 3, "button", 36, _forTrack017);
     \u0275\u0275elementEnd();
     \u0275\u0275conditionalCreate(18, AddEditChildModalComponent_Conditional_14_Conditional_18_Template, 3, 1, "p", 31);
     \u0275\u0275elementEnd()();
@@ -30676,7 +31422,7 @@ function AddEditChildModalComponent_Conditional_16_Conditional_14_For_2_Template
 function AddEditChildModalComponent_Conditional_16_Conditional_14_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 60);
-    \u0275\u0275repeaterCreate(1, AddEditChildModalComponent_Conditional_16_Conditional_14_For_2_Template, 9, 2, "div", 62, _forTrack14);
+    \u0275\u0275repeaterCreate(1, AddEditChildModalComponent_Conditional_16_Conditional_14_For_2_Template, 9, 2, "div", 62, _forTrack15);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -31128,7 +31874,7 @@ var AddEditChildModalComponent = class _AddEditChildModalComponent {
         \u0275\u0275advance(7);
         \u0275\u0275textInterpolate1(" ", ctx.mode === "edit" ? ctx.i18n.t()["childForm.titleEdit"] : ctx.i18n.t()["childForm.titleAdd"], " ");
         \u0275\u0275advance(4);
-        \u0275\u0275repeater(\u0275\u0275pureFunction0(8, _c010));
+        \u0275\u0275repeater(\u0275\u0275pureFunction0(8, _c011));
         \u0275\u0275advance(2);
         \u0275\u0275conditional(ctx.saveError() ? 13 : -1);
         \u0275\u0275advance();
@@ -31535,8 +32281,8 @@ var ThemeService = class _ThemeService {
 })();
 
 // src/app/components/settings/settings-page.component.ts
-var _forTrack017 = ($index, $item) => $item.id;
-var _forTrack15 = ($index, $item) => $item.value;
+var _forTrack018 = ($index, $item) => $item.id;
+var _forTrack16 = ($index, $item) => $item.value;
 function SettingsPageComponent_Conditional_7_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 6);
@@ -31720,7 +32466,7 @@ function SettingsPageComponent_Conditional_75_Conditional_9_Template(rf, ctx) {
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.notifSvc.updatePrefs({ dndStart: +$event.target.value }));
     });
-    \u0275\u0275repeaterCreate(26, SettingsPageComponent_Conditional_75_Conditional_9_For_27_Template, 2, 2, "option", 72, _forTrack15);
+    \u0275\u0275repeaterCreate(26, SettingsPageComponent_Conditional_75_Conditional_9_For_27_Template, 2, 2, "option", 72, _forTrack16);
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(28, "span", 73);
     \u0275\u0275text(29, "\u2014");
@@ -31734,7 +32480,7 @@ function SettingsPageComponent_Conditional_75_Conditional_9_Template(rf, ctx) {
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.notifSvc.updatePrefs({ dndEnd: +$event.target.value }));
     });
-    \u0275\u0275repeaterCreate(34, SettingsPageComponent_Conditional_75_Conditional_9_For_35_Template, 2, 2, "option", 72, _forTrack15);
+    \u0275\u0275repeaterCreate(34, SettingsPageComponent_Conditional_75_Conditional_9_For_35_Template, 2, 2, "option", 72, _forTrack16);
     \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
@@ -31919,7 +32665,7 @@ function SettingsPageComponent_Conditional_83_For_2_Template(rf, ctx) {
 function SettingsPageComponent_Conditional_83_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 43);
-    \u0275\u0275repeaterCreate(1, SettingsPageComponent_Conditional_83_For_2_Template, 9, 4, "div", 74, _forTrack017);
+    \u0275\u0275repeaterCreate(1, SettingsPageComponent_Conditional_83_For_2_Template, 9, 4, "div", 74, _forTrack018);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -32182,7 +32928,7 @@ var SettingsPageComponent = class _SettingsPageComponent {
         \u0275\u0275text(44);
         \u0275\u0275elementEnd();
         \u0275\u0275elementStart(45, "div", 26);
-        \u0275\u0275repeaterCreate(46, SettingsPageComponent_For_47_Template, 2, 11, "button", 27, _forTrack017);
+        \u0275\u0275repeaterCreate(46, SettingsPageComponent_For_47_Template, 2, 11, "button", 27, _forTrack018);
         \u0275\u0275elementEnd()();
         \u0275\u0275elementStart(48, "div", 28)(49, "p", 24);
         \u0275\u0275text(50);
@@ -32191,7 +32937,7 @@ var SettingsPageComponent = class _SettingsPageComponent {
         \u0275\u0275text(52);
         \u0275\u0275elementEnd();
         \u0275\u0275elementStart(53, "div", 29);
-        \u0275\u0275repeaterCreate(54, SettingsPageComponent_For_55_Template, 2, 4, "button", 30, _forTrack017);
+        \u0275\u0275repeaterCreate(54, SettingsPageComponent_For_55_Template, 2, 4, "button", 30, _forTrack018);
         \u0275\u0275elementEnd()()()();
         \u0275\u0275elementStart(56, "div", 31)(57, "h3", 16);
         \u0275\u0275element(58, "lucide-icon", 32);
@@ -32751,7 +33497,7 @@ var SettingsPageComponent = class _SettingsPageComponent {
 })();
 
 // src/app/components/analytics.component.ts
-var _c011 = ["tempChartCanvas"];
+var _c012 = ["tempChartCanvas"];
 var _c13 = ["growthChartCanvas"];
 var _c22 = ["vaccinePieCanvas"];
 function AnalyticsComponent_Conditional_5_Template(rf, ctx) {
@@ -33292,7 +34038,7 @@ var AnalyticsComponent = class _AnalyticsComponent {
   static {
     this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AnalyticsComponent, selectors: [["app-analytics"]], viewQuery: function AnalyticsComponent_Query(rf, ctx) {
       if (rf & 1) {
-        \u0275\u0275viewQuery(_c011, 5)(_c13, 5)(_c22, 5);
+        \u0275\u0275viewQuery(_c012, 5)(_c13, 5)(_c22, 5);
       }
       if (rf & 2) {
         let _t;
@@ -33988,7 +34734,7 @@ var OfflineIndicatorComponent = class _OfflineIndicatorComponent {
 })();
 
 // src/app/components/shell.component.ts
-var _forTrack018 = ($index, $item) => $item.id;
+var _forTrack019 = ($index, $item) => $item.id;
 function ShellComponent_Conditional_7_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span");
@@ -34112,7 +34858,7 @@ function ShellComponent_Conditional_10_Conditional_1_Template(rf, ctx) {
     \u0275\u0275text(4);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(5, "div", 21);
-    \u0275\u0275repeaterCreate(6, ShellComponent_Conditional_10_Conditional_1_For_7_Template, 15, 6, "div", 22, _forTrack018);
+    \u0275\u0275repeaterCreate(6, ShellComponent_Conditional_10_Conditional_1_For_7_Template, 15, 6, "div", 22, _forTrack019);
     \u0275\u0275elementStart(8, "button", 23);
     \u0275\u0275listener("click", function ShellComponent_Conditional_10_Conditional_1_Template_button_click_8_listener() {
       \u0275\u0275restoreView(_r3);
@@ -36195,7 +36941,7 @@ function PinLockComponent_Conditional_16_Template(rf, ctx) {
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.password);
     \u0275\u0275property("placeholder", ctx_r1.passwordPlaceholder());
     \u0275\u0275advance(2);
-    \u0275\u0275property("name", ctx_r1.showPassword() ? "eye-off" : "eye");
+    \u0275\u0275property("name", ctx_r1.showPassword() ? "eyeOff" : "eye");
     \u0275\u0275advance();
     \u0275\u0275conditional(ctx_r1.passwordError() ? 20 : -1);
     \u0275\u0275advance(3);
@@ -36699,7 +37445,7 @@ var PinLockComponent = class _PinLockComponent {
     };
   }
   static {
-    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _PinLockComponent, selectors: [["app-pin-lock"]], decls: 27, vars: 11, consts: [[1, "min-h-screen", "flex", "items-center", "justify-center", "p-4", "bg-gradient-to-br", "from-slate-100", "to-slate-200", "font-sans", "overflow-hidden", "relative"], [1, "absolute", "top-[-10%]", "right-[-5%]", "w-[500px]", "h-[500px]", "rounded-full", "bg-purple-200/30", "blur-3xl", "pointer-events-none"], [1, "absolute", "bottom-[-10%]", "left-[-5%]", "w-[400px]", "h-[400px]", "rounded-full", "bg-teal-200/20", "blur-3xl", "pointer-events-none"], [1, "relative", "z-10", "w-full", "max-w-md"], [1, "text-center", "mb-10"], [1, "inline-flex", "items-center", "justify-center", "w-20", "h-20", "rounded-3xl", "bg-gradient-to-br", "from-[#1a3c8f]", "to-[#0a1f5c]", "shadow-2xl", "mb-6"], ["name", "baby", 1, "text-4xl", "text-white"], [1, "text-4xl", "font-extrabold", "tracking-tight", "text-gray-900"], [1, "text-[#1a3c8f]"], [1, "text-slate-400", "mt-2", "text-sm", "font-medium"], [1, "bg-white", "rounded-[2rem]", "shadow-[0_24px_80px_-12px_rgba(45,27,105,0.18)]", "border", "border-slate-100", "overflow-hidden"], [1, "h-2", "bg-gradient-to-r", "from-[#1a3c8f]", "via-[#2a5fc8]", "to-[#1a3c8f]"], [1, "p-10"], [1, "mt-8", "pt-6", "border-t", "border-slate-100", "flex", "items-center", "justify-center", "gap-3"], [1, "text-slate-300", "text-xs", "font-medium"], [3, "click"], [1, "text-center", "text-slate-300", "text-xs", "mt-6", "font-medium"], [1, "text-2xl", "font-black", "text-gray-800", "mb-1"], [1, "text-slate-400", "text-sm", "mb-8", "font-medium", "leading-relaxed"], [1, "space-y-5"], [1, "block", "text-xs", "font-bold", "text-[#1a3c8f]", "mb-2.5", "ml-1", "uppercase", "tracking-wider"], [1, "relative"], ["name", "user", 1, "absolute", "left-4", "top-1/2", "-translate-y-1/2", "text-slate-400", "text-xl"], ["type", "text", 1, "w-full", "pl-12", "pr-5", "py-4", "rounded-2xl", "border-2", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-[#1a3c8f]/10", "outline-none", "transition-all", "text-gray-800", "text-base", "placeholder-slate-300", 3, "ngModelChange", "blur", "input", "ngModel", "placeholder"], [1, "flex", "items-center", "gap-1.5", "mt-2", "ml-1"], ["name", "key", 1, "absolute", "left-4", "top-1/2", "-translate-y-1/2", "text-slate-400", "text-xl"], [1, "w-full", "pl-12", "pr-14", "py-4", "rounded-2xl", "border-2", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-[#1a3c8f]/10", "outline-none", "transition-all", "text-gray-800", "text-base", 3, "ngModelChange", "blur", "input", "type", "ngModel", "placeholder"], ["type", "button", 1, "absolute", "right-4", "top-1/2", "-translate-y-1/2", "text-slate-400", "hover:text-slate-600", "transition-colors", 3, "click"], [1, "text-xl", 3, "name"], [1, "text-right", "-mt-1"], ["type", "button", 1, "text-xs", "font-semibold", "text-[#1a3c8f]", "hover:text-[#2a5fc8]", "transition-colors", "hover:underline", 3, "click"], [1, "p-3.5", "bg-red-50", "border", "border-red-200", "rounded-2xl", "flex", "items-center", "gap-2.5", "animate-fade-in"], [1, "w-full", "border-2", "border-[#c8102e]", "bg-gradient-to-r", "from-[#c8102e]", "to-[#e0173a]", "hover:from-[#a00d26]", "hover:to-[#c8102e]", "disabled:from-slate-300", "disabled:to-slate-300", "disabled:border-slate-300", "text-white", "font-bold", "py-4", "rounded-2xl", "transition-all", "shadow-md", "hover:shadow-lg", "hover:-translate-y-0.5", "disabled:hover:shadow-none", "disabled:translate-y-0", "flex", "items-center", "justify-center", "gap-3", "text-base", "mt-1", 3, "click", "disabled"], ["name", "alert-triangle", 1, "text-red-500", "text-base"], [1, "text-red-500", "text-xs", "font-medium"], ["name", "alert-circle", 1, "text-red-500", "text-lg"], [1, "text-red-600", "text-xs", "font-medium"], ["name", "refresh-cw", 1, "text-xl", "animate-spin"], ["name", "arrow-right", 1, "text-xl"], [1, "flex", "items-center", "gap-1.5", "text-sm", "text-slate-400", "hover:text-[#1a3c8f]", "transition-colors", "mb-6", "-ml-1", 3, "click"], ["name", "arrow-left", 1, "text-lg"], [1, "font-semibold"], [1, "text-2xl", "font-black", "text-[#1a3c8f]", "mb-1"], [1, "text-red-500", "ml-0.5"], [1, "p-4", "bg-emerald-50", "border", "border-emerald-200", "rounded-2xl", "animate-fade-in"], [1, "flex", "items-start", "gap-3"], ["name", "check-circle", 1, "text-emerald-500", "text-lg", "mt-0.5"], [1, "text-emerald-700", "text-xs", "font-medium", "leading-relaxed"], ["name", "lock", 1, "absolute", "left-4", "top-1/2", "-translate-y-1/2", "text-slate-400", "text-xl"], ["type", "text", "maxlength", "6", "placeholder", "\u25CF \u25CF \u25CF \u25CF \u25CF \u25CF", 1, "w-full", "pl-12", "pr-5", "py-4", "rounded-2xl", "border-2", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-[#1a3c8f]/10", "outline-none", "transition-all", "text-gray-800", "text-base", "tracking-widest", "font-mono", "placeholder-slate-300", "text-center", "text-lg", 3, "ngModelChange", "blur", "input", "ngModel"]], template: function PinLockComponent_Template(rf, ctx) {
+    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _PinLockComponent, selectors: [["app-pin-lock"]], decls: 27, vars: 11, consts: [[1, "min-h-screen", "flex", "items-center", "justify-center", "p-4", "bg-gradient-to-br", "from-slate-100", "to-slate-200", "font-sans", "overflow-hidden", "relative"], [1, "absolute", "top-[-10%]", "right-[-5%]", "w-[500px]", "h-[500px]", "rounded-full", "bg-purple-200/30", "blur-3xl", "pointer-events-none"], [1, "absolute", "bottom-[-10%]", "left-[-5%]", "w-[400px]", "h-[400px]", "rounded-full", "bg-teal-200/20", "blur-3xl", "pointer-events-none"], [1, "relative", "z-10", "w-full", "max-w-md"], [1, "text-center", "mb-10"], [1, "inline-flex", "items-center", "justify-center", "w-20", "h-20", "rounded-3xl", "bg-gradient-to-br", "from-[#1a3c8f]", "to-[#0a1f5c]", "shadow-2xl", "mb-6"], ["name", "baby", 1, "text-4xl", "text-white"], [1, "text-4xl", "font-extrabold", "tracking-tight", "text-gray-900"], [1, "text-[#1a3c8f]"], [1, "text-slate-400", "mt-2", "text-sm", "font-medium"], [1, "bg-white", "rounded-[2rem]", "shadow-[0_24px_80px_-12px_rgba(45,27,105,0.18)]", "border", "border-slate-100", "overflow-hidden"], [1, "h-2", "bg-gradient-to-r", "from-[#1a3c8f]", "via-[#2a5fc8]", "to-[#1a3c8f]"], [1, "p-10"], [1, "mt-8", "pt-6", "border-t", "border-slate-100", "flex", "items-center", "justify-center", "gap-3"], [1, "text-slate-300", "text-xs", "font-medium"], [3, "click"], [1, "text-center", "text-slate-300", "text-xs", "mt-6", "font-medium"], [1, "text-2xl", "font-black", "text-gray-800", "mb-1"], [1, "text-slate-400", "text-sm", "mb-8", "font-medium", "leading-relaxed"], [1, "space-y-5"], [1, "block", "text-xs", "font-bold", "text-[#1a3c8f]", "mb-2.5", "ml-1", "uppercase", "tracking-wider"], [1, "relative"], ["name", "user", 1, "absolute", "left-4", "top-1/2", "-translate-y-1/2", "text-slate-400", "text-xl"], ["type", "text", 1, "w-full", "pl-12", "pr-5", "py-4", "rounded-2xl", "border-2", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-[#1a3c8f]/10", "outline-none", "transition-all", "text-gray-800", "text-base", "placeholder-slate-300", 3, "ngModelChange", "blur", "input", "ngModel", "placeholder"], [1, "flex", "items-center", "gap-1.5", "mt-2", "ml-1"], ["name", "key", 1, "absolute", "left-4", "top-1/2", "-translate-y-1/2", "text-slate-400", "text-xl"], [1, "w-full", "pl-12", "pr-14", "py-4", "rounded-2xl", "border-2", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-[#1a3c8f]/10", "outline-none", "transition-all", "text-gray-800", "text-base", 3, "ngModelChange", "blur", "input", "type", "ngModel", "placeholder"], ["type", "button", 1, "absolute", "right-4", "top-1/2", "-translate-y-1/2", "text-slate-400", "hover:text-slate-600", "transition-colors", 3, "click"], [1, "text-xl", 3, "name"], [1, "text-right", "-mt-1"], ["type", "button", 1, "text-xs", "font-semibold", "text-[#1a3c8f]", "hover:text-[#2a5fc8]", "transition-colors", "hover:underline", 3, "click"], [1, "p-3.5", "bg-red-50", "border", "border-red-200", "rounded-2xl", "flex", "items-center", "gap-2.5", "animate-fade-in"], [1, "w-full", "border-2", "border-[#c8102e]", "bg-gradient-to-r", "from-[#c8102e]", "to-[#e0173a]", "hover:from-[#a00d26]", "hover:to-[#c8102e]", "disabled:from-slate-300", "disabled:to-slate-300", "disabled:border-slate-300", "text-white", "font-bold", "py-4", "rounded-2xl", "transition-all", "shadow-md", "hover:shadow-lg", "hover:-translate-y-0.5", "disabled:hover:shadow-none", "disabled:translate-y-0", "flex", "items-center", "justify-center", "gap-3", "text-base", "mt-1", 3, "click", "disabled"], ["name", "alert-triangle", 1, "text-red-500", "text-base"], [1, "text-red-500", "text-xs", "font-medium"], ["name", "alert-circle", 1, "text-red-500", "text-lg"], [1, "text-red-600", "text-xs", "font-medium"], ["name", "refresh-cw", 1, "text-xl", "animate-spin"], ["name", "arrowRight", 1, "text-xl"], [1, "flex", "items-center", "gap-1.5", "text-sm", "text-slate-400", "hover:text-[#1a3c8f]", "transition-colors", "mb-6", "-ml-1", 3, "click"], ["name", "arrow-left", 1, "text-lg"], [1, "font-semibold"], [1, "text-2xl", "font-black", "text-[#1a3c8f]", "mb-1"], [1, "text-red-500", "ml-0.5"], [1, "p-4", "bg-emerald-50", "border", "border-emerald-200", "rounded-2xl", "animate-fade-in"], [1, "flex", "items-start", "gap-3"], ["name", "check-circle", 1, "text-emerald-500", "text-lg", "mt-0.5"], [1, "text-emerald-700", "text-xs", "font-medium", "leading-relaxed"], ["name", "lock", 1, "absolute", "left-4", "top-1/2", "-translate-y-1/2", "text-slate-400", "text-xl"], ["type", "text", "maxlength", "6", "placeholder", "\u25CF \u25CF \u25CF \u25CF \u25CF \u25CF", 1, "w-full", "pl-12", "pr-5", "py-4", "rounded-2xl", "border-2", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-[#1a3c8f]/10", "outline-none", "transition-all", "text-gray-800", "text-base", "tracking-widest", "font-mono", "placeholder-slate-300", "text-center", "text-lg", 3, "ngModelChange", "blur", "input", "ngModel"]], template: function PinLockComponent_Template(rf, ctx) {
       if (rf & 1) {
         \u0275\u0275elementStart(0, "div", 0);
         \u0275\u0275element(1, "div", 1)(2, "div", 2);
@@ -36839,7 +37585,7 @@ var PinLockComponent = class _PinLockComponent {
                            [placeholder]="passwordPlaceholder()">
                     <button type="button" (click)="showPassword.set(!showPassword())"
                             class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
-                      <lucide-icon [name]="showPassword() ? 'eye-off' : 'eye'" class="text-xl"></lucide-icon>
+                      <lucide-icon [name]="showPassword() ? 'eyeOff' : 'eye'" class="text-xl"></lucide-icon>
                     </button>
                   </div>
                   @if (passwordError()) {
@@ -36874,7 +37620,7 @@ var PinLockComponent = class _PinLockComponent {
                     <lucide-icon name="refresh-cw" class="text-xl animate-spin"></lucide-icon>
                     {{ loadingText() }}
                   } @else {
-                    <lucide-icon name="arrow-right" class="text-xl"></lucide-icon>
+                    <lucide-icon name="arrowRight" class="text-xl"></lucide-icon>
                     {{ submitText() }}
                   }
                 </button>
@@ -36977,7 +37723,7 @@ var PinLockComponent = class _PinLockComponent {
                     <lucide-icon name="refresh-cw" class="text-xl animate-spin"></lucide-icon>
                     {{ loadingText() }}
                   } @else {
-                    <lucide-icon name="arrow-right" class="text-xl"></lucide-icon>
+                    <lucide-icon name="arrowRight" class="text-xl"></lucide-icon>
                     {{ submitText() }}
                   }
                 </button>
@@ -37105,7 +37851,12 @@ var appConfig = {
       Palette,
       Info,
       CircleHelp: CircleQuestionMark,
-      WifiOff
+      WifiOff,
+      Key,
+      Eye,
+      EyeOff,
+      ArrowRight,
+      Lock
     }))
   ]
 };
@@ -37149,5 +37900,12 @@ var AppComponent = class _AppComponent {
 })();
 
 // src/main.ts
-bootstrapApplication(AppComponent, __spreadProps(__spreadValues({}, appConfig), { providers: [provideZoneChangeDetection(), ...appConfig.providers] })).catch((err) => console.error(err));
+bootstrapApplication(AppComponent, __spreadProps(__spreadValues({}, appConfig), {
+  providers: [
+    provideZoneChangeDetection(),
+    ...appConfig.providers
+  ]
+})).then((appRef) => {
+  window.__angularInjector__ = appRef.injector;
+}).catch((err) => console.error(err));
 //# sourceMappingURL=main.js.map

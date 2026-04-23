@@ -5,6 +5,7 @@ export declare class GrowthEntriesService {
     create(userId: string, data: any): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         childId: string;
         notes: string | null;
         measuredAt: Date;
@@ -14,6 +15,7 @@ export declare class GrowthEntriesService {
     findByChild(userId: string, childId: string): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         childId: string;
         notes: string | null;
         measuredAt: Date;
@@ -23,6 +25,7 @@ export declare class GrowthEntriesService {
     delete(userId: string, id: string): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         childId: string;
         notes: string | null;
         measuredAt: Date;

@@ -6,6 +6,7 @@ export declare class GrowthEntriesController {
     create(req: any, data: CreateGrowthEntryDto): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         childId: string;
         notes: string | null;
         measuredAt: Date;
@@ -15,6 +16,7 @@ export declare class GrowthEntriesController {
     findByChild(req: any, childId: string): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         childId: string;
         notes: string | null;
         measuredAt: Date;
@@ -24,6 +26,7 @@ export declare class GrowthEntriesController {
     delete(req: any, id: string): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         childId: string;
         notes: string | null;
         measuredAt: Date;

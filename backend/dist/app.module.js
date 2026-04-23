@@ -31,6 +31,7 @@ const export_module_1 = require("./export/export.module");
 const import_module_1 = require("./import/import.module");
 const mail_module_1 = require("./mail/mail.module");
 const schedule_1 = require("@nestjs/schedule");
+const sync_module_1 = require("./sync/sync.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -62,6 +63,7 @@ exports.AppModule = AppModule = __decorate([
                 }]),
             export_module_1.ExportModule,
             import_module_1.ImportModule,
+            sync_module_1.SyncModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

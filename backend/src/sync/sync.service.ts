@@ -369,8 +369,11 @@ export class SyncService {
   async resolveConflict(userId: string, resolution: ConflictResolutionDto): Promise<boolean> {
     const { entityType, entityId, resolution: res, mergedData } = resolution;
 
+    const childId = await this.getEntityChildId(entityType, entityId);
+    if (!childId) return false;
+
     const child = await this.prisma.child.findFirst({
-      where: { id: (await this.getEntityChildId(entityType, entityId)), userId },
+      where: { id: childId, userId },
     });
     if (!child) return false;
 

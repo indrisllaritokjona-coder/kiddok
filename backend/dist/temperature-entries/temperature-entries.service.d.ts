@@ -5,6 +5,7 @@ export declare class TemperatureEntriesService {
     create(userId: string, data: any): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         childId: string;
         notes: string | null;
         temperature: number;
@@ -14,6 +15,7 @@ export declare class TemperatureEntriesService {
     findByChild(userId: string, childId: string): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         childId: string;
         notes: string | null;
         temperature: number;
@@ -23,6 +25,7 @@ export declare class TemperatureEntriesService {
     delete(userId: string, id: string): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         childId: string;
         notes: string | null;
         temperature: number;

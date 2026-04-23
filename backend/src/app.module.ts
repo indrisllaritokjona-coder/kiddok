@@ -23,6 +23,7 @@ import { ExportModule } from './export/export.module';
 import { ImportModule } from './import/import.module';
 import { MailModule } from './mail/mail.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { SyncModule } from './sync/sync.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     }]),
     ExportModule,
     ImportModule,
+    SyncModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -28,6 +28,7 @@ export declare class ShareController {
             temperatureEntries: {
                 id: string;
                 createdAt: Date;
+                updatedAt: Date;
                 childId: string;
                 notes: string | null;
                 temperature: number;
@@ -37,6 +38,7 @@ export declare class ShareController {
             growthEntries: {
                 id: string;
                 createdAt: Date;
+                updatedAt: Date;
                 childId: string;
                 notes: string | null;
                 measuredAt: Date;
@@ -58,6 +60,7 @@ export declare class ShareController {
             medicalDocument: string | null;
             documentIssueDate: Date | null;
             medicalNotes: string | null;
+            avatarSeed: string | null;
             userId: string;
         };
     } & {

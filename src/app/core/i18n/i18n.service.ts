@@ -543,6 +543,21 @@ const translations = {
   'tooltip.vaccineOverdue': { sq: 'Vaksina është e vonuar — contactoni mjekun', en: 'Vaccine is overdue — contact your doctor' },
   'tooltip.vaccineUpcoming': { sq: 'Vaksina është planifikuar së shpejti', en: 'Vaccine is scheduled coming up' },
   'tooltip.percentile': { sq: 'Përqindja në grafikun e rritjes së OMS — tregon krahasimin me fëmijët e tjerë të moshës së njëjtë', en: 'Percentile on WHO growth chart — shows comparison with other children the same age' },
+  // Sync Status
+  'sync.conflictPanelTitle': { sq: 'Konflikt i të Dhënave', en: 'Data Conflict' },
+  'sync.conflictPanelSubtitle': { sq: 'Të dhëna që kërkojnë rishikim manual', en: 'Data requiring manual review' },
+  'sync.medicalReview': { sq: 'Rishikim Mjekësor', en: 'Medical Review' },
+  'sync.thisLocal': { sq: 'Lokalisht', en: 'Local' },
+  'sync.server': { sq: 'Serveri', en: 'Server' },
+  'sync.useLocal': { sq: 'Përdor Lokalen', en: 'Use Local' },
+  'sync.useServer': { sq: 'Përdor Serverin', en: 'Use Server' },
+  'sync.conflictFooterNote': { sq: 'Konfliktet zgjidhen automatikisht për të dhëna jo-mjekësore.', en: 'Non-medical data conflicts are resolved automatically.' },
+  'sync.syncing': { sq: 'Duke sinkronizuar...', en: 'Syncing...' },
+  'sync.synced': { sq: 'Sinkronizuar', en: 'Synced' },
+  'sync.error': { sq: 'Gabim sinkronizimi', en: 'Sync error' },
+  'sync.conflict': { sq: 'Konflikt', en: 'Conflict' },
+  'sync.retry': { sq: 'Provo përsëri', en: 'Retry' },
+  'sync.pendingCount': { sq: '{n} në pritje', en: '{n} pending' },
 } as const;
 
 type TranslationKey = keyof RawTranslations;

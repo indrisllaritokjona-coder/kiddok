@@ -226,7 +226,7 @@ import {
   ɵɵtwoWayListener,
   ɵɵtwoWayProperty,
   ɵɵviewQuery
-} from "./chunk-AIFYPVBK.js";
+} from "./chunk-LCET5SDI.js";
 
 // node_modules/@angular/common/fesm2022/_location-chunk.mjs
 /**

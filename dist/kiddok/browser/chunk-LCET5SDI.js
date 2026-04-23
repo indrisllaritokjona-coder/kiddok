@@ -26550,7 +26550,22 @@ var translations = {
   "tooltip.vaccineCompleted": { sq: "Vaksina \xEBsht\xEB b\xEBr\xEB me sukses", en: "Vaccine completed successfully" },
   "tooltip.vaccineOverdue": { sq: "Vaksina \xEBsht\xEB e vonuar \u2014 contactoni mjekun", en: "Vaccine is overdue \u2014 contact your doctor" },
   "tooltip.vaccineUpcoming": { sq: "Vaksina \xEBsht\xEB planifikuar s\xEB shpejti", en: "Vaccine is scheduled coming up" },
-  "tooltip.percentile": { sq: "P\xEBrqindja n\xEB grafikun e rritjes s\xEB OMS \u2014 tregon krahasimin me f\xEBmij\xEBt e tjer\xEB t\xEB mosh\xEBs s\xEB nj\xEBjt\xEB", en: "Percentile on WHO growth chart \u2014 shows comparison with other children the same age" }
+  "tooltip.percentile": { sq: "P\xEBrqindja n\xEB grafikun e rritjes s\xEB OMS \u2014 tregon krahasimin me f\xEBmij\xEBt e tjer\xEB t\xEB mosh\xEBs s\xEB nj\xEBjt\xEB", en: "Percentile on WHO growth chart \u2014 shows comparison with other children the same age" },
+  // Sync Status
+  "sync.conflictPanelTitle": { sq: "Konflikt i t\xEB Dh\xEBnave", en: "Data Conflict" },
+  "sync.conflictPanelSubtitle": { sq: "T\xEB dh\xEBna q\xEB k\xEBrkojn\xEB rishikim manual", en: "Data requiring manual review" },
+  "sync.medicalReview": { sq: "Rishikim Mjek\xEBsor", en: "Medical Review" },
+  "sync.thisLocal": { sq: "Lokalisht", en: "Local" },
+  "sync.server": { sq: "Serveri", en: "Server" },
+  "sync.useLocal": { sq: "P\xEBrdor Lokalen", en: "Use Local" },
+  "sync.useServer": { sq: "P\xEBrdor Serverin", en: "Use Server" },
+  "sync.conflictFooterNote": { sq: "Konfliktet zgjidhen automatikisht p\xEBr t\xEB dh\xEBna jo-mjek\xEBsore.", en: "Non-medical data conflicts are resolved automatically." },
+  "sync.syncing": { sq: "Duke sinkronizuar...", en: "Syncing..." },
+  "sync.synced": { sq: "Sinkronizuar", en: "Synced" },
+  "sync.error": { sq: "Gabim sinkronizimi", en: "Sync error" },
+  "sync.conflict": { sq: "Konflikt", en: "Conflict" },
+  "sync.retry": { sq: "Provo p\xEBrs\xEBri", en: "Retry" },
+  "sync.pendingCount": { sq: "{n} n\xEB pritje", en: "{n} pending" }
 };
 var I18nService = class _I18nService {
   constructor() {
@@ -27125,7 +27140,7 @@ var DataService = class _DataService {
   cacheTemperaturesToOffline(entries) {
     return __async(this, null, function* () {
       try {
-        const { OfflineService: OfflineService2 } = yield import("./chunk-HQOSG35Y.js");
+        const { OfflineService: OfflineService2 } = yield import("./chunk-CLQ6PKDA.js");
         const svc = new OfflineService2();
         yield svc.saveTemperaturesToOffline(entries);
       } catch (e) {
@@ -27135,7 +27150,7 @@ var DataService = class _DataService {
   getOfflineTemperatures(childId) {
     return __async(this, null, function* () {
       try {
-        const { OfflineService: OfflineService2 } = yield import("./chunk-HQOSG35Y.js");
+        const { OfflineService: OfflineService2 } = yield import("./chunk-CLQ6PKDA.js");
         const svc = new OfflineService2();
         return yield svc.getTemperaturesFromOffline(childId);
       } catch (e) {
@@ -27188,7 +27203,7 @@ var DataService = class _DataService {
   cacheGrowthToOffline(entries) {
     return __async(this, null, function* () {
       try {
-        const { OfflineService: OfflineService2 } = yield import("./chunk-HQOSG35Y.js");
+        const { OfflineService: OfflineService2 } = yield import("./chunk-CLQ6PKDA.js");
         const svc = new OfflineService2();
         yield svc.saveGrowthToOffline(entries);
       } catch (e) {
@@ -27198,7 +27213,7 @@ var DataService = class _DataService {
   getOfflineGrowth(childId) {
     return __async(this, null, function* () {
       try {
-        const { OfflineService: OfflineService2 } = yield import("./chunk-HQOSG35Y.js");
+        const { OfflineService: OfflineService2 } = yield import("./chunk-CLQ6PKDA.js");
         const svc = new OfflineService2();
         return yield svc.getGrowthFromOffline(childId);
       } catch (e) {
@@ -27225,7 +27240,7 @@ var DataService = class _DataService {
   cacheVaccinesToOffline(records) {
     return __async(this, null, function* () {
       try {
-        const { OfflineService: OfflineService2 } = yield import("./chunk-HQOSG35Y.js");
+        const { OfflineService: OfflineService2 } = yield import("./chunk-CLQ6PKDA.js");
         const svc = new OfflineService2();
         yield svc.saveVaccinesToOffline(records);
       } catch (e) {
@@ -27235,7 +27250,7 @@ var DataService = class _DataService {
   getOfflineVaccines(childId) {
     return __async(this, null, function* () {
       try {
-        const { OfflineService: OfflineService2 } = yield import("./chunk-HQOSG35Y.js");
+        const { OfflineService: OfflineService2 } = yield import("./chunk-CLQ6PKDA.js");
         const svc = new OfflineService2();
         return yield svc.getVaccinesFromOffline(childId);
       } catch (e) {
@@ -27541,7 +27556,7 @@ var DataService = class _DataService {
   cacheToOffline() {
     return __async(this, null, function* () {
       try {
-        const offlineService = new (yield import("./chunk-HQOSG35Y.js")).OfflineService();
+        const offlineService = new (yield import("./chunk-CLQ6PKDA.js")).OfflineService();
         yield offlineService.saveChildrenToOffline(this.children());
         const activeId = this.activeChildId();
         if (activeId) {
@@ -27557,7 +27572,7 @@ var DataService = class _DataService {
   loadFromOffline() {
     return __async(this, null, function* () {
       try {
-        const { OfflineService: OfflineService2 } = yield import("./chunk-HQOSG35Y.js");
+        const { OfflineService: OfflineService2 } = yield import("./chunk-CLQ6PKDA.js");
         const offlineService = new OfflineService2();
         const cachedChildren = yield offlineService.getChildrenFromOffline();
         if (cachedChildren.length > 0) {
@@ -27590,6 +27605,86 @@ var DataService = class _DataService {
   }], () => [{ type: HttpClient }], null);
 })();
 
+// src/app/services/sync.service.ts
+var SyncService = class _SyncService {
+  constructor() {
+    this.http = inject2(HttpClient);
+  }
+  getHeaders() {
+    const token = localStorage.getItem("kiddok_access_token");
+    return {
+      headers: { Authorization: `Bearer ${token}` }
+    };
+  }
+  /**
+   * Send a batch of offline entries to the server for conflict-detecting sync.
+   * Returns the sync result with any conflicts that need manual resolution.
+   */
+  syncPendingEntries() {
+    return __async(this, null, function* () {
+      try {
+        const result = yield firstValueFrom(this.http.post(`${environment.apiUrl}/sync`, {}, this.getHeaders()));
+        return result;
+      } catch (err) {
+        console.error("[SyncService] syncPendingEntries failed:", err);
+        return { success: false, syncedCount: 0, failedCount: 1, conflicts: [] };
+      }
+    });
+  }
+  /**
+   * Submit a manual conflict resolution after user reviews a medical data conflict.
+   */
+  resolveConflict(entityType, entityId, resolution, mergedData) {
+    return __async(this, null, function* () {
+      try {
+        const body = {
+          entityType,
+          entityId,
+          resolution,
+          mergedData
+        };
+        const result = yield firstValueFrom(this.http.post(`${environment.apiUrl}/sync/resolve`, body, this.getHeaders()));
+        return result.success;
+      } catch (err) {
+        console.error("[SyncService] resolveConflict failed:", err);
+        return false;
+      }
+    });
+  }
+  /**
+   * Convenience: trigger sync for all pending offline entries.
+   * Called by OfflineService when coming online, or by SyncStatusComponent manually.
+   */
+  triggerFullSync(entries) {
+    return __async(this, null, function* () {
+      if (entries.length === 0) {
+        return { success: true, syncedCount: 0, failedCount: 0, conflicts: [] };
+      }
+      try {
+        const result = yield firstValueFrom(this.http.post(`${environment.apiUrl}/sync`, { entries }, this.getHeaders()));
+        return result;
+      } catch (err) {
+        console.error("[SyncService] triggerFullSync failed:", err);
+        return { success: false, syncedCount: 0, failedCount: entries.length, conflicts: [] };
+      }
+    });
+  }
+  static {
+    this.\u0275fac = function SyncService_Factory(__ngFactoryType__) {
+      return new (__ngFactoryType__ || _SyncService)();
+    };
+  }
+  static {
+    this.\u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _SyncService, factory: _SyncService.\u0275fac, providedIn: "root" });
+  }
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SyncService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
 // src/app/services/offline.service.ts
 var DB_NAME = "kiddok_offline";
 var DB_VERSION = 1;
@@ -27606,6 +27701,7 @@ var OfflineService = class _OfflineService {
     this.dataService = inject2(DataService);
     this.toast = inject2(ToastService);
     this.ngZone = inject2(NgZone);
+    this.syncService = inject2(SyncService);
     this.isOnline = signal(navigator.onLine, ...ngDevMode ? [{ debugName: "isOnline" }] : (
       /* istanbul ignore next */
       []
@@ -27869,33 +27965,37 @@ var OfflineService = class _OfflineService {
         this.hasPendingSync.set(false);
         return;
       }
-      entries.sort((a, b) => a.timestamp - b.timestamp);
-      let successCount = 0;
-      for (const entry of entries) {
-        try {
+      const syncEntries = entries.sort((a, b) => a.timestamp - b.timestamp).map((entry) => ({
+        entityType: entry.entity,
+        action: entry.action,
+        data: entry.body,
+        localTimestamp: entry.timestamp
+      }));
+      try {
+        const result = yield this.syncService.triggerFullSync(syncEntries);
+        if (result.success || result.conflicts.length > 0) {
           const deleteTx = db.transaction(STORE_SYNC_QUEUE, "readwrite");
           const deleteStore = deleteTx.objectStore(STORE_SYNC_QUEUE);
-          deleteStore.delete(entry.id);
-          yield new Promise((resolveDelete, rejectDelete) => {
-            const delReq = deleteStore.add(entry);
-            delReq.onsuccess = () => resolveDelete();
-            delReq.onerror = () => rejectDelete(delReq.error);
-          });
-          yield firstValueFrom(this.http.request(entry.method, entry.endpoint, { body: entry.body }));
-          successCount++;
-        } catch (e) {
+          for (const entry of entries) {
+            if (entry.id !== void 0)
+              deleteStore.delete(entry.id);
+          }
+          if (result.conflicts.length > 0) {
+            const conflictIds = new Set(result.conflicts.map((c) => c.entityId));
+            this.toast.show(this.isSq() ? `${result.conflicts.length} konflikt u.detektua \u2014 rishikoni manualisht` : `${result.conflicts.length} conflict(s) detected \u2014 review manually`, "info");
+          }
+          const remaining = result.failedCount;
+          this.hasPendingSync.set(remaining > 0);
+          const successCount = result.syncedCount;
+          if (successCount > 0) {
+            this.toast.show(this.isSq() ? `${successCount} t\xEB dh\xEBna u sinkronizuan!` : `${successCount} items synced!`, "success");
+          }
+        } else {
+          this.hasPendingSync.set(true);
+          this.toast.show(this.isSq() ? "Sinkronizimi d\xEBshtoi. Do t\xEB provohet p\xEBrs\xEBri." : "Sync failed. Will retry automatically.", "error");
         }
-      }
-      const remainingTx = db.transaction(STORE_SYNC_QUEUE, "readonly");
-      const remainingStore = remainingTx.objectStore(STORE_SYNC_QUEUE);
-      const remaining = yield new Promise((resolve, reject) => {
-        const req = remainingStore.getAll();
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-      });
-      this.hasPendingSync.set(remaining.length > 0);
-      if (successCount > 0) {
-        this.toast.show(this.isSq() ? `${successCount} t\xEB dh\xEBna u sinkronizuan!` : `${successCount} items synced!`, "success");
+      } catch (e) {
+        this.hasPendingSync.set(true);
       }
     });
   }
@@ -28197,4 +28297,4 @@ export {
   OfflineService,
   DataService
 };
-//# sourceMappingURL=chunk-AIFYPVBK.js.map
+//# sourceMappingURL=chunk-LCET5SDI.js.map

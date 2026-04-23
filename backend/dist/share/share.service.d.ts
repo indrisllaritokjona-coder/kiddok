@@ -27,6 +27,7 @@ export declare class ShareService {
             temperatureEntries: {
                 id: string;
                 createdAt: Date;
+                updatedAt: Date;
                 childId: string;
                 notes: string | null;
                 temperature: number;
@@ -36,6 +37,7 @@ export declare class ShareService {
             growthEntries: {
                 id: string;
                 createdAt: Date;
+                updatedAt: Date;
                 childId: string;
                 notes: string | null;
                 measuredAt: Date;
@@ -57,6 +59,7 @@ export declare class ShareService {
             medicalDocument: string | null;
             documentIssueDate: Date | null;
             medicalNotes: string | null;
+            avatarSeed: string | null;
             userId: string;
         };
     } & {

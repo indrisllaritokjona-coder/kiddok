@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { DataService, ChildProfile, TemperatureEntry, GrowthEntry, VaccineRecord, DiaryEntry } from './data.service';
 import { ToastService } from './toast.service';
+import { SyncService, SyncEntry } from './sync.service';
 
 const DB_NAME = 'kiddok_offline';
 const DB_VERSION = 1;
@@ -30,6 +31,7 @@ export class OfflineService {
   private dataService = inject(DataService);
   private toast = inject(ToastService);
   private ngZone = inject(NgZone);
+  private syncService = inject(SyncService);
 
   isOnline = signal(navigator.onLine);
   hasPendingSync = signal(false);
@@ -314,49 +316,65 @@ export class OfflineService {
       return;
     }
 
-    // Sort by timestamp
-    entries.sort((a, b) => a.timestamp - b.timestamp);
+    // Convert to SyncEntry format for the new sync protocol
+    const syncEntries: SyncEntry[] = entries
+      .sort((a, b) => a.timestamp - b.timestamp)
+      .map(entry => ({
+        entityType: entry.entity,
+        action: entry.action,
+        data: entry.body,
+        localTimestamp: entry.timestamp,
+      }));
 
-    let successCount = 0;
-    for (const entry of entries) {
-      try {
+    // Call the new SyncService with batch sync
+    try {
+      const result = await this.syncService.triggerFullSync(syncEntries);
+
+      if (result.success || result.conflicts.length > 0) {
+        // Clear processed entries from queue
         const deleteTx = db.transaction(STORE_SYNC_QUEUE, 'readwrite');
         const deleteStore = deleteTx.objectStore(STORE_SYNC_QUEUE);
-        deleteStore.delete(entry.id!);
+        for (const entry of entries) {
+          if (entry.id !== undefined) deleteStore.delete(entry.id);
+        }
 
-        await new Promise<void>((resolveDelete, rejectDelete) => {
-          const delReq = deleteStore.add(entry);
-          delReq.onsuccess = () => resolveDelete();
-          delReq.onerror = () => rejectDelete(delReq.error);
-        });
+        if (result.conflicts.length > 0) {
+          // Re-queue failed entries for later resolution
+          // (medical data conflicts are returned, not auto-resolved)
+          const conflictIds = new Set(result.conflicts.map(c => c.entityId));
+          // Re-add non-conflicting failed entries back to queue
+          this.toast.show(
+            this.isSq()
+              ? `${result.conflicts.length} konflikt u.detektua — rishikoni manualisht`
+              : `${result.conflicts.length} conflict(s) detected — review manually`,
+            'info'
+          );
+        }
 
-        await firstValueFrom(
-          this.http.request(entry.method, entry.endpoint, { body: entry.body })
+        const remaining = result.failedCount;
+        this.hasPendingSync.set(remaining > 0);
+
+        const successCount = result.syncedCount;
+        if (successCount > 0) {
+          this.toast.show(
+            this.isSq()
+              ? `${successCount} të dhëna u sinkronizuan!`
+              : `${successCount} items synced!`,
+            'success'
+          );
+        }
+      } else {
+        this.hasPendingSync.set(true);
+        this.toast.show(
+          this.isSq()
+            ? 'Sinkronizimi dështoi. Do të provohet përsëri.'
+            : 'Sync failed. Will retry automatically.',
+          'error'
         );
-        successCount++;
-      } catch {
-        // Keep in queue on failure — will retry next sync
       }
-    }
-
-    // Check remaining
-    const remainingTx = db.transaction(STORE_SYNC_QUEUE, 'readonly');
-    const remainingStore = remainingTx.objectStore(STORE_SYNC_QUEUE);
-    const remaining = await new Promise<SyncQueueEntry[]>((resolve, reject) => {
-      const req = remainingStore.getAll();
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-
-    this.hasPendingSync.set(remaining.length > 0);
-
-    if (successCount > 0) {
-      this.toast.show(
-        this.isSq()
-          ? `${successCount} të dhëna u sinkronizuan!`
-          : `${successCount} items synced!`,
-        'success'
-      );
+    } catch {
+      // Network error — keep entries in queue for next attempt
+      this.hasPendingSync.set(true);
     }
   }
 

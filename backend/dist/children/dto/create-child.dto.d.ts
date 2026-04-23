@@ -1,6 +1,7 @@
 export declare class CreateChildDto {
     name: string;
     dateOfBirth: string;
+    avatarSeed?: string;
     gender?: string;
     bloodType?: string;
     birthWeight?: number;

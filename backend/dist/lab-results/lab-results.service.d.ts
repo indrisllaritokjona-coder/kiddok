@@ -47,6 +47,7 @@ export declare class LabResultsService {
             medicalDocument: string | null;
             documentIssueDate: Date | null;
             medicalNotes: string | null;
+            avatarSeed: string | null;
             userId: string;
         };
     } & {

@@ -15,6 +15,7 @@ const class_transformer_1 = require("class-transformer");
 class CreateChildDto {
     name;
     dateOfBirth;
+    avatarSeed;
     gender;
     bloodType;
     birthWeight;
@@ -35,6 +36,11 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreateChildDto.prototype, "dateOfBirth", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateChildDto.prototype, "avatarSeed", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),

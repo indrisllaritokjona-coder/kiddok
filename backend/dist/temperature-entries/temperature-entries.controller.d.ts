@@ -5,6 +5,7 @@ export declare class TemperatureEntriesController {
     create(req: any, data: any): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         childId: string;
         notes: string | null;
         temperature: number;
@@ -14,6 +15,7 @@ export declare class TemperatureEntriesController {
     findByChild(req: any, childId: string): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         childId: string;
         notes: string | null;
         temperature: number;
@@ -23,6 +25,7 @@ export declare class TemperatureEntriesController {
     delete(req: any, id: string): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         childId: string;
         notes: string | null;
         temperature: number;

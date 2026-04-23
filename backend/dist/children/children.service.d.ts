@@ -17,6 +17,7 @@ export declare class ChildrenService {
         medicalDocument: string | null;
         documentIssueDate: Date | null;
         medicalNotes: string | null;
+        avatarSeed: string | null;
         userId: string;
     }>;
     findAllByUser(userId: string): Promise<{
@@ -34,6 +35,7 @@ export declare class ChildrenService {
         medicalDocument: string | null;
         documentIssueDate: Date | null;
         medicalNotes: string | null;
+        avatarSeed: string | null;
         userId: string;
     }[]>;
     findOne(id: string, userId: string): Promise<{
@@ -84,6 +86,7 @@ export declare class ChildrenService {
         medicalDocument: string | null;
         documentIssueDate: Date | null;
         medicalNotes: string | null;
+        avatarSeed: string | null;
         userId: string;
     }>;
     findOneById(id: string): Promise<{
@@ -101,6 +104,7 @@ export declare class ChildrenService {
         medicalDocument: string | null;
         documentIssueDate: Date | null;
         medicalNotes: string | null;
+        avatarSeed: string | null;
         userId: string;
     } | null>;
     hasAccess(childId: string, userId: string): Promise<boolean>;
@@ -119,6 +123,7 @@ export declare class ChildrenService {
         medicalDocument: string | null;
         documentIssueDate: Date | null;
         medicalNotes: string | null;
+        avatarSeed: string | null;
         userId: string;
     }>;
     remove(id: string, userId: string): Promise<{
@@ -136,6 +141,7 @@ export declare class ChildrenService {
         medicalDocument: string | null;
         documentIssueDate: Date | null;
         medicalNotes: string | null;
+        avatarSeed: string | null;
         userId: string;
     }>;
 }

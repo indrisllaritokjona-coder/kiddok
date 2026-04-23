@@ -19,6 +19,7 @@ export declare class ChildrenController {
         medicalDocument: string | null;
         documentIssueDate: Date | null;
         medicalNotes: string | null;
+        avatarSeed: string | null;
         userId: string;
     }>;
     findAll(req: any): Promise<{
@@ -36,6 +37,7 @@ export declare class ChildrenController {
         medicalDocument: string | null;
         documentIssueDate: Date | null;
         medicalNotes: string | null;
+        avatarSeed: string | null;
         userId: string;
     }[]>;
     findOne(req: any, id: string): Promise<{
@@ -53,6 +55,7 @@ export declare class ChildrenController {
         medicalDocument: string | null;
         documentIssueDate: Date | null;
         medicalNotes: string | null;
+        avatarSeed: string | null;
         userId: string;
     }>;
     update(req: any, id: string, updateChildDto: UpdateChildDto): Promise<{
@@ -70,6 +73,7 @@ export declare class ChildrenController {
         medicalDocument: string | null;
         documentIssueDate: Date | null;
         medicalNotes: string | null;
+        avatarSeed: string | null;
         userId: string;
     }>;
     remove(req: any, id: string): Promise<{
@@ -87,6 +91,7 @@ export declare class ChildrenController {
         medicalDocument: string | null;
         documentIssueDate: Date | null;
         medicalNotes: string | null;
+        avatarSeed: string | null;
         userId: string;
     }>;
 }

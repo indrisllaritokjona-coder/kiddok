@@ -43,6 +43,13 @@ export class ExportService {
     });
   }
 
+  /**
+   * Public wrapper for CSV export — calls private fetchChildHealthData.
+   */
+  async getChildHealthData(childId: string, userId: string): Promise<ChildHealthData> {
+    return this.fetchChildHealthData(childId, userId);
+  }
+
   private async fetchChildHealthData(childId: string, userId: string): Promise<ChildHealthData> {
     const child = await this.prisma.child.findFirst({
       where: {

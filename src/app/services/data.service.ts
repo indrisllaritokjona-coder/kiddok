@@ -79,6 +79,22 @@ export interface DiaryEntry {
   notes?: string;
 }
 
+export interface LabResultRecord {
+  id: string;
+  childId: string;
+  testName: string;
+  result: string;
+  unit?: string;
+  referenceRange?: string;
+  date: string;
+  doctor?: string;
+  notes?: string;
+  type?: string;
+  attachments: string[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface VaccineRecord {
   id: string;
   childId: string;
@@ -156,6 +172,7 @@ export class DataService {
 
   // ─── Diary Entries ─────────────────────────────────────────────
   diaryEntries = signal<DiaryEntry[]>([]);
+  labResults = signal<LabResultRecord[]>([]);
 
   addDiaryEntry(entry: Omit<DiaryEntry, 'id'>): DiaryEntry {
     const newEntry: DiaryEntry = { ...entry, id: 'de_' + Date.now() };
@@ -429,6 +446,51 @@ export class DataService {
       console.error('[DataService] deleteTemperatureEntry failed:', err);
       this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
     }
+  }
+
+  async loadLabResults(childId: string): Promise<LabResultRecord[]> {
+    try {
+      const records = await firstValueFrom(
+        this.http.get<LabResultRecord[]>(`${this.API_URL}/lab-results/child/${childId}`, this.getHeaders())
+      );
+      this.labResults.set(records);
+      return records;
+    } catch (err: any) {
+      console.error('[DataService] loadLabResults failed:', err);
+      return this.labResults();
+    }
+  }
+
+  async addLabResult(childId: string, data: any): Promise<LabResultRecord> {
+    const record = await firstValueFrom(
+      this.http.post<LabResultRecord>(`${this.API_URL}/lab-results/${childId}`, data, this.getHeaders())
+    );
+    const updated = [record, ...this.labResults()];
+    this.labResults.set(updated);
+    return record;
+  }
+
+  async updateLabResult(id: string, data: any): Promise<LabResultRecord> {
+    const record = await firstValueFrom(
+      this.http.patch<LabResultRecord>(`${this.API_URL}/lab-results/${id}`, data, this.getHeaders())
+    );
+    const updated = this.labResults().map(r => r.id === id ? record : r);
+    this.labResults.set(updated);
+    return record;
+  }
+
+  async deleteLabResult(id: string): Promise<void> {
+    await firstValueFrom(
+      this.http.delete<void>(`${this.API_URL}/lab-results/${id}`, this.getHeaders())
+    );
+    const updated = this.labResults().filter(r => r.id !== id);
+    this.labResults.set(updated);
+  }
+
+  async getLabResult(id: string): Promise<LabResultRecord> {
+    return firstValueFrom(
+      this.http.get<LabResultRecord>(`${this.API_URL}/lab-results/${id}`, this.getHeaders())
+    );
   }
 
   async loadGrowthEntries(childId: string): Promise<GrowthEntry[]> {

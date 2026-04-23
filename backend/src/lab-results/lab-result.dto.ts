@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsDateString } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsDateString, IsArray } from 'class-validator';
 
 export class CreateLabResultDto {
   @IsString()
@@ -27,6 +27,14 @@ export class CreateLabResultDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @IsString()
+  @IsOptional()
+  type?: string;
+
+  @IsArray()
+  @IsOptional()
+  attachments?: string[];
 }
 
 export class UpdateLabResultDto {
@@ -57,4 +65,12 @@ export class UpdateLabResultDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @IsString()
+  @IsOptional()
+  type?: string;
+
+  @IsArray()
+  @IsOptional()
+  attachments?: string[];
 }

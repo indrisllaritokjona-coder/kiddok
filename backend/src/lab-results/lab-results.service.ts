@@ -22,6 +22,8 @@ export class LabResultsService {
         date: new Date(data.date),
         doctor: data.doctor || null,
         notes: data.notes || null,
+        type: data.type || null,
+        attachments: data.attachments || [],
         child: { connect: { id: childId } },
       },
     });
@@ -54,13 +56,15 @@ export class LabResultsService {
     return this.prisma.labResult.update({
       where: { id },
       data: {
-        ...(data.testName && { testName: data.testName }),
-        ...(data.result && { result: data.result }),
+        ...(data.testName !== undefined && { testName: data.testName }),
+        ...(data.result !== undefined && { result: data.result }),
         ...(data.unit !== undefined && { unit: data.unit }),
         ...(data.referenceRange !== undefined && { referenceRange: data.referenceRange }),
         ...(data.date && { date: new Date(data.date) }),
         ...(data.doctor !== undefined && { doctor: data.doctor }),
         ...(data.notes !== undefined && { notes: data.notes }),
+        ...(data.type !== undefined && { type: data.type }),
+        ...(data.attachments !== undefined && { attachments: data.attachments }),
       },
     });
   }

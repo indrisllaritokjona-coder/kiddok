@@ -3,7 +3,7 @@ import {
   I18nService,
   NotificationService,
   OfflineService
-} from "./chunk-IWH5FZCO.js";
+} from "./chunk-K7QXQ4WD.js";
 import {
   APP_BOOTSTRAP_LISTENER,
   APP_ID,
@@ -215,6 +215,7 @@ import {
   ɵɵresetView,
   ɵɵresolveDocument,
   ɵɵrestoreView,
+  ɵɵsanitizeResourceUrl,
   ɵɵsanitizeUrl,
   ɵɵsanitizeUrlOrResourceUrl,
   ɵɵstyleProp,
@@ -231,7 +232,7 @@ import {
   ɵɵtwoWayListener,
   ɵɵtwoWayProperty,
   ɵɵviewQuery
-} from "./chunk-UON6NLE4.js";
+} from "./chunk-Z7AA2C4B.js";
 
 // node_modules/@angular/common/fesm2022/_location-chunk.mjs
 /**
@@ -12388,6 +12389,13 @@ var Bell = [["path", {
   d: "M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326",
   key: "11g9vi"
 }]];
+var BookOpen = [["path", {
+  d: "M12 7v14",
+  key: "1akyts"
+}], ["path", {
+  d: "M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z",
+  key: "ruj8y"
+}]];
 var Cake = [["path", {
   d: "M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8",
   key: "1w3rig"
@@ -12544,6 +12552,16 @@ var ChartBar = [["path", {
 }], ["path", {
   d: "M7 6h3",
   key: "w9rmul"
+}]];
+var ChartNoAxesColumn = [["path", {
+  d: "M5 21v-6",
+  key: "1hz6c0"
+}], ["path", {
+  d: "M12 21V3",
+  key: "1lcnhd"
+}], ["path", {
+  d: "M19 21V9",
+  key: "unv183"
 }]];
 var Check = [["path", {
   d: "M20 6 9 17l-5-5",
@@ -12760,6 +12778,16 @@ var FileText = [["path", {
   d: "M16 17H8",
   key: "z1uh3a"
 }]];
+var FlaskConical = [["path", {
+  d: "M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2",
+  key: "18mbvz"
+}], ["path", {
+  d: "M6.453 15h11.094",
+  key: "3shlmq"
+}], ["path", {
+  d: "M8.5 2h7",
+  key: "csnxdl"
+}]];
 var FolderOpen = [["path", {
   d: "m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2",
   key: "usdka0"
@@ -12822,6 +12850,13 @@ var Hourglass = [["path", {
 }], ["path", {
   d: "M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2",
   key: "1vvvr6"
+}]];
+var House = [["path", {
+  d: "M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8",
+  key: "5wwlr5"
+}], ["path", {
+  d: "M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
+  key: "r6nss1"
 }]];
 var Inbox = [["polyline", {
   points: "22 12 16 12 14 15 10 15 8 12 2 12",
@@ -12927,6 +12962,16 @@ var LogIn = [["path", {
 }], ["path", {
   d: "M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4",
   key: "u53s6r"
+}]];
+var LogOut = [["path", {
+  d: "m16 17 5-5-5-5",
+  key: "1bji2h"
+}], ["path", {
+  d: "M21 12H9",
+  key: "dn1m92"
+}], ["path", {
+  d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4",
+  key: "1uf3rs"
 }]];
 var Menu = [["path", {
   d: "M4 5h16",
@@ -29947,7 +29992,7 @@ var _c010 = () => [1, 2, 3];
 var _forTrack013 = ($index, $item) => $item.id;
 function LabResultsComponent_Conditional_6_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 4);
+    \u0275\u0275elementStart(0, "p", 5);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -29960,17 +30005,17 @@ function LabResultsComponent_Conditional_6_Template(rf, ctx) {
 }
 function LabResultsComponent_Conditional_10_For_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 10)(1, "div", 11);
-    \u0275\u0275element(2, "div", 12);
-    \u0275\u0275elementStart(3, "div", 13);
-    \u0275\u0275element(4, "div", 14)(5, "div", 15);
+    \u0275\u0275elementStart(0, "div", 12)(1, "div", 13);
+    \u0275\u0275element(2, "div", 14);
+    \u0275\u0275elementStart(3, "div", 15);
+    \u0275\u0275element(4, "div", 16)(5, "div", 17);
     \u0275\u0275elementEnd()()();
   }
 }
 function LabResultsComponent_Conditional_10_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 7);
-    \u0275\u0275repeaterCreate(1, LabResultsComponent_Conditional_10_For_2_Template, 6, 0, "div", 10, \u0275\u0275repeaterTrackByIdentity);
+    \u0275\u0275elementStart(0, "div", 8);
+    \u0275\u0275repeaterCreate(1, LabResultsComponent_Conditional_10_For_2_Template, 6, 0, "div", 12, \u0275\u0275repeaterTrackByIdentity);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -29981,25 +30026,25 @@ function LabResultsComponent_Conditional_10_Template(rf, ctx) {
 function LabResultsComponent_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
     const _r2 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 8);
+    \u0275\u0275elementStart(0, "div", 9);
     \u0275\u0275namespaceSVG();
-    \u0275\u0275elementStart(1, "svg", 16);
-    \u0275\u0275element(2, "circle", 17)(3, "path", 18)(4, "circle", 19);
+    \u0275\u0275elementStart(1, "svg", 18);
+    \u0275\u0275element(2, "circle", 19)(3, "path", 20)(4, "circle", 21);
     \u0275\u0275elementEnd();
     \u0275\u0275namespaceHTML();
-    \u0275\u0275elementStart(5, "h3", 20);
+    \u0275\u0275elementStart(5, "h3", 22);
     \u0275\u0275text(6);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "p", 21);
+    \u0275\u0275elementStart(7, "p", 23);
     \u0275\u0275text(8);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "button", 22);
+    \u0275\u0275elementStart(9, "button", 24);
     \u0275\u0275listener("click", function LabResultsComponent_Conditional_11_Template_button_click_9_listener() {
       \u0275\u0275restoreView(_r2);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.openAddModal());
     });
-    \u0275\u0275element(10, "lucide-icon", 23);
+    \u0275\u0275element(10, "lucide-icon", 25);
     \u0275\u0275text(11);
     \u0275\u0275elementEnd()();
   }
@@ -30015,7 +30060,7 @@ function LabResultsComponent_Conditional_11_Template(rf, ctx) {
 }
 function LabResultsComponent_Conditional_12_For_2_Conditional_14_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 35);
+    \u0275\u0275elementStart(0, "span", 37);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -30027,7 +30072,7 @@ function LabResultsComponent_Conditional_12_For_2_Conditional_14_Template(rf, ct
 }
 function LabResultsComponent_Conditional_12_For_2_Conditional_15_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 36);
+    \u0275\u0275elementStart(0, "span", 38);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -30040,8 +30085,21 @@ function LabResultsComponent_Conditional_12_For_2_Conditional_15_Template(rf, ct
 }
 function LabResultsComponent_Conditional_12_For_2_Conditional_16_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 37);
-    \u0275\u0275element(1, "lucide-icon", 44);
+    \u0275\u0275elementStart(0, "div", 39)(1, "span", 50);
+    \u0275\u0275text(2);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const lr_r4 = \u0275\u0275nextContext().$implicit;
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.getTypeLabel(lr_r4.type), " ");
+  }
+}
+function LabResultsComponent_Conditional_12_For_2_Conditional_17_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 40);
+    \u0275\u0275element(1, "lucide-icon", 51);
     \u0275\u0275elementStart(2, "span");
     \u0275\u0275text(3);
     \u0275\u0275elementEnd()();
@@ -30052,9 +30110,23 @@ function LabResultsComponent_Conditional_12_For_2_Conditional_16_Template(rf, ct
     \u0275\u0275textInterpolate(lr_r4.doctor);
   }
 }
-function LabResultsComponent_Conditional_12_For_2_Conditional_17_Template(rf, ctx) {
+function LabResultsComponent_Conditional_12_For_2_Conditional_18_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 38);
+    \u0275\u0275elementStart(0, "div", 41)(1, "span", 52);
+    \u0275\u0275element(2, "lucide-icon", 53);
+    \u0275\u0275text(3);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const lr_r4 = \u0275\u0275nextContext().$implicit;
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate2(" ", lr_r4.attachments.length, " ", ctx_r0.i18n.t()["labResults.attachments"] || "Dokumente", " ");
+  }
+}
+function LabResultsComponent_Conditional_12_For_2_Conditional_19_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 42);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -30067,41 +30139,52 @@ function LabResultsComponent_Conditional_12_For_2_Conditional_17_Template(rf, ct
 function LabResultsComponent_Conditional_12_For_2_Template(rf, ctx) {
   if (rf & 1) {
     const _r3 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 24)(1, "div", 25)(2, "div", 26)(3, "div", 27);
-    \u0275\u0275element(4, "lucide-icon", 28);
+    \u0275\u0275elementStart(0, "div", 26)(1, "div", 27)(2, "div", 28)(3, "div", 29);
+    \u0275\u0275element(4, "lucide-icon", 30);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "div", 29)(6, "div", 30)(7, "h3", 31);
+    \u0275\u0275elementStart(5, "div", 31)(6, "div", 32)(7, "h3", 33);
     \u0275\u0275text(8);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "span", 32);
+    \u0275\u0275elementStart(9, "span", 34);
     \u0275\u0275text(10);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(11, "div", 33)(12, "span", 34);
+    \u0275\u0275elementStart(11, "div", 35)(12, "span", 36);
     \u0275\u0275text(13);
     \u0275\u0275elementEnd();
-    \u0275\u0275conditionalCreate(14, LabResultsComponent_Conditional_12_For_2_Conditional_14_Template, 2, 1, "span", 35);
-    \u0275\u0275conditionalCreate(15, LabResultsComponent_Conditional_12_For_2_Conditional_15_Template, 2, 2, "span", 36);
+    \u0275\u0275conditionalCreate(14, LabResultsComponent_Conditional_12_For_2_Conditional_14_Template, 2, 1, "span", 37);
+    \u0275\u0275conditionalCreate(15, LabResultsComponent_Conditional_12_For_2_Conditional_15_Template, 2, 2, "span", 38);
     \u0275\u0275elementEnd();
-    \u0275\u0275conditionalCreate(16, LabResultsComponent_Conditional_12_For_2_Conditional_16_Template, 4, 1, "div", 37);
+    \u0275\u0275conditionalCreate(16, LabResultsComponent_Conditional_12_For_2_Conditional_16_Template, 3, 1, "div", 39);
+    \u0275\u0275conditionalCreate(17, LabResultsComponent_Conditional_12_For_2_Conditional_17_Template, 4, 1, "div", 40);
+    \u0275\u0275conditionalCreate(18, LabResultsComponent_Conditional_12_For_2_Conditional_18_Template, 4, 2, "div", 41);
     \u0275\u0275elementEnd()();
-    \u0275\u0275conditionalCreate(17, LabResultsComponent_Conditional_12_For_2_Conditional_17_Template, 2, 1, "div", 38);
-    \u0275\u0275elementStart(18, "div", 39)(19, "button", 40);
-    \u0275\u0275listener("click", function LabResultsComponent_Conditional_12_For_2_Template_button_click_19_listener() {
+    \u0275\u0275conditionalCreate(19, LabResultsComponent_Conditional_12_For_2_Conditional_19_Template, 2, 1, "div", 42);
+    \u0275\u0275elementStart(20, "div", 43)(21, "button", 44);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_12_For_2_Template_button_click_21_listener() {
       const lr_r4 = \u0275\u0275restoreView(_r3).$implicit;
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.openViewModal(lr_r4));
     });
-    \u0275\u0275element(20, "lucide-icon", 41);
-    \u0275\u0275text(21);
+    \u0275\u0275element(22, "lucide-icon", 45);
+    \u0275\u0275text(23);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(22, "button", 42);
-    \u0275\u0275listener("click", function LabResultsComponent_Conditional_12_For_2_Template_button_click_22_listener() {
+    \u0275\u0275elementStart(24, "button", 46);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_12_For_2_Template_button_click_24_listener() {
+      const lr_r4 = \u0275\u0275restoreView(_r3).$implicit;
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.openEditModal(lr_r4));
+    });
+    \u0275\u0275element(25, "lucide-icon", 47);
+    \u0275\u0275text(26);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(27, "button", 48);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_12_For_2_Template_button_click_27_listener() {
       const lr_r4 = \u0275\u0275restoreView(_r3).$implicit;
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.confirmDelete(lr_r4));
     });
-    \u0275\u0275element(23, "lucide-icon", 43);
-    \u0275\u0275text(24);
+    \u0275\u0275element(28, "lucide-icon", 49);
+    \u0275\u0275text(29);
     \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
@@ -30118,19 +30201,25 @@ function LabResultsComponent_Conditional_12_For_2_Template(rf, ctx) {
     \u0275\u0275advance();
     \u0275\u0275conditional(lr_r4.referenceRange ? 15 : -1);
     \u0275\u0275advance();
-    \u0275\u0275conditional(lr_r4.doctor ? 16 : -1);
+    \u0275\u0275conditional(lr_r4.type ? 16 : -1);
     \u0275\u0275advance();
-    \u0275\u0275conditional(lr_r4.notes ? 17 : -1);
+    \u0275\u0275conditional(lr_r4.doctor ? 17 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(lr_r4.attachments && lr_r4.attachments.length > 0 ? 18 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(lr_r4.notes ? 19 : -1);
     \u0275\u0275advance(4);
     \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.view"] || "Shiko Detajet", " ");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["medications.edit"] || "Redakto", " ");
     \u0275\u0275advance(3);
     \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.delete"] || "Fshi", " ");
   }
 }
 function LabResultsComponent_Conditional_12_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 7);
-    \u0275\u0275repeaterCreate(1, LabResultsComponent_Conditional_12_For_2_Template, 25, 9, "div", 24, _forTrack013);
+    \u0275\u0275elementStart(0, "div", 8);
+    \u0275\u0275repeaterCreate(1, LabResultsComponent_Conditional_12_For_2_Template, 30, 12, "div", 26, _forTrack013);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -30139,9 +30228,117 @@ function LabResultsComponent_Conditional_12_Template(rf, ctx) {
     \u0275\u0275repeater(ctx_r0.labResults());
   }
 }
-function LabResultsComponent_Conditional_13_Conditional_43_Template(rf, ctx) {
+function LabResultsComponent_Conditional_13_Conditional_66_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 61);
+    const _r6 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 83);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_13_Conditional_66_Template_div_click_0_listener() {
+      \u0275\u0275restoreView(_r6);
+      const fileInput_r7 = \u0275\u0275reference(7);
+      return \u0275\u0275resetView(fileInput_r7.click());
+    })("dragover", function LabResultsComponent_Conditional_13_Conditional_66_Template_div_dragover_0_listener($event) {
+      \u0275\u0275restoreView(_r6);
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.onDragOver($event));
+    })("dragleave", function LabResultsComponent_Conditional_13_Conditional_66_Template_div_dragleave_0_listener($event) {
+      \u0275\u0275restoreView(_r6);
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.onDragLeave($event));
+    })("drop", function LabResultsComponent_Conditional_13_Conditional_66_Template_div_drop_0_listener($event) {
+      \u0275\u0275restoreView(_r6);
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.onDrop($event));
+    });
+    \u0275\u0275element(1, "lucide-icon", 84);
+    \u0275\u0275elementStart(2, "p", 85);
+    \u0275\u0275text(3);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "p", 86);
+    \u0275\u0275text(5, "PDF, PNG, JPG, WebP \xB7 max 10MB");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(6, "input", 87, 0);
+    \u0275\u0275listener("change", function LabResultsComponent_Conditional_13_Conditional_66_Template_input_change_6_listener($event) {
+      \u0275\u0275restoreView(_r6);
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.onFileSelected($event));
+    });
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["labResults.dropZoneHint"] || "Zv\xEBre dokumentin ose kliko p\xEBr t\xEB zgjedhur");
+  }
+}
+function LabResultsComponent_Conditional_13_Conditional_67_For_2_Conditional_2_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "lucide-icon", 90);
+  }
+}
+function LabResultsComponent_Conditional_13_Conditional_67_For_2_Conditional_3_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "lucide-icon", 91);
+  }
+}
+function LabResultsComponent_Conditional_13_Conditional_67_For_2_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r8 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 88)(1, "div", 89);
+    \u0275\u0275conditionalCreate(2, LabResultsComponent_Conditional_13_Conditional_67_For_2_Conditional_2_Template, 1, 0, "lucide-icon", 90)(3, LabResultsComponent_Conditional_13_Conditional_67_For_2_Conditional_3_Template, 1, 0, "lucide-icon", 91);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "div", 31)(5, "p", 92);
+    \u0275\u0275text(6);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(7, "p", 93);
+    \u0275\u0275text(8);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(9, "button", 94);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_13_Conditional_67_For_2_Template_button_click_9_listener() {
+      const $index_r9 = \u0275\u0275restoreView(_r8).$index;
+      const ctx_r0 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r0.removePendingFile($index_r9));
+    });
+    \u0275\u0275element(10, "lucide-icon", 95);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const file_r10 = ctx.$implicit;
+    const ctx_r0 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional(file_r10.mimeType === "application/pdf" ? 2 : 3);
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(file_r10.name);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.formatFileSize(file_r10.size));
+  }
+}
+function LabResultsComponent_Conditional_13_Conditional_67_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 77);
+    \u0275\u0275repeaterCreate(1, LabResultsComponent_Conditional_13_Conditional_67_For_2_Template, 11, 3, "div", 88, \u0275\u0275repeaterTrackByIndex);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275repeater(ctx_r0.pendingFiles());
+  }
+}
+function LabResultsComponent_Conditional_13_Conditional_68_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 78);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r0.fileError(), " ");
+  }
+}
+function LabResultsComponent_Conditional_13_Conditional_69_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 79);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -30151,9 +30348,9 @@ function LabResultsComponent_Conditional_13_Conditional_43_Template(rf, ctx) {
     \u0275\u0275textInterpolate1(" ", ctx_r0.saveError(), " ");
   }
 }
-function LabResultsComponent_Conditional_13_Conditional_48_Template(rf, ctx) {
+function LabResultsComponent_Conditional_13_Conditional_74_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "lucide-icon", 65);
+    \u0275\u0275element(0, "lucide-icon", 96);
     \u0275\u0275text(1);
   }
   if (rf & 2) {
@@ -30162,9 +30359,9 @@ function LabResultsComponent_Conditional_13_Conditional_48_Template(rf, ctx) {
     \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.saving"] || "Duke ruajtur...", " ");
   }
 }
-function LabResultsComponent_Conditional_13_Conditional_49_Template(rf, ctx) {
+function LabResultsComponent_Conditional_13_Conditional_75_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "lucide-icon", 66);
+    \u0275\u0275element(0, "lucide-icon", 97);
     \u0275\u0275text(1);
   }
   if (rf & 2) {
@@ -30176,31 +30373,31 @@ function LabResultsComponent_Conditional_13_Conditional_49_Template(rf, ctx) {
 function LabResultsComponent_Conditional_13_Template(rf, ctx) {
   if (rf & 1) {
     const _r5 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 45);
+    \u0275\u0275elementStart(0, "div", 54);
     \u0275\u0275listener("click", function LabResultsComponent_Conditional_13_Template_div_click_0_listener() {
       \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.closeModal());
     });
-    \u0275\u0275elementStart(1, "div", 46);
+    \u0275\u0275elementStart(1, "div", 55);
     \u0275\u0275listener("click", function LabResultsComponent_Conditional_13_Template_div_click_1_listener($event) {
       return $event.stopPropagation();
     });
-    \u0275\u0275elementStart(2, "div", 47)(3, "h2", 48);
+    \u0275\u0275elementStart(2, "div", 56)(3, "h2", 57);
     \u0275\u0275text(4);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "button", 49);
+    \u0275\u0275elementStart(5, "button", 58);
     \u0275\u0275listener("click", function LabResultsComponent_Conditional_13_Template_button_click_5_listener() {
       \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.closeModal());
     });
-    \u0275\u0275element(6, "lucide-icon", 50);
+    \u0275\u0275element(6, "lucide-icon", 59);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(7, "div", 51)(8, "div")(9, "label", 52);
+    \u0275\u0275elementStart(7, "div", 60)(8, "div")(9, "label", 61);
     \u0275\u0275text(10);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(11, "input", 53);
+    \u0275\u0275elementStart(11, "input", 62);
     \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_input_ngModelChange_11_listener($event) {
       \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext();
@@ -30208,106 +30405,161 @@ function LabResultsComponent_Conditional_13_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(12, "div", 54)(13, "div")(14, "label", 52);
-    \u0275\u0275text(15);
+    \u0275\u0275elementStart(12, "div")(13, "label", 61);
+    \u0275\u0275text(14);
+    \u0275\u0275elementStart(15, "span", 63);
+    \u0275\u0275text(16);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(17, "select", 64);
+    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_select_ngModelChange_17_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.formType, $event) || (ctx_r0.formType = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementStart(18, "option", 65);
+    \u0275\u0275text(19, "--");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(16, "input", 55);
-    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_input_ngModelChange_16_listener($event) {
+    \u0275\u0275elementStart(20, "option", 66);
+    \u0275\u0275text(21);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(22, "option", 67);
+    \u0275\u0275text(23);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(24, "option", 68);
+    \u0275\u0275text(25);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(26, "option", 69);
+    \u0275\u0275text(27);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(28, "option", 70);
+    \u0275\u0275text(29);
+    \u0275\u0275elementEnd()()();
+    \u0275\u0275elementStart(30, "div", 71)(31, "div")(32, "label", 61);
+    \u0275\u0275text(33);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(34, "input", 72);
+    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_input_ngModelChange_34_listener($event) {
       \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r0.formResult, $event) || (ctx_r0.formResult = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(17, "div")(18, "label", 52);
-    \u0275\u0275text(19);
+    \u0275\u0275elementStart(35, "div")(36, "label", 61);
+    \u0275\u0275text(37);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(20, "input", 56);
-    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_input_ngModelChange_20_listener($event) {
+    \u0275\u0275elementStart(38, "input", 73);
+    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_input_ngModelChange_38_listener($event) {
       \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r0.formUnit, $event) || (ctx_r0.formUnit = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()()();
-    \u0275\u0275elementStart(21, "div")(22, "label", 52);
-    \u0275\u0275text(23);
-    \u0275\u0275elementStart(24, "span", 57);
-    \u0275\u0275text(25);
+    \u0275\u0275elementStart(39, "div")(40, "label", 61);
+    \u0275\u0275text(41);
+    \u0275\u0275elementStart(42, "span", 63);
+    \u0275\u0275text(43);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(26, "input", 58);
-    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_input_ngModelChange_26_listener($event) {
+    \u0275\u0275elementStart(44, "input", 74);
+    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_input_ngModelChange_44_listener($event) {
       \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r0.formReferenceRange, $event) || (ctx_r0.formReferenceRange = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(27, "div")(28, "label", 52);
-    \u0275\u0275text(29);
+    \u0275\u0275elementStart(45, "div")(46, "label", 61);
+    \u0275\u0275text(47);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(30, "input", 59);
-    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_input_ngModelChange_30_listener($event) {
+    \u0275\u0275elementStart(48, "input", 75);
+    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_input_ngModelChange_48_listener($event) {
       \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r0.formDate, $event) || (ctx_r0.formDate = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(31, "div")(32, "label", 52);
-    \u0275\u0275text(33);
-    \u0275\u0275elementStart(34, "span", 57);
-    \u0275\u0275text(35);
+    \u0275\u0275elementStart(49, "div")(50, "label", 61);
+    \u0275\u0275text(51);
+    \u0275\u0275elementStart(52, "span", 63);
+    \u0275\u0275text(53);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(36, "input", 53);
-    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_input_ngModelChange_36_listener($event) {
+    \u0275\u0275elementStart(54, "input", 62);
+    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_input_ngModelChange_54_listener($event) {
       \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r0.formDoctor, $event) || (ctx_r0.formDoctor = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(37, "div")(38, "label", 52);
-    \u0275\u0275text(39);
-    \u0275\u0275elementStart(40, "span", 57);
-    \u0275\u0275text(41);
+    \u0275\u0275elementStart(55, "div")(56, "label", 61);
+    \u0275\u0275text(57);
+    \u0275\u0275elementStart(58, "span", 63);
+    \u0275\u0275text(59);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(42, "textarea", 60);
-    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_textarea_ngModelChange_42_listener($event) {
+    \u0275\u0275elementStart(60, "textarea", 76);
+    \u0275\u0275twoWayListener("ngModelChange", function LabResultsComponent_Conditional_13_Template_textarea_ngModelChange_60_listener($event) {
       \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r0.formNotes, $event) || (ctx_r0.formNotes = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275conditionalCreate(43, LabResultsComponent_Conditional_13_Conditional_43_Template, 2, 1, "div", 61);
+    \u0275\u0275elementStart(61, "div")(62, "label", 61);
+    \u0275\u0275text(63);
+    \u0275\u0275elementStart(64, "span", 63);
+    \u0275\u0275text(65);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275conditionalCreate(66, LabResultsComponent_Conditional_13_Conditional_66_Template, 8, 1);
+    \u0275\u0275conditionalCreate(67, LabResultsComponent_Conditional_13_Conditional_67_Template, 3, 0, "div", 77);
+    \u0275\u0275conditionalCreate(68, LabResultsComponent_Conditional_13_Conditional_68_Template, 2, 1, "div", 78);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(44, "div", 62)(45, "button", 63);
-    \u0275\u0275listener("click", function LabResultsComponent_Conditional_13_Template_button_click_45_listener() {
+    \u0275\u0275conditionalCreate(69, LabResultsComponent_Conditional_13_Conditional_69_Template, 2, 1, "div", 79);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(70, "div", 80)(71, "button", 81);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_13_Template_button_click_71_listener() {
       \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.closeModal());
     });
-    \u0275\u0275text(46);
+    \u0275\u0275text(72);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(47, "button", 64);
-    \u0275\u0275listener("click", function LabResultsComponent_Conditional_13_Template_button_click_47_listener() {
+    \u0275\u0275elementStart(73, "button", 82);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_13_Template_button_click_73_listener() {
       \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.saveLabResult());
     });
-    \u0275\u0275conditionalCreate(48, LabResultsComponent_Conditional_13_Conditional_48_Template, 2, 1)(49, LabResultsComponent_Conditional_13_Conditional_49_Template, 2, 1);
+    \u0275\u0275conditionalCreate(74, LabResultsComponent_Conditional_13_Conditional_74_Template, 2, 1)(75, LabResultsComponent_Conditional_13_Conditional_75_Template, 2, 1);
     \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
     \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.addResult"] || "Shto Rezultat Laboratori", " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r0.editingResult() ? ctx_r0.i18n.t()["labResults.editResult"] || "Redakto Rezultatin" : ctx_r0.i18n.t()["labResults.addResult"] || "Shto Rezultat Laboratori", " ");
     \u0275\u0275advance(6);
     \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.testName"] || "Emri i Testit", " * ");
     \u0275\u0275advance();
     \u0275\u0275twoWayProperty("ngModel", ctx_r0.formTestName);
     \u0275\u0275property("placeholder", ctx_r0.i18n.t()["labResults.testNamePlaceholder"] || "P.sh. Gjak i plot\xEB");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.type"] || "Lloji i Testit", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1("(", ctx_r0.i18n.t()["labResults.optional"] || "opsionale", ")");
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.formType);
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.isSq() ? "Hemogram" : "Hemogram");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.isSq() ? "Analiz\xEB Urine" : "Urinalysis");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.isSq() ? "Biokim i gjakut" : "Blood Biochemistry");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.isSq() ? "Imunologji" : "Immunology");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.isSq() ? "Tjet\xEBr" : "Other");
     \u0275\u0275advance(4);
     \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.result"] || "Rezultati", " * ");
     \u0275\u0275advance();
@@ -30340,19 +30592,29 @@ function LabResultsComponent_Conditional_13_Template(rf, ctx) {
     \u0275\u0275advance();
     \u0275\u0275twoWayProperty("ngModel", ctx_r0.formNotes);
     \u0275\u0275property("placeholder", ctx_r0.i18n.t()["labResults.notesPlaceholder"] || "Sh\xEBno detajet shtes\xEB...");
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.attachments"] || "Dokumente", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1("(", ctx_r0.i18n.t()["labResults.optional"] || "opsionale", ")");
     \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r0.saveError() ? 43 : -1);
+    \u0275\u0275conditional(ctx_r0.pendingFiles().length < ctx_r0.MAX_FILES ? 66 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.pendingFiles().length > 0 ? 67 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.fileError() ? 68 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.saveError() ? 69 : -1);
     \u0275\u0275advance(3);
     \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.cancel"] || "Anulo", " ");
     \u0275\u0275advance();
     \u0275\u0275property("disabled", ctx_r0.saving() || !ctx_r0.canSave());
     \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r0.saving() ? 48 : 49);
+    \u0275\u0275conditional(ctx_r0.saving() ? 74 : 75);
   }
 }
 function LabResultsComponent_Conditional_14_Conditional_14_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 72);
+    \u0275\u0275elementStart(0, "span", 103);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -30364,10 +30626,27 @@ function LabResultsComponent_Conditional_14_Conditional_14_Template(rf, ctx) {
 }
 function LabResultsComponent_Conditional_14_Conditional_20_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 73)(1, "p", 77);
+    \u0275\u0275elementStart(0, "div", 104)(1, "p", 109);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "p", 78);
+    \u0275\u0275elementStart(3, "p", 110);
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["labResults.type"] || "Lloji i Testit");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.getTypeLabel(ctx_r0.viewingResult().type));
+  }
+}
+function LabResultsComponent_Conditional_14_Conditional_21_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 104)(1, "p", 109);
+    \u0275\u0275text(2);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "p", 110);
     \u0275\u0275text(4);
     \u0275\u0275elementEnd()();
   }
@@ -30379,10 +30658,10 @@ function LabResultsComponent_Conditional_14_Conditional_20_Template(rf, ctx) {
     \u0275\u0275textInterpolate(ctx_r0.viewingResult().referenceRange);
   }
 }
-function LabResultsComponent_Conditional_14_Conditional_21_Template(rf, ctx) {
+function LabResultsComponent_Conditional_14_Conditional_22_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 74);
-    \u0275\u0275element(1, "lucide-icon", 79);
+    \u0275\u0275elementStart(0, "div", 105);
+    \u0275\u0275element(1, "lucide-icon", 111);
     \u0275\u0275elementStart(2, "span");
     \u0275\u0275text(3);
     \u0275\u0275elementEnd()();
@@ -30393,12 +30672,12 @@ function LabResultsComponent_Conditional_14_Conditional_21_Template(rf, ctx) {
     \u0275\u0275textInterpolate(ctx_r0.viewingResult().doctor);
   }
 }
-function LabResultsComponent_Conditional_14_Conditional_22_Template(rf, ctx) {
+function LabResultsComponent_Conditional_14_Conditional_23_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 70)(1, "p", 71);
+    \u0275\u0275elementStart(0, "div", 101)(1, "p", 102);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "p", 80);
+    \u0275\u0275elementStart(3, "p", 112);
     \u0275\u0275text(4);
     \u0275\u0275elementEnd()();
   }
@@ -30410,54 +30689,108 @@ function LabResultsComponent_Conditional_14_Conditional_22_Template(rf, ctx) {
     \u0275\u0275textInterpolate(ctx_r0.viewingResult().notes);
   }
 }
+function LabResultsComponent_Conditional_14_Conditional_24_For_6_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r12 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 116)(1, "div", 89);
+    \u0275\u0275element(2, "lucide-icon", 117);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "div", 31)(4, "p", 118);
+    \u0275\u0275text(5);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(6, "div", 119)(7, "button", 120);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_14_Conditional_24_For_6_Template_button_click_7_listener() {
+      const att_r13 = \u0275\u0275restoreView(_r12).$implicit;
+      const ctx_r0 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r0.viewAttachment(att_r13));
+    });
+    \u0275\u0275element(8, "lucide-icon", 121);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(9, "button", 122);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_14_Conditional_24_For_6_Template_button_click_9_listener() {
+      const ctx_r13 = \u0275\u0275restoreView(_r12);
+      const att_r13 = ctx_r13.$implicit;
+      const $index_r15 = ctx_r13.$index;
+      const ctx_r0 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r0.downloadAttachment(att_r13, $index_r15));
+    });
+    \u0275\u0275element(10, "lucide-icon", 123);
+    \u0275\u0275elementEnd()()();
+  }
+  if (rf & 2) {
+    const $index_r15 = ctx.$index;
+    const ctx_r0 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(5);
+    \u0275\u0275textInterpolate2("", ctx_r0.i18n.t()["labResults.attachments"] || "Dokumenti", " ", $index_r15 + 1);
+  }
+}
+function LabResultsComponent_Conditional_14_Conditional_24_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 106)(1, "div", 113)(2, "p", 114);
+    \u0275\u0275text(3);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(4, "div", 115);
+    \u0275\u0275repeaterCreate(5, LabResultsComponent_Conditional_14_Conditional_24_For_6_Template, 11, 2, "div", 116, \u0275\u0275repeaterTrackByIndex);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate2(" ", ctx_r0.i18n.t()["labResults.attachments"] || "Dokumente", " (", ctx_r0.viewingResult().attachments.length, ") ");
+    \u0275\u0275advance(2);
+    \u0275\u0275repeater(ctx_r0.viewingResult().attachments);
+  }
+}
 function LabResultsComponent_Conditional_14_Template(rf, ctx) {
   if (rf & 1) {
-    const _r6 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 45);
+    const _r11 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 54);
     \u0275\u0275listener("click", function LabResultsComponent_Conditional_14_Template_div_click_0_listener() {
-      \u0275\u0275restoreView(_r6);
+      \u0275\u0275restoreView(_r11);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.viewingResult.set(null));
     });
-    \u0275\u0275elementStart(1, "div", 67);
+    \u0275\u0275elementStart(1, "div", 98);
     \u0275\u0275listener("click", function LabResultsComponent_Conditional_14_Template_div_click_1_listener($event) {
       return $event.stopPropagation();
     });
-    \u0275\u0275elementStart(2, "div", 47)(3, "h2", 48);
+    \u0275\u0275elementStart(2, "div", 56)(3, "h2", 57);
     \u0275\u0275text(4);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "button", 49);
+    \u0275\u0275elementStart(5, "button", 58);
     \u0275\u0275listener("click", function LabResultsComponent_Conditional_14_Template_button_click_5_listener() {
-      \u0275\u0275restoreView(_r6);
+      \u0275\u0275restoreView(_r11);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.viewingResult.set(null));
     });
-    \u0275\u0275element(6, "lucide-icon", 50);
+    \u0275\u0275element(6, "lucide-icon", 59);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(7, "div", 68)(8, "div", 69)(9, "div", 70)(10, "p", 71);
+    \u0275\u0275elementStart(7, "div", 99)(8, "div", 100)(9, "div", 101)(10, "p", 102);
     \u0275\u0275text(11);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(12, "p", 34);
+    \u0275\u0275elementStart(12, "p", 36);
     \u0275\u0275text(13);
-    \u0275\u0275conditionalCreate(14, LabResultsComponent_Conditional_14_Conditional_14_Template, 2, 1, "span", 72);
+    \u0275\u0275conditionalCreate(14, LabResultsComponent_Conditional_14_Conditional_14_Template, 2, 1, "span", 103);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(15, "div", 70)(16, "p", 71);
+    \u0275\u0275elementStart(15, "div", 101)(16, "p", 102);
     \u0275\u0275text(17);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(18, "p", 34);
+    \u0275\u0275elementStart(18, "p", 36);
     \u0275\u0275text(19);
     \u0275\u0275elementEnd()()();
-    \u0275\u0275conditionalCreate(20, LabResultsComponent_Conditional_14_Conditional_20_Template, 5, 2, "div", 73);
-    \u0275\u0275conditionalCreate(21, LabResultsComponent_Conditional_14_Conditional_21_Template, 4, 1, "div", 74);
-    \u0275\u0275conditionalCreate(22, LabResultsComponent_Conditional_14_Conditional_22_Template, 5, 2, "div", 70);
+    \u0275\u0275conditionalCreate(20, LabResultsComponent_Conditional_14_Conditional_20_Template, 5, 2, "div", 104);
+    \u0275\u0275conditionalCreate(21, LabResultsComponent_Conditional_14_Conditional_21_Template, 5, 2, "div", 104);
+    \u0275\u0275conditionalCreate(22, LabResultsComponent_Conditional_14_Conditional_22_Template, 4, 1, "div", 105);
+    \u0275\u0275conditionalCreate(23, LabResultsComponent_Conditional_14_Conditional_23_Template, 5, 2, "div", 101);
+    \u0275\u0275conditionalCreate(24, LabResultsComponent_Conditional_14_Conditional_24_Template, 7, 2, "div", 106);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(23, "div", 75)(24, "button", 76);
-    \u0275\u0275listener("click", function LabResultsComponent_Conditional_14_Template_button_click_24_listener() {
-      \u0275\u0275restoreView(_r6);
+    \u0275\u0275elementStart(25, "div", 107)(26, "button", 108);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_14_Template_button_click_26_listener() {
+      \u0275\u0275restoreView(_r11);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.viewingResult.set(null));
     });
-    \u0275\u0275text(25);
+    \u0275\u0275text(27);
     \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
@@ -30475,48 +30808,114 @@ function LabResultsComponent_Conditional_14_Template(rf, ctx) {
     \u0275\u0275advance(2);
     \u0275\u0275textInterpolate(ctx_r0.formatDate(ctx_r0.viewingResult().date));
     \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r0.viewingResult().referenceRange ? 20 : -1);
+    \u0275\u0275conditional(ctx_r0.viewingResult().type ? 20 : -1);
     \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r0.viewingResult().doctor ? 21 : -1);
+    \u0275\u0275conditional(ctx_r0.viewingResult().referenceRange ? 21 : -1);
     \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r0.viewingResult().notes ? 22 : -1);
+    \u0275\u0275conditional(ctx_r0.viewingResult().doctor ? 22 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.viewingResult().notes ? 23 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.viewingResult().attachments && ctx_r0.viewingResult().attachments.length > 0 ? 24 : -1);
     \u0275\u0275advance(3);
     \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.close"] || "Mbyll", " ");
   }
 }
+function LabResultsComponent_Conditional_15_Conditional_11_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "iframe", 133);
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275property("src", ctx_r0.getPdfUrl(ctx_r0.viewingAttachment()), \u0275\u0275sanitizeResourceUrl);
+  }
+}
+function LabResultsComponent_Conditional_15_Conditional_12_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "img", 134);
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275property("src", ctx_r0.viewingAttachment(), \u0275\u0275sanitizeUrl);
+  }
+}
 function LabResultsComponent_Conditional_15_Template(rf, ctx) {
   if (rf & 1) {
-    const _r7 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 45);
+    const _r16 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 124);
     \u0275\u0275listener("click", function LabResultsComponent_Conditional_15_Template_div_click_0_listener() {
-      \u0275\u0275restoreView(_r7);
+      \u0275\u0275restoreView(_r16);
       const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.showDeleteModal.set(false));
+      return \u0275\u0275resetView(ctx_r0.viewingAttachment.set(null));
     });
-    \u0275\u0275elementStart(1, "div", 81);
+    \u0275\u0275elementStart(1, "div", 125);
     \u0275\u0275listener("click", function LabResultsComponent_Conditional_15_Template_div_click_1_listener($event) {
       return $event.stopPropagation();
     });
-    \u0275\u0275elementStart(2, "div", 82);
-    \u0275\u0275element(3, "lucide-icon", 83);
+    \u0275\u0275elementStart(2, "div", 126)(3, "p", 127);
+    \u0275\u0275text(4);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(4, "h3", 84);
+    \u0275\u0275elementStart(5, "div", 128)(6, "button", 129);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_15_Template_button_click_6_listener() {
+      \u0275\u0275restoreView(_r16);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.downloadAttachment(ctx_r0.viewingAttachment(), 0));
+    });
+    \u0275\u0275element(7, "lucide-icon", 123);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(8, "button", 130);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_15_Template_button_click_8_listener() {
+      \u0275\u0275restoreView(_r16);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.viewingAttachment.set(null));
+    });
+    \u0275\u0275element(9, "lucide-icon", 131);
+    \u0275\u0275elementEnd()()();
+    \u0275\u0275elementStart(10, "div", 132);
+    \u0275\u0275conditionalCreate(11, LabResultsComponent_Conditional_15_Conditional_11_Template, 1, 1, "iframe", 133)(12, LabResultsComponent_Conditional_15_Conditional_12_Template, 1, 1, "img", 134);
+    \u0275\u0275elementEnd()()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(ctx_r0.i18n.t()["labResults.viewAttachment"] || "Shiko Dokumentin");
+    \u0275\u0275advance(7);
+    \u0275\u0275conditional(ctx_r0.isPdfAttachment(ctx_r0.viewingAttachment()) ? 11 : 12);
+  }
+}
+function LabResultsComponent_Conditional_16_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r17 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 54);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_16_Template_div_click_0_listener() {
+      \u0275\u0275restoreView(_r17);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.showDeleteModal.set(false));
+    });
+    \u0275\u0275elementStart(1, "div", 135);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_16_Template_div_click_1_listener($event) {
+      return $event.stopPropagation();
+    });
+    \u0275\u0275elementStart(2, "div", 136);
+    \u0275\u0275element(3, "lucide-icon", 137);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "h3", 138);
     \u0275\u0275text(5);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(6, "p", 85);
+    \u0275\u0275elementStart(6, "p", 139);
     \u0275\u0275text(7);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(8, "div", 86)(9, "button", 87);
-    \u0275\u0275listener("click", function LabResultsComponent_Conditional_15_Template_button_click_9_listener() {
-      \u0275\u0275restoreView(_r7);
+    \u0275\u0275elementStart(8, "div", 140)(9, "button", 141);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_16_Template_button_click_9_listener() {
+      \u0275\u0275restoreView(_r17);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.showDeleteModal.set(false));
     });
     \u0275\u0275text(10);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(11, "button", 88);
-    \u0275\u0275listener("click", function LabResultsComponent_Conditional_15_Template_button_click_11_listener() {
-      \u0275\u0275restoreView(_r7);
+    \u0275\u0275elementStart(11, "button", 142);
+    \u0275\u0275listener("click", function LabResultsComponent_Conditional_16_Template_button_click_11_listener() {
+      \u0275\u0275restoreView(_r17);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.deleteLabResult());
     });
@@ -30536,6 +30935,9 @@ function LabResultsComponent_Conditional_15_Template(rf, ctx) {
     \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["labResults.delete"] || "Fshi", " ");
   }
 }
+var MAX_FILE_SIZE = 10 * 1024 * 1024;
+var MAX_FILES = 5;
+var ALLOWED_TYPES = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
 var LabResultsComponent = class _LabResultsComponent {
   constructor() {
     this.i18n = inject(I18nService);
@@ -30564,10 +30966,31 @@ var LabResultsComponent = class _LabResultsComponent {
       /* istanbul ignore next */
       []
     ));
+    this.editingResult = signal(null, ...ngDevMode ? [{ debugName: "editingResult" }] : (
+      /* istanbul ignore next */
+      []
+    ));
     this.saveError = signal(null, ...ngDevMode ? [{ debugName: "saveError" }] : (
       /* istanbul ignore next */
       []
     ));
+    this.fileError = signal(null, ...ngDevMode ? [{ debugName: "fileError" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.viewingAttachment = signal(null, ...ngDevMode ? [{ debugName: "viewingAttachment" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.pendingFiles = signal([], ...ngDevMode ? [{ debugName: "pendingFiles" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.isDragOver = signal(false, ...ngDevMode ? [{ debugName: "isDragOver" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.MAX_FILES = MAX_FILES;
     this.formTestName = signal("", ...ngDevMode ? [{ debugName: "formTestName" }] : (
       /* istanbul ignore next */
       []
@@ -30596,6 +31019,10 @@ var LabResultsComponent = class _LabResultsComponent {
       /* istanbul ignore next */
       []
     ));
+    this.formType = signal("", ...ngDevMode ? [{ debugName: "formType" }] : (
+      /* istanbul ignore next */
+      []
+    ));
     this.activeChild = computed(() => {
       const id = this.data.activeChildId();
       return this.data.children().find((c) => c.id === id) ?? null;
@@ -30603,7 +31030,7 @@ var LabResultsComponent = class _LabResultsComponent {
       /* istanbul ignore next */
       []
     ));
-    this.labResults = signal([], ...ngDevMode ? [{ debugName: "labResults" }] : (
+    this.labResults = computed(() => this.data.labResults(), ...ngDevMode ? [{ debugName: "labResults" }] : (
       /* istanbul ignore next */
       []
     ));
@@ -30624,14 +31051,7 @@ var LabResultsComponent = class _LabResultsComponent {
         return;
       this.loading.set(true);
       try {
-        const token = localStorage.getItem(this.data.AUTH_KEY);
-        const response = yield fetch(`${this.data.API_URL}/lab-results/child/${childId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (response.ok) {
-          const data = yield response.json();
-          this.labResults.set(Array.isArray(data) ? data : []);
-        }
+        yield this.data.loadLabResults(childId);
       } catch (e) {
       } finally {
         this.loading.set(false);
@@ -30639,6 +31059,7 @@ var LabResultsComponent = class _LabResultsComponent {
     });
   }
   openAddModal() {
+    this.editingResult.set(null);
     this.formTestName.set("");
     this.formResult.set("");
     this.formUnit.set("");
@@ -30646,7 +31067,32 @@ var LabResultsComponent = class _LabResultsComponent {
     this.formDate.set((/* @__PURE__ */ new Date()).toISOString().split("T")[0]);
     this.formDoctor.set("");
     this.formNotes.set("");
+    this.formType.set("");
+    this.pendingFiles.set([]);
     this.saveError.set(null);
+    this.fileError.set(null);
+    this.showModal.set(true);
+  }
+  openEditModal(lr) {
+    this.editingResult.set(lr);
+    this.formTestName.set(lr.testName);
+    this.formResult.set(lr.result);
+    this.formUnit.set(lr.unit || "");
+    this.formReferenceRange.set(lr.referenceRange || "");
+    this.formDate.set(lr.date.split("T")[0]);
+    this.formDoctor.set(lr.doctor || "");
+    this.formNotes.set(lr.notes || "");
+    this.formType.set(lr.type || "");
+    const existing = (lr.attachments || []).map((att, i) => ({
+      name: `${this.i18n.t()["labResults.attachments"] || "Dokumenti"} ${i + 1}`,
+      size: Math.round(att.length * 3 / 4),
+      // rough base64 estimate
+      base64: att,
+      mimeType: this.guessMimeType(att)
+    }));
+    this.pendingFiles.set(existing);
+    this.saveError.set(null);
+    this.fileError.set(null);
     this.showModal.set(true);
   }
   openViewModal(lr) {
@@ -30654,6 +31100,7 @@ var LabResultsComponent = class _LabResultsComponent {
   }
   closeModal() {
     this.showModal.set(false);
+    this.editingResult.set(null);
   }
   saveLabResult() {
     return __async(this, null, function* () {
@@ -30664,6 +31111,7 @@ var LabResultsComponent = class _LabResultsComponent {
         return;
       this.saving.set(true);
       this.saveError.set(null);
+      const attachments = this.pendingFiles().map((f) => f.base64);
       const payload = {
         testName: this.formTestName().trim(),
         result: this.formResult().trim(),
@@ -30671,29 +31119,20 @@ var LabResultsComponent = class _LabResultsComponent {
         referenceRange: this.formReferenceRange().trim() || void 0,
         date: new Date(this.formDate()).toISOString(),
         doctor: this.formDoctor().trim() || void 0,
-        notes: this.formNotes().trim() || void 0
+        notes: this.formNotes().trim() || void 0,
+        type: this.formType().trim() || void 0,
+        attachments
       };
       try {
-        const token = localStorage.getItem(this.data.AUTH_KEY);
-        const response = yield fetch(`${this.data.API_URL}/lab-results/${childId}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify(payload)
-        });
-        if (!response.ok) {
-          const err = yield response.json().catch(() => ({}));
-          throw new Error(err.message || "Save failed");
+        if (this.editingResult()) {
+          yield this.data.updateLabResult(this.editingResult().id, payload);
+        } else {
+          yield this.data.addLabResult(childId, payload);
         }
-        const saved = yield response.json();
-        const list = [saved, ...this.labResults()];
-        list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        this.labResults.set(list);
+        yield this.data.loadLabResults(childId);
         this.closeModal();
       } catch (err) {
-        this.saveError.set(err.message || this.i18n.t()["labResults.saveError"] || "Ruajtja d\xEBshtoi.");
+        this.saveError.set(err?.message || this.i18n.t()["labResults.saveError"] || "Ruajtja d\xEBshtoi.");
       } finally {
         this.saving.set(false);
       }
@@ -30709,14 +31148,10 @@ var LabResultsComponent = class _LabResultsComponent {
       if (!lr)
         return;
       try {
-        const token = localStorage.getItem(this.data.AUTH_KEY);
-        const response = yield fetch(`${this.data.API_URL}/lab-results/${lr.id}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (response.ok) {
-          this.labResults.set(this.labResults().filter((r) => r.id !== lr.id));
-        }
+        yield this.data.deleteLabResult(lr.id);
+        const childId = this.data.activeChildId();
+        if (childId)
+          yield this.data.loadLabResults(childId);
       } catch (e) {
       } finally {
         this.showDeleteModal.set(false);
@@ -30730,33 +31165,140 @@ var LabResultsComponent = class _LabResultsComponent {
     const d = new Date(dateStr);
     return d.toLocaleDateString(this.i18n.isSq() ? "sq-AL" : "en-GB", { day: "2-digit", month: "short", year: "numeric" });
   }
+  getTypeLabel(type) {
+    const labels = {
+      hemogram: { sq: "Hemogram", en: "Hemogram" },
+      urinalysis: { sq: "Analiz\xEB Urine", en: "Urinalysis" },
+      biochemistry: { sq: "Biokim i gjakut", en: "Blood Biochemistry" },
+      immunology: { sq: "Imunologji", en: "Immunology" },
+      other: { sq: "Tjet\xEBr", en: "Other" }
+    };
+    return labels[type]?.[this.i18n.isSq() ? "sq" : "en"] || type;
+  }
+  // ─── File handling ───────────────────────────────────────────
+  onDragOver(event) {
+    event.preventDefault();
+    this.isDragOver.set(true);
+  }
+  onDragLeave(event) {
+    event.preventDefault();
+    this.isDragOver.set(false);
+  }
+  onDrop(event) {
+    event.preventDefault();
+    this.isDragOver.set(false);
+    const files = event.dataTransfer?.files;
+    if (files)
+      this.processFiles(files);
+  }
+  onFileSelected(event) {
+    const input2 = event.target;
+    if (input2.files)
+      this.processFiles(input2.files);
+    input2.value = "";
+  }
+  processFiles(files) {
+    this.fileError.set(null);
+    if (this.pendingFiles().length >= MAX_FILES) {
+      this.fileError.set(this.i18n.t()["labResults.maxFilesReached"] || "Maksimumi 5 fajlla p\xEBr rezultat");
+      return;
+    }
+    const remaining = MAX_FILES - this.pendingFiles().length;
+    const toProcess = Array.from(files).slice(0, remaining);
+    for (const file of toProcess) {
+      if (file.size > MAX_FILE_SIZE) {
+        this.fileError.set(this.i18n.t()["labResults.fileTooBig"] || "Skedari tejkalon 10MB");
+        continue;
+      }
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        this.fileError.set(this.i18n.t()["labResults.fileTypeError"] || "Lloji i skedarit nuk mb\xEBshtetet. Vet\xEBm PDF dhe imazhe.");
+        continue;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = (e.target?.result).split(",")[1];
+        const pending = {
+          name: file.name,
+          size: file.size,
+          base64,
+          mimeType: file.type
+        };
+        this.pendingFiles.update((list) => [...list, pending]);
+      };
+      reader.readAsDataURL(file);
+    }
+    if (Array.from(files).length > remaining) {
+      this.fileError.set(this.i18n.t()["labResults.maxFilesReached"] || "Maksimumi 5 fajlla p\xEBr rezultat");
+    }
+  }
+  removePendingFile(index) {
+    this.pendingFiles.update((list) => list.filter((_, i) => i !== index));
+  }
+  formatFileSize(bytes) {
+    if (bytes < 1024)
+      return bytes + " B";
+    if (bytes < 1024 * 1024)
+      return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  }
+  guessMimeType(base64) {
+    if (base64.startsWith("/9j/"))
+      return "image/jpeg";
+    if (base64.startsWith("iVBOR"))
+      return "image/png";
+    if (base64.startsWith("UEs"))
+      return "application/pdf";
+    if (base64.startsWith("JVBER"))
+      return "application/pdf";
+    return "application/octet-stream";
+  }
+  isPdfAttachment(base64) {
+    return this.guessMimeType(base64) === "application/pdf";
+  }
+  getPdfUrl(base64) {
+    const mime = this.guessMimeType(base64);
+    return `data:${mime};base64,${base64}`;
+  }
+  viewAttachment(base64) {
+    this.viewingAttachment.set(base64);
+  }
+  downloadAttachment(base64, index) {
+    const mime = this.guessMimeType(base64);
+    const ext = mime.split("/")[1];
+    const dataUrl = `data:${mime};base64,${base64}`;
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = `lab-result-attachment-${index + 1}.${ext}`;
+    a.click();
+  }
   static {
     this.\u0275fac = function LabResultsComponent_Factory(__ngFactoryType__) {
       return new (__ngFactoryType__ || _LabResultsComponent)();
     };
   }
   static {
-    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _LabResultsComponent, selectors: [["app-lab-results"]], decls: 16, vars: 9, consts: [[1, "min-h-screen", "bg-gray-50", "pb-24"], [1, "bg-white", "border-b", "border-gray-100", "px-4", "pt-6", "pb-4"], [1, "flex", "items-center", "justify-between"], [1, "text-3xl", "font-extrabold", "text-gray-800"], [1, "text-slate-400", "text-sm", "mt-1", "font-medium"], [1, "bg-indigo-500", "hover:bg-indigo-600", "text-white", "px-5", "py-2.5", "rounded-2xl", "font-bold", "shadow-sm", "transition-all", "flex", "items-center", "gap-2", "text-sm", 3, "click"], ["name", "plus", 1, "text-inherit"], [1, "px-4", "mt-4", "space-y-3"], [1, "flex", "flex-col", "items-center", "justify-center", "mt-20", "px-4"], [1, "fixed", "inset-0", "z-50", "flex", "items-center", "justify-center", "p-4", "bg-black/40", "backdrop-blur-sm"], [1, "bg-white", "rounded-2xl", "p-5", "border", "border-gray-100", "animate-pulse"], [1, "flex", "gap-4"], [1, "w-12", "h-12", "rounded-xl", "bg-gray-200"], [1, "flex-1", "space-y-2"], [1, "h-4", "bg-gray-200", "rounded", "w-1/2"], [1, "h-3", "bg-gray-100", "rounded", "w-1/3"], ["width", "160", "height", "160", "viewBox", "0 0 160 160", "fill", "none", 1, "mb-6"], ["cx", "80", "cy", "80", "r", "60", "fill", "#EEF2FF"], ["d", "M55 90 L70 90 M70 90 L70 65 M70 65 L90 65 L90 90 L110 90", "stroke", "#6366F1", "stroke-width", "4", "stroke-linecap", "round", "stroke-linejoin", "round", "fill", "none"], ["cx", "80", "cy", "50", "r", "10", "stroke", "#C7D2FE", "stroke-width", "3", "fill", "none"], [1, "text-xl", "font-extrabold", "text-gray-700", "mb-2"], [1, "text-slate-400", "text-center", "mb-6", "text-sm"], [1, "bg-indigo-500", "hover:bg-indigo-600", "text-white", "px-6", "py-3", "rounded-2xl", "font-bold", "shadow-sm", "transition-all", "text-sm", 3, "click"], ["name", "plus", 1, "text-inherit", "inline", "w-4", "h-4", "mr-1"], [1, "bg-white", "rounded-2xl", "border", "border-gray-100", "shadow-sm", "overflow-hidden"], [1, "p-5"], [1, "flex", "items-start", "gap-4"], [1, "w-12", "h-12", "rounded-xl", "bg-violet-100", "flex", "items-center", "justify-center", "flex-shrink-0"], ["name", "flask-conical", 1, "text-violet-500", "w-5", "h-5"], [1, "flex-1", "min-w-0"], [1, "flex", "items-start", "justify-between", "gap-2"], [1, "font-bold", "text-gray-800", "text-base", "truncate"], [1, "text-xs", "font-semibold", "text-slate-400", "flex-shrink-0"], [1, "flex", "items-center", "gap-2", "mt-1.5"], [1, "text-lg", "font-extrabold", "text-gray-800"], [1, "text-sm", "text-slate-400"], [1, "text-xs", "text-slate-400", "bg-slate-100", "px-2", "py-0.5", "rounded-full"], [1, "flex", "items-center", "gap-2", "mt-1", "text-xs", "text-slate-400"], [1, "mt-3", "text-xs", "text-slate-500", "bg-slate-50", "rounded-xl", "p-3"], [1, "flex", "items-center", "gap-2", "mt-4"], [1, "flex-1", "py-2", "rounded-xl", "text-xs", "font-semibold", "bg-indigo-50", "hover:bg-indigo-100", "text-indigo-600", "transition-all", "flex", "items-center", "justify-center", "gap-1.5", 3, "click"], ["name", "eye", 1, "w-3.5", "h-3.5"], [1, "flex-1", "py-2", "rounded-xl", "text-xs", "font-semibold", "bg-red-50", "hover:bg-red-100", "text-red-600", "transition-all", "flex", "items-center", "justify-center", "gap-1.5", 3, "click"], ["name", "trash-2", 1, "w-3.5", "h-3.5"], ["name", "stethoscope", 1, "w-3.5", "h-3.5", "flex-shrink-0"], [1, "fixed", "inset-0", "z-50", "flex", "items-center", "justify-center", "p-4", "bg-black/40", "backdrop-blur-sm", 3, "click"], [1, "bg-white", "rounded-3xl", "shadow-2xl", "w-full", "max-w-md", "max-h-[90vh]", "overflow-y-auto", 3, "click"], [1, "px-6", "pt-6", "pb-4", "border-b", "border-gray-100", "flex", "items-center", "justify-between"], [1, "text-xl", "font-extrabold", "text-gray-800"], [1, "p-2", "rounded-xl", "hover:bg-gray-100", "transition-colors", 3, "click"], ["name", "x", 1, "w-5", "h-5", "text-slate-400"], [1, "p-6", "space-y-5"], [1, "block", "text-xs", "font-bold", "text-primary-700", "mb-2", "uppercase", "tracking-wider"], ["type", "text", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "ngModel", "placeholder"], [1, "grid", "grid-cols-2", "gap-3"], ["type", "text", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "ngModel"], ["type", "text", "placeholder", "g/dL", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "ngModel"], [1, "text-slate-400", "normal-case", "font-normal", "text-xs", "ml-1"], ["type", "text", "placeholder", "P.sh. 12.0 - 16.0", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "ngModel"], ["type", "date", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", 3, "ngModelChange", "ngModel"], ["rows", "2", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "resize-none", 3, "ngModelChange", "ngModel", "placeholder"], [1, "p-3", "bg-red-50", "border", "border-red-200", "rounded-xl", "text-red-600", "text-sm", "font-semibold"], [1, "px-6", "pb-6", "flex", "gap-3"], [1, "flex-1", "py-3.5", "rounded-2xl", "font-bold", "text-slate-600", "bg-slate-100", "hover:bg-slate-200", "transition-all", "text-sm", 3, "click"], [1, "flex-1", "py-3.5", "rounded-2xl", "font-bold", "text-white", "bg-indigo-500", "hover:bg-indigo-600", "disabled:opacity-50", "disabled:cursor-not-allowed", "transition-all", "text-sm", "flex", "items-center", "justify-center", "gap-2", 3, "click", "disabled"], ["name", "loader-2", 1, "w-4", "h-4", "animate-spin"], ["name", "check", 1, "w-4", "h-4"], [1, "bg-white", "rounded-3xl", "shadow-2xl", "w-full", "max-w-md", 3, "click"], [1, "p-6", "space-y-4"], [1, "grid", "grid-cols-2", "gap-4"], [1, "bg-slate-50", "rounded-2xl", "p-4"], [1, "text-xs", "text-slate-400", "font-semibold", "uppercase", "tracking-wider", "mb-1"], [1, "text-sm", "font-normal", "text-slate-400"], [1, "bg-violet-50", "rounded-2xl", "p-4"], [1, "flex", "items-center", "gap-2", "text-sm", "text-slate-500"], [1, "px-6", "pb-6"], [1, "w-full", "py-3.5", "rounded-2xl", "font-bold", "text-slate-600", "bg-slate-100", "hover:bg-slate-200", "transition-all", "text-sm", 3, "click"], [1, "text-xs", "text-violet-500", "font-semibold", "uppercase", "tracking-wider", "mb-1"], [1, "text-base", "font-bold", "text-violet-700"], ["name", "stethoscope", 1, "w-4", "h-4", "text-slate-400"], [1, "text-sm", "text-slate-600"], [1, "bg-white", "rounded-3xl", "shadow-2xl", "w-full", "max-w-sm", "p-6", 3, "click"], [1, "w-14", "h-14", "bg-red-100", "rounded-2xl", "flex", "items-center", "justify-center", "mx-auto", "mb-4"], ["name", "trash-2", 1, "text-red-500", "w-6", "h-6"], [1, "text-lg", "font-extrabold", "text-gray-800", "text-center", "mb-2"], [1, "text-slate-500", "text-sm", "text-center", "mb-6"], [1, "flex", "gap-3"], [1, "flex-1", "py-3", "rounded-2xl", "font-bold", "text-slate-600", "bg-slate-100", "hover:bg-slate-200", "transition-all", "text-sm", 3, "click"], [1, "flex-1", "py-3", "rounded-2xl", "font-bold", "text-white", "bg-red-500", "hover:bg-red-600", "transition-all", "text-sm", 3, "click"]], template: function LabResultsComponent_Template(rf, ctx) {
+    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _LabResultsComponent, selectors: [["app-lab-results"]], decls: 17, vars: 10, consts: [["fileInput", ""], [1, "min-h-screen", "bg-gray-50", "pb-24"], [1, "bg-white", "border-b", "border-gray-100", "px-4", "pt-6", "pb-4"], [1, "flex", "items-center", "justify-between"], [1, "text-3xl", "font-extrabold", "text-gray-800"], [1, "text-slate-400", "text-sm", "mt-1", "font-medium"], [1, "bg-indigo-500", "hover:bg-indigo-600", "text-white", "px-5", "py-2.5", "rounded-2xl", "font-bold", "shadow-sm", "transition-all", "flex", "items-center", "gap-2", "text-sm", 3, "click"], ["name", "plus", 1, "text-inherit"], [1, "px-4", "mt-4", "space-y-3"], [1, "flex", "flex-col", "items-center", "justify-center", "mt-20", "px-4"], [1, "fixed", "inset-0", "z-50", "flex", "items-center", "justify-center", "p-4", "bg-black/40", "backdrop-blur-sm"], [1, "fixed", "inset-0", "z-[60]", "flex", "items-center", "justify-center", "p-4", "bg-black/80", "backdrop-blur-sm"], [1, "bg-white", "rounded-2xl", "p-5", "border", "border-gray-100", "animate-pulse"], [1, "flex", "gap-4"], [1, "w-12", "h-12", "rounded-xl", "bg-gray-200"], [1, "flex-1", "space-y-2"], [1, "h-4", "bg-gray-200", "rounded", "w-1/2"], [1, "h-3", "bg-gray-100", "rounded", "w-1/3"], ["width", "160", "height", "160", "viewBox", "0 0 160 160", "fill", "none", 1, "mb-6"], ["cx", "80", "cy", "80", "r", "60", "fill", "#EEF2FF"], ["d", "M55 90 L70 90 M70 90 L70 65 M70 65 L90 65 L90 90 L110 90", "stroke", "#6366F1", "stroke-width", "4", "stroke-linecap", "round", "stroke-linejoin", "round", "fill", "none"], ["cx", "80", "cy", "50", "r", "10", "stroke", "#C7D2FE", "stroke-width", "3", "fill", "none"], [1, "text-xl", "font-extrabold", "text-gray-700", "mb-2"], [1, "text-slate-400", "text-center", "mb-6", "text-sm"], [1, "bg-indigo-500", "hover:bg-indigo-600", "text-white", "px-6", "py-3", "rounded-2xl", "font-bold", "shadow-sm", "transition-all", "text-sm", 3, "click"], ["name", "plus", 1, "text-inherit", "inline", "w-4", "h-4", "mr-1"], [1, "bg-white", "rounded-2xl", "border", "border-gray-100", "shadow-sm", "overflow-hidden"], [1, "p-5"], [1, "flex", "items-start", "gap-4"], [1, "w-12", "h-12", "rounded-xl", "bg-violet-100", "flex", "items-center", "justify-center", "flex-shrink-0"], ["name", "flask-conical", 1, "text-violet-500", "w-5", "h-5"], [1, "flex-1", "min-w-0"], [1, "flex", "items-start", "justify-between", "gap-2"], [1, "font-bold", "text-gray-800", "text-base", "truncate"], [1, "text-xs", "font-semibold", "text-slate-400", "flex-shrink-0"], [1, "flex", "items-center", "gap-2", "mt-1.5", "flex-wrap"], [1, "text-lg", "font-extrabold", "text-gray-800"], [1, "text-sm", "text-slate-400"], [1, "text-xs", "text-slate-400", "bg-slate-100", "px-2", "py-0.5", "rounded-full"], [1, "mt-1"], [1, "flex", "items-center", "gap-2", "mt-1", "text-xs", "text-slate-400"], [1, "flex", "items-center", "gap-1.5", "mt-2"], [1, "mt-3", "text-xs", "text-slate-500", "bg-slate-50", "rounded-xl", "p-3"], [1, "flex", "items-center", "gap-2", "mt-4"], [1, "flex-1", "py-2", "rounded-xl", "text-xs", "font-semibold", "bg-indigo-50", "hover:bg-indigo-100", "text-indigo-600", "transition-all", "flex", "items-center", "justify-center", "gap-1.5", 3, "click"], ["name", "eye", 1, "w-3.5", "h-3.5"], [1, "flex-1", "py-2", "rounded-xl", "text-xs", "font-semibold", "bg-slate-100", "hover:bg-slate-200", "text-slate-600", "transition-all", "flex", "items-center", "justify-center", "gap-1.5", 3, "click"], ["name", "pencil", 1, "w-3.5", "h-3.5"], [1, "flex-1", "py-2", "rounded-xl", "text-xs", "font-semibold", "bg-red-50", "hover:bg-red-100", "text-red-600", "transition-all", "flex", "items-center", "justify-center", "gap-1.5", 3, "click"], ["name", "trash-2", 1, "w-3.5", "h-3.5"], [1, "text-xs", "font-semibold", "text-violet-600", "bg-violet-50", "px-2", "py-0.5", "rounded-full"], ["name", "stethoscope", 1, "w-3.5", "h-3.5", "flex-shrink-0"], [1, "text-xs", "font-semibold", "text-indigo-600", "bg-indigo-50", "px-2", "py-0.5", "rounded-full", "flex", "items-center", "gap-1"], ["name", "paperclip", 1, "w-3", "h-3"], [1, "fixed", "inset-0", "z-50", "flex", "items-center", "justify-center", "p-4", "bg-black/40", "backdrop-blur-sm", 3, "click"], [1, "bg-white", "rounded-3xl", "shadow-2xl", "w-full", "max-w-md", "max-h-[90vh]", "overflow-y-auto", 3, "click"], [1, "px-6", "pt-6", "pb-4", "border-b", "border-gray-100", "flex", "items-center", "justify-between"], [1, "text-xl", "font-extrabold", "text-gray-800"], [1, "p-2", "rounded-xl", "hover:bg-gray-100", "transition-colors", 3, "click"], ["name", "x", 1, "w-5", "h-5", "text-slate-400"], [1, "p-6", "space-y-5"], [1, "block", "text-xs", "font-bold", "text-primary-700", "mb-2", "uppercase", "tracking-wider"], ["type", "text", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "ngModel", "placeholder"], [1, "text-slate-400", "normal-case", "font-normal", "text-xs", "ml-1"], [1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "ngModel"], ["value", ""], ["value", "hemogram"], ["value", "urinalysis"], ["value", "biochemistry"], ["value", "immunology"], ["value", "other"], [1, "grid", "grid-cols-2", "gap-3"], ["type", "text", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "ngModel"], ["type", "text", "placeholder", "g/dL", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "ngModel"], ["type", "text", "placeholder", "P.sh. 12.0 - 16.0", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "ngModel"], ["type", "date", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", 3, "ngModelChange", "ngModel"], ["rows", "2", "maxlength", "500", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-primary-500/10", "focus:border-primary-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "resize-none", 3, "ngModelChange", "ngModel", "placeholder"], [1, "mt-3", "space-y-2"], [1, "p-3", "bg-red-50", "border", "border-red-200", "rounded-xl", "text-red-600", "text-sm", "font-semibold", "mt-2"], [1, "p-3", "bg-red-50", "border", "border-red-200", "rounded-xl", "text-red-600", "text-sm", "font-semibold"], [1, "px-6", "pb-6", "flex", "gap-3"], [1, "flex-1", "py-3.5", "rounded-2xl", "font-bold", "text-slate-600", "bg-slate-100", "hover:bg-slate-200", "transition-all", "text-sm", 3, "click"], [1, "flex-1", "py-3.5", "rounded-2xl", "font-bold", "text-white", "bg-indigo-500", "hover:bg-indigo-600", "disabled:opacity-50", "disabled:cursor-not-allowed", "transition-all", "text-sm", "flex", "items-center", "justify-center", "gap-2", 3, "click", "disabled"], [1, "border-2", "border-dashed", "border-slate-300", "rounded-2xl", "p-6", "text-center", "cursor-pointer", "hover:border-indigo-400", "hover:bg-indigo-50/30", "transition-all", 3, "click", "dragover", "dragleave", "drop"], ["name", "upload-cloud", 1, "w-8", "h-8", "text-slate-400", "mx-auto", "mb-2"], [1, "text-sm", "text-slate-500"], [1, "text-xs", "text-slate-400", "mt-1"], ["type", "file", "accept", ".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp", 1, "hidden", 3, "change"], [1, "flex", "items-center", "gap-3", "bg-slate-50", "rounded-xl", "p-3", "border", "border-slate-200"], [1, "w-10", "h-10", "rounded-lg", "bg-indigo-100", "flex", "items-center", "justify-center", "flex-shrink-0"], ["name", "file-text", 1, "w-5", "h-5", "text-red-500"], ["name", "image", 1, "w-5", "h-5", "text-indigo-500"], [1, "text-sm", "font-semibold", "text-gray-800", "truncate"], [1, "text-xs", "text-slate-400"], [1, "p-1.5", "rounded-lg", "hover:bg-red-100", "text-red-500", "transition-colors", "flex-shrink-0", 3, "click"], ["name", "x", 1, "w-4", "h-4"], ["name", "loader-2", 1, "w-4", "h-4", "animate-spin"], ["name", "check", 1, "w-4", "h-4"], [1, "bg-white", "rounded-3xl", "shadow-2xl", "w-full", "max-w-md", 3, "click"], [1, "p-6", "space-y-4"], [1, "grid", "grid-cols-2", "gap-4"], [1, "bg-slate-50", "rounded-2xl", "p-4"], [1, "text-xs", "text-slate-400", "font-semibold", "uppercase", "tracking-wider", "mb-1"], [1, "text-sm", "font-normal", "text-slate-400"], [1, "bg-violet-50", "rounded-2xl", "p-4"], [1, "flex", "items-center", "gap-2", "text-sm", "text-slate-500"], [1, "border", "border-slate-200", "rounded-2xl", "overflow-hidden"], [1, "px-6", "pb-6"], [1, "w-full", "py-3.5", "rounded-2xl", "font-bold", "text-slate-600", "bg-slate-100", "hover:bg-slate-200", "transition-all", "text-sm", 3, "click"], [1, "text-xs", "text-violet-500", "font-semibold", "uppercase", "tracking-wider", "mb-1"], [1, "text-base", "font-bold", "text-violet-700"], ["name", "stethoscope", 1, "w-4", "h-4", "text-slate-400"], [1, "text-sm", "text-slate-600"], [1, "px-4", "py-3", "bg-slate-50", "border-b", "border-slate-200"], [1, "text-xs", "font-bold", "text-slate-500", "uppercase", "tracking-wider"], [1, "p-4", "space-y-3"], [1, "flex", "items-center", "gap-3", "bg-white", "border", "border-slate-100", "rounded-xl", "p-3"], ["name", "file-text", 1, "w-5", "h-5", "text-indigo-500"], [1, "text-sm", "font-semibold", "text-gray-700"], [1, "flex", "gap-1"], [1, "p-2", "rounded-lg", "bg-indigo-50", "hover:bg-indigo-100", "text-indigo-600", "transition-colors", 3, "click"], ["name", "eye", 1, "w-4", "h-4"], [1, "p-2", "rounded-lg", "bg-slate-50", "hover:bg-slate-100", "text-slate-600", "transition-colors", 3, "click"], ["name", "download", 1, "w-4", "h-4"], [1, "fixed", "inset-0", "z-[60]", "flex", "items-center", "justify-center", "p-4", "bg-black/80", "backdrop-blur-sm", 3, "click"], [1, "bg-white", "rounded-3xl", "shadow-2xl", "w-full", "max-w-2xl", "max-h-[90vh]", "overflow-hidden", "flex", "flex-col", 3, "click"], [1, "px-6", "py-4", "border-b", "border-gray-200", "flex", "items-center", "justify-between", "bg-slate-50"], [1, "text-sm", "font-bold", "text-gray-700"], [1, "flex", "gap-2"], [1, "p-2", "rounded-xl", "bg-indigo-50", "hover:bg-indigo-100", "text-indigo-600", "transition-colors", 3, "click"], [1, "p-2", "rounded-xl", "hover:bg-gray-200", "text-gray-500", "transition-colors", 3, "click"], ["name", "x", 1, "w-5", "h-5"], [1, "flex-1", "overflow-auto", "p-4", "bg-gray-100"], [1, "w-full", "h-full", "min-h-[500px]", "rounded-xl", "border-0", 3, "src"], ["alt", "Attachment", 1, "max-w-full", "max-h-full", "object-contain", "rounded-xl", "mx-auto", 3, "src"], [1, "bg-white", "rounded-3xl", "shadow-2xl", "w-full", "max-w-sm", "p-6", 3, "click"], [1, "w-14", "h-14", "bg-red-100", "rounded-2xl", "flex", "items-center", "justify-center", "mx-auto", "mb-4"], ["name", "trash-2", 1, "text-red-500", "w-6", "h-6"], [1, "text-lg", "font-extrabold", "text-gray-800", "text-center", "mb-2"], [1, "text-slate-500", "text-sm", "text-center", "mb-6"], [1, "flex", "gap-3"], [1, "flex-1", "py-3", "rounded-2xl", "font-bold", "text-slate-600", "bg-slate-100", "hover:bg-slate-200", "transition-all", "text-sm", 3, "click"], [1, "flex-1", "py-3", "rounded-2xl", "font-bold", "text-white", "bg-red-500", "hover:bg-red-600", "transition-all", "text-sm", 3, "click"]], template: function LabResultsComponent_Template(rf, ctx) {
       if (rf & 1) {
-        \u0275\u0275elementStart(0, "div", 0)(1, "div", 1)(2, "div", 2)(3, "div")(4, "h1", 3);
+        \u0275\u0275elementStart(0, "div", 1)(1, "div", 2)(2, "div", 3)(3, "div")(4, "h1", 4);
         \u0275\u0275text(5);
         \u0275\u0275elementEnd();
-        \u0275\u0275conditionalCreate(6, LabResultsComponent_Conditional_6_Template, 2, 1, "p", 4);
+        \u0275\u0275conditionalCreate(6, LabResultsComponent_Conditional_6_Template, 2, 1, "p", 5);
         \u0275\u0275elementEnd();
-        \u0275\u0275elementStart(7, "button", 5);
+        \u0275\u0275elementStart(7, "button", 6);
         \u0275\u0275listener("click", function LabResultsComponent_Template_button_click_7_listener() {
           return ctx.openAddModal();
         });
-        \u0275\u0275element(8, "lucide-icon", 6);
+        \u0275\u0275element(8, "lucide-icon", 7);
         \u0275\u0275text(9);
         \u0275\u0275elementEnd()()();
-        \u0275\u0275conditionalCreate(10, LabResultsComponent_Conditional_10_Template, 3, 1, "div", 7);
-        \u0275\u0275conditionalCreate(11, LabResultsComponent_Conditional_11_Template, 12, 3, "div", 8);
-        \u0275\u0275conditionalCreate(12, LabResultsComponent_Conditional_12_Template, 3, 0, "div", 7);
+        \u0275\u0275conditionalCreate(10, LabResultsComponent_Conditional_10_Template, 3, 1, "div", 8);
+        \u0275\u0275conditionalCreate(11, LabResultsComponent_Conditional_11_Template, 12, 3, "div", 9);
+        \u0275\u0275conditionalCreate(12, LabResultsComponent_Conditional_12_Template, 3, 0, "div", 8);
         \u0275\u0275elementEnd();
-        \u0275\u0275conditionalCreate(13, LabResultsComponent_Conditional_13_Template, 50, 25, "div", 9);
-        \u0275\u0275conditionalCreate(14, LabResultsComponent_Conditional_14_Template, 26, 10, "div", 9);
-        \u0275\u0275conditionalCreate(15, LabResultsComponent_Conditional_15_Template, 13, 4, "div", 9);
+        \u0275\u0275conditionalCreate(13, LabResultsComponent_Conditional_13_Template, 76, 38, "div", 10);
+        \u0275\u0275conditionalCreate(14, LabResultsComponent_Conditional_14_Template, 28, 12, "div", 10);
+        \u0275\u0275conditionalCreate(15, LabResultsComponent_Conditional_15_Template, 13, 2, "div", 11);
+        \u0275\u0275conditionalCreate(16, LabResultsComponent_Conditional_16_Template, 13, 4, "div", 10);
       }
       if (rf & 2) {
         \u0275\u0275advance(5);
@@ -30776,9 +31318,11 @@ var LabResultsComponent = class _LabResultsComponent {
         \u0275\u0275advance();
         \u0275\u0275conditional(ctx.viewingResult() ? 14 : -1);
         \u0275\u0275advance();
-        \u0275\u0275conditional(ctx.showDeleteModal() ? 15 : -1);
+        \u0275\u0275conditional(ctx.viewingAttachment() ? 15 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275conditional(ctx.showDeleteModal() ? 16 : -1);
       }
-    }, dependencies: [CommonModule, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel, LucideAngularModule, LucideAngularComponent], encapsulation: 2 });
+    }, dependencies: [CommonModule, FormsModule, NgSelectOption, \u0275NgSelectMultipleOption, DefaultValueAccessor, SelectControlValueAccessor, NgControlStatus, MaxLengthValidator, NgModel, LucideAngularModule, LucideAngularComponent], encapsulation: 2 });
   }
 };
 (() => {
@@ -30865,7 +31409,7 @@ var LabResultsComponent = class _LabResultsComponent {
                     </div>
 
                     <!-- Result Value -->
-                    <div class="flex items-center gap-2 mt-1.5">
+                    <div class="flex items-center gap-2 mt-1.5 flex-wrap">
                       <span class="text-lg font-extrabold text-gray-800">{{ lr.result }}</span>
                       @if (lr.unit) {
                         <span class="text-sm text-slate-400">{{ lr.unit }}</span>
@@ -30877,11 +31421,30 @@ var LabResultsComponent = class _LabResultsComponent {
                       }
                     </div>
 
-                    <!-- Doctor & Date -->
+                    <!-- Type badge -->
+                    @if (lr.type) {
+                      <div class="mt-1">
+                        <span class="text-xs font-semibold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full">
+                          {{ getTypeLabel(lr.type) }}
+                        </span>
+                      </div>
+                    }
+
+                    <!-- Doctor -->
                     @if (lr.doctor) {
                       <div class="flex items-center gap-2 mt-1 text-xs text-slate-400">
                         <lucide-icon name="stethoscope" class="w-3.5 h-3.5 flex-shrink-0"></lucide-icon>
                         <span>{{ lr.doctor }}</span>
+                      </div>
+                    }
+
+                    <!-- Attachments badge -->
+                    @if (lr.attachments && lr.attachments.length > 0) {
+                      <div class="flex items-center gap-1.5 mt-2">
+                        <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <lucide-icon name="paperclip" class="w-3 h-3"></lucide-icon>
+                          {{ lr.attachments.length }} {{ i18n.t()['labResults.attachments'] || 'Dokumente' }}
+                        </span>
                       </div>
                     }
                   </div>
@@ -30901,6 +31464,11 @@ var LabResultsComponent = class _LabResultsComponent {
                     <lucide-icon name="eye" class="w-3.5 h-3.5"></lucide-icon>
                     {{ i18n.t()['labResults.view'] || 'Shiko Detajet' }}
                   </button>
+                  <button (click)="openEditModal(lr)"
+                    class="flex-1 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 transition-all flex items-center justify-center gap-1.5">
+                    <lucide-icon name="pencil" class="w-3.5 h-3.5"></lucide-icon>
+                    {{ i18n.t()['medications.edit'] || 'Redakto' }}
+                  </button>
                   <button (click)="confirmDelete(lr)"
                     class="flex-1 py-2 rounded-xl text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 transition-all flex items-center justify-center gap-1.5">
                     <lucide-icon name="trash-2" class="w-3.5 h-3.5"></lucide-icon>
@@ -30914,7 +31482,7 @@ var LabResultsComponent = class _LabResultsComponent {
       }
     </div>
 
-    <!-- Add Modal -->
+    <!-- Add/Edit Modal -->
     @if (showModal()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
            (click)="closeModal()">
@@ -30924,7 +31492,7 @@ var LabResultsComponent = class _LabResultsComponent {
           <!-- Modal Header -->
           <div class="px-6 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between">
             <h2 class="text-xl font-extrabold text-gray-800">
-              {{ i18n.t()['labResults.addResult'] || 'Shto Rezultat Laboratori' }}
+              {{ editingResult() ? (i18n.t()['labResults.editResult'] || 'Redakto Rezultatin') : (i18n.t()['labResults.addResult'] || 'Shto Rezultat Laboratori') }}
             </h2>
             <button (click)="closeModal()" class="p-2 rounded-xl hover:bg-gray-100 transition-colors">
               <lucide-icon name="x" class="w-5 h-5 text-slate-400"></lucide-icon>
@@ -30933,6 +31501,7 @@ var LabResultsComponent = class _LabResultsComponent {
 
           <!-- Modal Body -->
           <div class="p-6 space-y-5">
+
             <!-- Test Name -->
             <div>
               <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
@@ -30943,7 +31512,24 @@ var LabResultsComponent = class _LabResultsComponent {
                 [placeholder]="i18n.t()['labResults.testNamePlaceholder'] || 'P.sh. Gjak i plot\xEB'">
             </div>
 
-            <!-- Result -->
+            <!-- Type -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['labResults.type'] || 'Lloji i Testit' }}
+                <span class="text-slate-400 normal-case font-normal text-xs ml-1">({{ i18n.t()['labResults.optional'] || 'opsionale' }})</span>
+              </label>
+              <select [(ngModel)]="formType"
+                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm font-medium">
+                <option value="">--</option>
+                <option value="hemogram">{{ i18n.isSq() ? 'Hemogram' : 'Hemogram' }}</option>
+                <option value="urinalysis">{{ i18n.isSq() ? 'Analiz\xEB Urine' : 'Urinalysis' }}</option>
+                <option value="biochemistry">{{ i18n.isSq() ? 'Biokim i gjakut' : 'Blood Biochemistry' }}</option>
+                <option value="immunology">{{ i18n.isSq() ? 'Imunologji' : 'Immunology' }}</option>
+                <option value="other">{{ i18n.isSq() ? 'Tjet\xEBr' : 'Other' }}</option>
+              </select>
+            </div>
+
+            <!-- Result + Unit -->
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
@@ -30999,12 +31585,67 @@ var LabResultsComponent = class _LabResultsComponent {
                 {{ i18n.t()['labResults.notes'] || 'Sh\xEBnime' }}
                 <span class="text-slate-400 normal-case font-normal text-xs ml-1">({{ i18n.t()['labResults.optional'] || 'opsionale' }})</span>
               </label>
-              <textarea [(ngModel)]="formNotes" rows="2"
+              <textarea [(ngModel)]="formNotes" rows="2" maxlength="500"
                 class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm resize-none"
                 [placeholder]="i18n.t()['labResults.notesPlaceholder'] || 'Sh\xEBno detajet shtes\xEB...'"></textarea>
             </div>
 
-            <!-- Error -->
+            <!-- Attachments -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['labResults.attachments'] || 'Dokumente' }}
+                <span class="text-slate-400 normal-case font-normal text-xs ml-1">({{ i18n.t()['labResults.optional'] || 'opsionale' }})</span>
+              </label>
+
+              <!-- Drop zone -->
+              @if (pendingFiles().length < MAX_FILES) {
+                <div
+                  class="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 transition-all"
+                  (click)="fileInput.click()"
+                  (dragover)="onDragOver($event)"
+                  (dragleave)="onDragLeave($event)"
+                  (drop)="onDrop($event)">
+                  <lucide-icon name="upload-cloud" class="w-8 h-8 text-slate-400 mx-auto mb-2"></lucide-icon>
+                  <p class="text-sm text-slate-500">{{ i18n.t()['labResults.dropZoneHint'] || 'Zv\xEBre dokumentin ose kliko p\xEBr t\xEB zgjedhur' }}</p>
+                  <p class="text-xs text-slate-400 mt-1">PDF, PNG, JPG, WebP \xB7 max 10MB</p>
+                </div>
+                <input #fileInput type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp" class="hidden" (change)="onFileSelected($event)">
+              }
+
+              <!-- File list -->
+              @if (pendingFiles().length > 0) {
+                <div class="mt-3 space-y-2">
+                  @for (file of pendingFiles(); track $index) {
+                    <div class="flex items-center gap-3 bg-slate-50 rounded-xl p-3 border border-slate-200">
+                      <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                        @if (file.mimeType === 'application/pdf') {
+                          <lucide-icon name="file-text" class="w-5 h-5 text-red-500"></lucide-icon>
+                        } @else {
+                          <lucide-icon name="image" class="w-5 h-5 text-indigo-500"></lucide-icon>
+                        }
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-gray-800 truncate">{{ file.name }}</p>
+                        <p class="text-xs text-slate-400">{{ formatFileSize(file.size) }}</p>
+                      </div>
+                      <button (click)="removePendingFile($index)"
+                        class="p-1.5 rounded-lg hover:bg-red-100 text-red-500 transition-colors flex-shrink-0">
+                        <lucide-icon name="x" class="w-4 h-4"></lucide-icon>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Error -->
+              @if (fileError()) {
+                <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-semibold mt-2">
+                  {{ fileError() }}
+                </div>
+              }
+            </div>
+
+            <!-- Save Error -->
             @if (saveError()) {
               <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-semibold">
                 {{ saveError() }}
@@ -31068,6 +31709,13 @@ var LabResultsComponent = class _LabResultsComponent {
               </div>
             </div>
 
+            @if (viewingResult()!.type) {
+              <div class="bg-violet-50 rounded-2xl p-4">
+                <p class="text-xs text-violet-500 font-semibold uppercase tracking-wider mb-1">{{ i18n.t()['labResults.type'] || 'Lloji i Testit' }}</p>
+                <p class="text-base font-bold text-violet-700">{{ getTypeLabel(viewingResult()!.type!) }}</p>
+              </div>
+            }
+
             @if (viewingResult()!.referenceRange) {
               <div class="bg-violet-50 rounded-2xl p-4">
                 <p class="text-xs text-violet-500 font-semibold uppercase tracking-wider mb-1">{{ i18n.t()['labResults.referenceRange'] || 'Vlera Referente' }}</p>
@@ -31088,6 +31736,39 @@ var LabResultsComponent = class _LabResultsComponent {
                 <p class="text-sm text-slate-600">{{ viewingResult()!.notes }}</p>
               </div>
             }
+
+            <!-- Attachments section -->
+            @if (viewingResult()!.attachments && viewingResult()!.attachments.length > 0) {
+              <div class="border border-slate-200 rounded-2xl overflow-hidden">
+                <div class="px-4 py-3 bg-slate-50 border-b border-slate-200">
+                  <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    {{ i18n.t()['labResults.attachments'] || 'Dokumente' }} ({{ viewingResult()!.attachments!.length }})
+                  </p>
+                </div>
+                <div class="p-4 space-y-3">
+                  @for (att of viewingResult()!.attachments; track $index) {
+                    <div class="flex items-center gap-3 bg-white border border-slate-100 rounded-xl p-3">
+                      <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                        <lucide-icon name="file-text" class="w-5 h-5 text-indigo-500"></lucide-icon>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-gray-700">{{ i18n.t()['labResults.attachments'] || 'Dokumenti' }} {{ $index + 1 }}</p>
+                      </div>
+                      <div class="flex gap-1">
+                        <button (click)="viewAttachment(att)"
+                          class="p-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors">
+                          <lucide-icon name="eye" class="w-4 h-4"></lucide-icon>
+                        </button>
+                        <button (click)="downloadAttachment(att, $index)"
+                          class="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors">
+                          <lucide-icon name="download" class="w-4 h-4"></lucide-icon>
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
           </div>
 
           <!-- Modal Footer -->
@@ -31096,6 +31777,39 @@ var LabResultsComponent = class _LabResultsComponent {
               class="w-full py-3.5 rounded-2xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all text-sm">
               {{ i18n.t()['labResults.close'] || 'Mbyll' }}
             </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Attachment Viewer Modal -->
+    @if (viewingAttachment()) {
+      <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+           (click)="viewingAttachment.set(null)">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
+             (click)="$event.stopPropagation()">
+
+          <!-- Viewer Header -->
+          <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-slate-50">
+            <p class="text-sm font-bold text-gray-700">{{ i18n.t()['labResults.viewAttachment'] || 'Shiko Dokumentin' }}</p>
+            <div class="flex gap-2">
+              <button (click)="downloadAttachment(viewingAttachment()!, 0)"
+                class="p-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors">
+                <lucide-icon name="download" class="w-4 h-4"></lucide-icon>
+              </button>
+              <button (click)="viewingAttachment.set(null)" class="p-2 rounded-xl hover:bg-gray-200 text-gray-500 transition-colors">
+                <lucide-icon name="x" class="w-5 h-5"></lucide-icon>
+              </button>
+            </div>
+          </div>
+
+          <!-- Viewer Body -->
+          <div class="flex-1 overflow-auto p-4 bg-gray-100">
+            @if (isPdfAttachment(viewingAttachment()!)) {
+              <iframe [src]="getPdfUrl(viewingAttachment()!)" class="w-full h-full min-h-[500px] rounded-xl border-0"></iframe>
+            } @else {
+              <img [src]="viewingAttachment()!" class="max-w-full max-h-full object-contain rounded-xl mx-auto" alt="Attachment">
+            }
           </div>
         </div>
       </div>
@@ -31133,7 +31847,7 @@ var LabResultsComponent = class _LabResultsComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(LabResultsComponent, { className: "LabResultsComponent", filePath: "src/app/components/lab-results/lab-results.component.ts", lineNumber: 372 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(LabResultsComponent, { className: "LabResultsComponent", filePath: "src/app/components/lab-results/lab-results.component.ts", lineNumber: 540 });
 })();
 
 // src/app/components/sidebar.component.ts
@@ -31205,15 +31919,15 @@ var SidebarComponent = class _SidebarComponent {
     this.t = this.i18n.t;
     this.currentTab = this.dataService.currentTab;
     this.navItems = [
-      { id: "home", icon: "house", labelKey: "sidebar.nav.home" },
-      { id: "temperature", icon: "thermometer", labelKey: "sidebar.nav.temperature" },
-      { id: "growth", icon: "trending-up", labelKey: "sidebar.nav.growth" },
-      { id: "diary", icon: "book-open", labelKey: "sidebar.nav.diary" },
-      { id: "vaccines", icon: "syringe", labelKey: "sidebar.nav.vaccines" },
-      { id: "medications", icon: "pill", labelKey: "sidebar.nav.medications" },
-      { id: "appointments", icon: "calendar-check", labelKey: "sidebar.nav.appointments" },
-      { id: "lab-results", icon: "flask-conical", labelKey: "sidebar.nav.labResults" },
-      { id: "analytics", icon: "bar-chart-2", labelKey: "sidebar.nav.analytics" }
+      { id: "home", icon: "Home", labelKey: "sidebar.nav.home" },
+      { id: "temperature", icon: "Thermometer", labelKey: "sidebar.nav.temperature" },
+      { id: "growth", icon: "TrendingUp", labelKey: "sidebar.nav.growth" },
+      { id: "diary", icon: "BookOpen", labelKey: "sidebar.nav.diary" },
+      { id: "vaccines", icon: "Syringe", labelKey: "sidebar.nav.vaccines" },
+      { id: "medications", icon: "Pill", labelKey: "sidebar.nav.medications" },
+      { id: "appointments", icon: "CalendarCheck", labelKey: "sidebar.nav.appointments" },
+      { id: "lab-results", icon: "FlaskConical", labelKey: "sidebar.nav.labResults" },
+      { id: "analytics", icon: "BarChart2", labelKey: "sidebar.nav.analytics" }
     ];
     this.activeChild = computed(() => {
       const activeId = this.dataService.activeChildId();
@@ -31248,7 +31962,7 @@ var SidebarComponent = class _SidebarComponent {
     };
   }
   static {
-    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _SidebarComponent, selectors: [["app-sidebar"]], decls: 21, vars: 7, consts: [["aria-label", "Sidebar navigation", 1, "sidebar"], [1, "sidebar__brand"], [1, "sidebar__logo"], ["type", "button", 1, "locale-toggle", 3, "click"], [1, "sidebar__child-card"], [1, "sidebar__child-placeholder"], ["aria-label", "Main navigation", 1, "sidebar__nav"], ["type", "button", 1, "sidebar__nav-item", 3, "sidebar__nav-item--active"], [1, "sidebar__footer"], ["type", "button", 1, "sidebar__footer-item", 3, "click"], ["name", "settings", "aria-hidden", "true", 1, "sidebar__nav-icon"], ["type", "button", 1, "sidebar__footer-item", "sidebar__footer-item--logout", 3, "click"], ["name", "log-out", "aria-hidden", "true", 1, "sidebar__nav-icon"], [1, "sidebar__avatar", 3, "src", "alt"], [1, "sidebar__child-info"], [1, "sidebar__child-name"], [1, "sidebar__age-badge"], ["name", "user", "aria-hidden", "true", 1, "sidebar__placeholder-icon"], [1, "sidebar__placeholder-text"], ["type", "button", 1, "sidebar__nav-item", 3, "click"], ["aria-hidden", "true", 1, "sidebar__nav-icon", 3, "name"]], template: function SidebarComponent_Template(rf, ctx) {
+    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _SidebarComponent, selectors: [["app-sidebar"]], decls: 21, vars: 7, consts: [["aria-label", "Sidebar navigation", 1, "sidebar"], [1, "sidebar__brand"], [1, "sidebar__logo"], ["type", "button", 1, "locale-toggle", 3, "click"], [1, "sidebar__child-card"], [1, "sidebar__child-placeholder"], ["aria-label", "Main navigation", 1, "sidebar__nav"], ["type", "button", 1, "sidebar__nav-item", 3, "sidebar__nav-item--active"], [1, "sidebar__footer"], ["type", "button", 1, "sidebar__footer-item", 3, "click"], ["name", "settings", "aria-hidden", "true", 1, "sidebar__nav-icon"], ["type", "button", 1, "sidebar__footer-item", "sidebar__footer-item--logout", 3, "click"], ["name", "LogOut", "aria-hidden", "true", 1, "sidebar__nav-icon"], [1, "sidebar__avatar", 3, "src", "alt"], [1, "sidebar__child-info"], [1, "sidebar__child-name"], [1, "sidebar__age-badge"], ["name", "user", "aria-hidden", "true", 1, "sidebar__placeholder-icon"], [1, "sidebar__placeholder-text"], ["type", "button", 1, "sidebar__nav-item", 3, "click"], ["aria-hidden", "true", 1, "sidebar__nav-icon", 3, "name"]], template: function SidebarComponent_Template(rf, ctx) {
       if (rf & 1) {
         \u0275\u0275elementStart(0, "aside", 0)(1, "div", 1)(2, "span", 2);
         \u0275\u0275text(3, "KidDok");
@@ -31354,7 +32068,7 @@ var SidebarComponent = class _SidebarComponent {
           <span>{{ t()['sidebar.footer.settings'] }}</span>
         </button>
         <button type="button" class="sidebar__footer-item sidebar__footer-item--logout" (click)="logout()">
-          <lucide-icon name="log-out" class="sidebar__nav-icon" aria-hidden="true"></lucide-icon>
+          <lucide-icon name="LogOut" class="sidebar__nav-icon" aria-hidden="true"></lucide-icon>
           <span>{{ t()['sidebar.footer.logout'] }}</span>
         </button>
       </div>
@@ -32196,11 +32910,11 @@ var BottomNavComponent = class _BottomNavComponent {
     this.i18n = inject(I18nService);
     this.currentTab = this.dataService.currentTab;
     this.tabs = [
-      { id: "home", icon: "house", labelKey: "bottomNav.home" },
-      { id: "temperature", icon: "thermometer", labelKey: "bottomNav.temperature" },
-      { id: "growth", icon: "trending-up", labelKey: "bottomNav.growth" },
-      { id: "diary", icon: "book-open", labelKey: "bottomNav.diary" },
-      { id: "vaccines", icon: "syringe", labelKey: "bottomNav.vaccines" }
+      { id: "home", icon: "Home", labelKey: "bottomNav.home" },
+      { id: "temperature", icon: "Thermometer", labelKey: "bottomNav.temperature" },
+      { id: "growth", icon: "TrendingUp", labelKey: "bottomNav.growth" },
+      { id: "diary", icon: "BookOpen", labelKey: "bottomNav.diary" },
+      { id: "vaccines", icon: "Syringe", labelKey: "bottomNav.vaccines" }
     ];
   }
   label(key) {
@@ -39042,7 +39756,12 @@ var appConfig = {
       Eye,
       EyeOff,
       ArrowRight,
-      Lock
+      Lock,
+      LogOut,
+      Home: House,
+      BookOpen,
+      FlaskConical,
+      BarChart2: ChartNoAxesColumn
     }))
   ]
 };

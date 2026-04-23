@@ -221,6 +221,8 @@ model LabResult {
   date           DateTime
   doctor         String?
   notes          String?
+  type           String?
+  attachments    String[]
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }

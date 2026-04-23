@@ -2,20 +2,18 @@ import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular
 import { LucideAngularModule } from 'lucide-angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DataService } from '../../services/data.service';
+import { DataService, LabResultRecord } from '../../services/data.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 
-export interface LabResultRecord {
-  id: string;
-  childId: string;
-  testName: string;
-  result: string;
-  unit?: string;
-  referenceRange?: string;
-  date: string;
-  doctor?: string;
-  notes?: string;
-  createdAt: string;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILES = 5;
+const ALLOWED_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
+
+interface PendingFile {
+  name: string;
+  size: number;
+  base64: string;
+  mimeType: string;
 }
 
 @Component({
@@ -102,7 +100,7 @@ export interface LabResultRecord {
                     </div>
 
                     <!-- Result Value -->
-                    <div class="flex items-center gap-2 mt-1.5">
+                    <div class="flex items-center gap-2 mt-1.5 flex-wrap">
                       <span class="text-lg font-extrabold text-gray-800">{{ lr.result }}</span>
                       @if (lr.unit) {
                         <span class="text-sm text-slate-400">{{ lr.unit }}</span>
@@ -114,11 +112,30 @@ export interface LabResultRecord {
                       }
                     </div>
 
-                    <!-- Doctor & Date -->
+                    <!-- Type badge -->
+                    @if (lr.type) {
+                      <div class="mt-1">
+                        <span class="text-xs font-semibold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full">
+                          {{ getTypeLabel(lr.type) }}
+                        </span>
+                      </div>
+                    }
+
+                    <!-- Doctor -->
                     @if (lr.doctor) {
                       <div class="flex items-center gap-2 mt-1 text-xs text-slate-400">
                         <lucide-icon name="stethoscope" class="w-3.5 h-3.5 flex-shrink-0"></lucide-icon>
                         <span>{{ lr.doctor }}</span>
+                      </div>
+                    }
+
+                    <!-- Attachments badge -->
+                    @if (lr.attachments && lr.attachments.length > 0) {
+                      <div class="flex items-center gap-1.5 mt-2">
+                        <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <lucide-icon name="paperclip" class="w-3 h-3"></lucide-icon>
+                          {{ lr.attachments.length }} {{ i18n.t()['labResults.attachments'] || 'Dokumente' }}
+                        </span>
                       </div>
                     }
                   </div>
@@ -138,6 +155,11 @@ export interface LabResultRecord {
                     <lucide-icon name="eye" class="w-3.5 h-3.5"></lucide-icon>
                     {{ i18n.t()['labResults.view'] || 'Shiko Detajet' }}
                   </button>
+                  <button (click)="openEditModal(lr)"
+                    class="flex-1 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 transition-all flex items-center justify-center gap-1.5">
+                    <lucide-icon name="pencil" class="w-3.5 h-3.5"></lucide-icon>
+                    {{ i18n.t()['medications.edit'] || 'Redakto' }}
+                  </button>
                   <button (click)="confirmDelete(lr)"
                     class="flex-1 py-2 rounded-xl text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 transition-all flex items-center justify-center gap-1.5">
                     <lucide-icon name="trash-2" class="w-3.5 h-3.5"></lucide-icon>
@@ -151,7 +173,7 @@ export interface LabResultRecord {
       }
     </div>
 
-    <!-- Add Modal -->
+    <!-- Add/Edit Modal -->
     @if (showModal()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
            (click)="closeModal()">
@@ -161,7 +183,7 @@ export interface LabResultRecord {
           <!-- Modal Header -->
           <div class="px-6 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between">
             <h2 class="text-xl font-extrabold text-gray-800">
-              {{ i18n.t()['labResults.addResult'] || 'Shto Rezultat Laboratori' }}
+              {{ editingResult() ? (i18n.t()['labResults.editResult'] || 'Redakto Rezultatin') : (i18n.t()['labResults.addResult'] || 'Shto Rezultat Laboratori') }}
             </h2>
             <button (click)="closeModal()" class="p-2 rounded-xl hover:bg-gray-100 transition-colors">
               <lucide-icon name="x" class="w-5 h-5 text-slate-400"></lucide-icon>
@@ -170,6 +192,7 @@ export interface LabResultRecord {
 
           <!-- Modal Body -->
           <div class="p-6 space-y-5">
+
             <!-- Test Name -->
             <div>
               <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
@@ -180,7 +203,24 @@ export interface LabResultRecord {
                 [placeholder]="i18n.t()['labResults.testNamePlaceholder'] || 'P.sh. Gjak i plotë'">
             </div>
 
-            <!-- Result -->
+            <!-- Type -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['labResults.type'] || 'Lloji i Testit' }}
+                <span class="text-slate-400 normal-case font-normal text-xs ml-1">({{ i18n.t()['labResults.optional'] || 'opsionale' }})</span>
+              </label>
+              <select [(ngModel)]="formType"
+                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm font-medium">
+                <option value="">--</option>
+                <option value="hemogram">{{ i18n.isSq() ? 'Hemogram' : 'Hemogram' }}</option>
+                <option value="urinalysis">{{ i18n.isSq() ? 'Analizë Urine' : 'Urinalysis' }}</option>
+                <option value="biochemistry">{{ i18n.isSq() ? 'Biokim i gjakut' : 'Blood Biochemistry' }}</option>
+                <option value="immunology">{{ i18n.isSq() ? 'Imunologji' : 'Immunology' }}</option>
+                <option value="other">{{ i18n.isSq() ? 'Tjetër' : 'Other' }}</option>
+              </select>
+            </div>
+
+            <!-- Result + Unit -->
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
@@ -236,12 +276,67 @@ export interface LabResultRecord {
                 {{ i18n.t()['labResults.notes'] || 'Shënime' }}
                 <span class="text-slate-400 normal-case font-normal text-xs ml-1">({{ i18n.t()['labResults.optional'] || 'opsionale' }})</span>
               </label>
-              <textarea [(ngModel)]="formNotes" rows="2"
+              <textarea [(ngModel)]="formNotes" rows="2" maxlength="500"
                 class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm resize-none"
                 [placeholder]="i18n.t()['labResults.notesPlaceholder'] || 'Shëno detajet shtesë...'"></textarea>
             </div>
 
-            <!-- Error -->
+            <!-- Attachments -->
+            <div>
+              <label class="block text-xs font-bold text-primary-700 mb-2 uppercase tracking-wider">
+                {{ i18n.t()['labResults.attachments'] || 'Dokumente' }}
+                <span class="text-slate-400 normal-case font-normal text-xs ml-1">({{ i18n.t()['labResults.optional'] || 'opsionale' }})</span>
+              </label>
+
+              <!-- Drop zone -->
+              @if (pendingFiles().length < MAX_FILES) {
+                <div
+                  class="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 transition-all"
+                  (click)="fileInput.click()"
+                  (dragover)="onDragOver($event)"
+                  (dragleave)="onDragLeave($event)"
+                  (drop)="onDrop($event)">
+                  <lucide-icon name="upload-cloud" class="w-8 h-8 text-slate-400 mx-auto mb-2"></lucide-icon>
+                  <p class="text-sm text-slate-500">{{ i18n.t()['labResults.dropZoneHint'] || 'Zvëre dokumentin ose kliko për të zgjedhur' }}</p>
+                  <p class="text-xs text-slate-400 mt-1">PDF, PNG, JPG, WebP · max 10MB</p>
+                </div>
+                <input #fileInput type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp" class="hidden" (change)="onFileSelected($event)">
+              }
+
+              <!-- File list -->
+              @if (pendingFiles().length > 0) {
+                <div class="mt-3 space-y-2">
+                  @for (file of pendingFiles(); track $index) {
+                    <div class="flex items-center gap-3 bg-slate-50 rounded-xl p-3 border border-slate-200">
+                      <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                        @if (file.mimeType === 'application/pdf') {
+                          <lucide-icon name="file-text" class="w-5 h-5 text-red-500"></lucide-icon>
+                        } @else {
+                          <lucide-icon name="image" class="w-5 h-5 text-indigo-500"></lucide-icon>
+                        }
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-gray-800 truncate">{{ file.name }}</p>
+                        <p class="text-xs text-slate-400">{{ formatFileSize(file.size) }}</p>
+                      </div>
+                      <button (click)="removePendingFile($index)"
+                        class="p-1.5 rounded-lg hover:bg-red-100 text-red-500 transition-colors flex-shrink-0">
+                        <lucide-icon name="x" class="w-4 h-4"></lucide-icon>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Error -->
+              @if (fileError()) {
+                <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-semibold mt-2">
+                  {{ fileError() }}
+                </div>
+              }
+            </div>
+
+            <!-- Save Error -->
             @if (saveError()) {
               <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-semibold">
                 {{ saveError() }}
@@ -305,6 +400,13 @@ export interface LabResultRecord {
               </div>
             </div>
 
+            @if (viewingResult()!.type) {
+              <div class="bg-violet-50 rounded-2xl p-4">
+                <p class="text-xs text-violet-500 font-semibold uppercase tracking-wider mb-1">{{ i18n.t()['labResults.type'] || 'Lloji i Testit' }}</p>
+                <p class="text-base font-bold text-violet-700">{{ getTypeLabel(viewingResult()!.type!) }}</p>
+              </div>
+            }
+
             @if (viewingResult()!.referenceRange) {
               <div class="bg-violet-50 rounded-2xl p-4">
                 <p class="text-xs text-violet-500 font-semibold uppercase tracking-wider mb-1">{{ i18n.t()['labResults.referenceRange'] || 'Vlera Referente' }}</p>
@@ -325,6 +427,39 @@ export interface LabResultRecord {
                 <p class="text-sm text-slate-600">{{ viewingResult()!.notes }}</p>
               </div>
             }
+
+            <!-- Attachments section -->
+            @if (viewingResult()!.attachments && viewingResult()!.attachments.length > 0) {
+              <div class="border border-slate-200 rounded-2xl overflow-hidden">
+                <div class="px-4 py-3 bg-slate-50 border-b border-slate-200">
+                  <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    {{ i18n.t()['labResults.attachments'] || 'Dokumente' }} ({{ viewingResult()!.attachments!.length }})
+                  </p>
+                </div>
+                <div class="p-4 space-y-3">
+                  @for (att of viewingResult()!.attachments; track $index) {
+                    <div class="flex items-center gap-3 bg-white border border-slate-100 rounded-xl p-3">
+                      <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                        <lucide-icon name="file-text" class="w-5 h-5 text-indigo-500"></lucide-icon>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-gray-700">{{ i18n.t()['labResults.attachments'] || 'Dokumenti' }} {{ $index + 1 }}</p>
+                      </div>
+                      <div class="flex gap-1">
+                        <button (click)="viewAttachment(att)"
+                          class="p-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors">
+                          <lucide-icon name="eye" class="w-4 h-4"></lucide-icon>
+                        </button>
+                        <button (click)="downloadAttachment(att, $index)"
+                          class="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors">
+                          <lucide-icon name="download" class="w-4 h-4"></lucide-icon>
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
           </div>
 
           <!-- Modal Footer -->
@@ -333,6 +468,39 @@ export interface LabResultRecord {
               class="w-full py-3.5 rounded-2xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all text-sm">
               {{ i18n.t()['labResults.close'] || 'Mbyll' }}
             </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Attachment Viewer Modal -->
+    @if (viewingAttachment()) {
+      <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+           (click)="viewingAttachment.set(null)">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
+             (click)="$event.stopPropagation()">
+
+          <!-- Viewer Header -->
+          <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-slate-50">
+            <p class="text-sm font-bold text-gray-700">{{ i18n.t()['labResults.viewAttachment'] || 'Shiko Dokumentin' }}</p>
+            <div class="flex gap-2">
+              <button (click)="downloadAttachment(viewingAttachment()!, 0)"
+                class="p-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors">
+                <lucide-icon name="download" class="w-4 h-4"></lucide-icon>
+              </button>
+              <button (click)="viewingAttachment.set(null)" class="p-2 rounded-xl hover:bg-gray-200 text-gray-500 transition-colors">
+                <lucide-icon name="x" class="w-5 h-5"></lucide-icon>
+              </button>
+            </div>
+          </div>
+
+          <!-- Viewer Body -->
+          <div class="flex-1 overflow-auto p-4 bg-gray-100">
+            @if (isPdfAttachment(viewingAttachment()!)) {
+              <iframe [src]="getPdfUrl(viewingAttachment()!)" class="w-full h-full min-h-[500px] rounded-xl border-0"></iframe>
+            } @else {
+              <img [src]="viewingAttachment()!" class="max-w-full max-h-full object-contain rounded-xl mx-auto" alt="Attachment">
+            }
           </div>
         </div>
       </div>
@@ -380,7 +548,14 @@ export class LabResultsComponent implements OnInit, OnDestroy {
   showDeleteModal = signal(false);
   viewingResult = signal<LabResultRecord | null>(null);
   deletingResult = signal<LabResultRecord | null>(null);
+  editingResult = signal<LabResultRecord | null>(null);
   saveError = signal<string | null>(null);
+  fileError = signal<string | null>(null);
+  viewingAttachment = signal<string | null>(null);
+  pendingFiles = signal<PendingFile[]>([]);
+  isDragOver = signal(false);
+
+  readonly MAX_FILES = MAX_FILES;
 
   // Form fields
   formTestName = signal('');
@@ -390,6 +565,7 @@ export class LabResultsComponent implements OnInit, OnDestroy {
   formDate = signal('');
   formDoctor = signal('');
   formNotes = signal('');
+  formType = signal('');
 
   // Computed
   activeChild = computed(() => {
@@ -397,7 +573,7 @@ export class LabResultsComponent implements OnInit, OnDestroy {
     return this.data.children().find(c => c.id === id) ?? null;
   });
 
-  labResults = signal<LabResultRecord[]>([]);
+  labResults = computed(() => this.data.labResults());
 
   canSave = computed(() =>
     !!(this.formTestName().trim() && this.formResult().trim() && this.formDate())
@@ -417,14 +593,7 @@ export class LabResultsComponent implements OnInit, OnDestroy {
 
     this.loading.set(true);
     try {
-      const token = localStorage.getItem(this.data.AUTH_KEY);
-      const response = await fetch(`${this.data.API_URL}/lab-results/child/${childId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        this.labResults.set(Array.isArray(data) ? data : []);
-      }
+      await this.data.loadLabResults(childId);
     } catch {
       // silent fail
     } finally {
@@ -433,6 +602,7 @@ export class LabResultsComponent implements OnInit, OnDestroy {
   }
 
   openAddModal() {
+    this.editingResult.set(null);
     this.formTestName.set('');
     this.formResult.set('');
     this.formUnit.set('');
@@ -440,7 +610,33 @@ export class LabResultsComponent implements OnInit, OnDestroy {
     this.formDate.set(new Date().toISOString().split('T')[0]);
     this.formDoctor.set('');
     this.formNotes.set('');
+    this.formType.set('');
+    this.pendingFiles.set([]);
     this.saveError.set(null);
+    this.fileError.set(null);
+    this.showModal.set(true);
+  }
+
+  openEditModal(lr: LabResultRecord) {
+    this.editingResult.set(lr);
+    this.formTestName.set(lr.testName);
+    this.formResult.set(lr.result);
+    this.formUnit.set(lr.unit || '');
+    this.formReferenceRange.set(lr.referenceRange || '');
+    this.formDate.set(lr.date.split('T')[0]);
+    this.formDoctor.set(lr.doctor || '');
+    this.formNotes.set(lr.notes || '');
+    this.formType.set(lr.type || '');
+    // Load existing attachments as pending files
+    const existing = (lr.attachments || []).map((att, i) => ({
+      name: `${this.i18n.t()['labResults.attachments'] || 'Dokumenti'} ${i + 1}`,
+      size: Math.round((att.length * 3) / 4), // rough base64 estimate
+      base64: att,
+      mimeType: this.guessMimeType(att),
+    }));
+    this.pendingFiles.set(existing);
+    this.saveError.set(null);
+    this.fileError.set(null);
     this.showModal.set(true);
   }
 
@@ -450,6 +646,7 @@ export class LabResultsComponent implements OnInit, OnDestroy {
 
   closeModal() {
     this.showModal.set(false);
+    this.editingResult.set(null);
   }
 
   async saveLabResult() {
@@ -461,6 +658,8 @@ export class LabResultsComponent implements OnInit, OnDestroy {
     this.saving.set(true);
     this.saveError.set(null);
 
+    const attachments = this.pendingFiles().map(f => f.base64);
+
     const payload: any = {
       testName: this.formTestName().trim(),
       result: this.formResult().trim(),
@@ -469,32 +668,21 @@ export class LabResultsComponent implements OnInit, OnDestroy {
       date: new Date(this.formDate()).toISOString(),
       doctor: this.formDoctor().trim() || undefined,
       notes: this.formNotes().trim() || undefined,
+      type: this.formType().trim() || undefined,
+      attachments,
     };
 
     try {
-      const token = localStorage.getItem(this.data.AUTH_KEY);
-      const response = await fetch(`${this.data.API_URL}/lab-results/${childId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.message || 'Save failed');
+      if (this.editingResult()) {
+        await this.data.updateLabResult(this.editingResult()!.id, payload);
+      } else {
+        await this.data.addLabResult(childId, payload);
       }
-
-      const saved = await response.json();
-      const list = [saved as LabResultRecord, ...this.labResults()];
-      // Sort by date desc
-      list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      this.labResults.set(list);
+      // Reload to get server data
+      await this.data.loadLabResults(childId);
       this.closeModal();
     } catch (err: any) {
-      this.saveError.set(err.message || this.i18n.t()['labResults.saveError'] || 'Ruajtja dështoi.');
+      this.saveError.set(err?.message || this.i18n.t()['labResults.saveError'] || 'Ruajtja dështoi.');
     } finally {
       this.saving.set(false);
     }
@@ -510,15 +698,9 @@ export class LabResultsComponent implements OnInit, OnDestroy {
     if (!lr) return;
 
     try {
-      const token = localStorage.getItem(this.data.AUTH_KEY);
-      const response = await fetch(`${this.data.API_URL}/lab-results/${lr.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        this.labResults.set(this.labResults().filter(r => r.id !== lr.id));
-      }
+      await this.data.deleteLabResult(lr.id);
+      const childId = this.data.activeChildId();
+      if (childId) await this.data.loadLabResults(childId);
     } catch {
       // silent
     } finally {
@@ -531,5 +713,122 @@ export class LabResultsComponent implements OnInit, OnDestroy {
     if (!dateStr) return '';
     const d = new Date(dateStr);
     return d.toLocaleDateString(this.i18n.isSq() ? 'sq-AL' : 'en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  getTypeLabel(type: string): string {
+    const labels: Record<string, Record<string, string>> = {
+      hemogram: { sq: 'Hemogram', en: 'Hemogram' },
+      urinalysis: { sq: 'Analizë Urine', en: 'Urinalysis' },
+      biochemistry: { sq: 'Biokim i gjakut', en: 'Blood Biochemistry' },
+      immunology: { sq: 'Imunologji', en: 'Immunology' },
+      other: { sq: 'Tjetër', en: 'Other' },
+    };
+    return labels[type]?.[this.i18n.isSq() ? 'sq' : 'en'] || type;
+  }
+
+  // ─── File handling ───────────────────────────────────────────
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    this.isDragOver.set(true);
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    this.isDragOver.set(false);
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    this.isDragOver.set(false);
+    const files = event.dataTransfer?.files;
+    if (files) this.processFiles(files);
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files) this.processFiles(input.files);
+    input.value = ''; // reset so same file can be re-selected
+  }
+
+  private processFiles(files: FileList) {
+    this.fileError.set(null);
+
+    if (this.pendingFiles().length >= MAX_FILES) {
+      this.fileError.set(this.i18n.t()['labResults.maxFilesReached'] || 'Maksimumi 5 fajlla për rezultat');
+      return;
+    }
+
+    const remaining = MAX_FILES - this.pendingFiles().length;
+    const toProcess = Array.from(files).slice(0, remaining);
+
+    for (const file of toProcess) {
+      if (file.size > MAX_FILE_SIZE) {
+        this.fileError.set(this.i18n.t()['labResults.fileTooBig'] || 'Skedari tejkalon 10MB');
+        continue;
+      }
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        this.fileError.set(this.i18n.t()['labResults.fileTypeError'] || 'Lloji i skedarit nuk mbështetet. Vetëm PDF dhe imazhe.');
+        continue;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = (e.target?.result as string).split(',')[1];
+        const pending: PendingFile = {
+          name: file.name,
+          size: file.size,
+          base64,
+          mimeType: file.type,
+        };
+        this.pendingFiles.update(list => [...list, pending]);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    if (Array.from(files).length > remaining) {
+      this.fileError.set(this.i18n.t()['labResults.maxFilesReached'] || 'Maksimumi 5 fajlla për rezultat');
+    }
+  }
+
+  removePendingFile(index: number) {
+    this.pendingFiles.update(list => list.filter((_, i) => i !== index));
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  guessMimeType(base64: string): string {
+    if (base64.startsWith('/9j/')) return 'image/jpeg';
+    if (base64.startsWith('iVBOR')) return 'image/png';
+    if (base64.startsWith('UEs')) return 'application/pdf';
+    if (base64.startsWith('JVBER')) return 'application/pdf';
+    return 'application/octet-stream';
+  }
+
+  isPdfAttachment(base64: string): boolean {
+    return this.guessMimeType(base64) === 'application/pdf';
+  }
+
+  getPdfUrl(base64: string): string {
+    const mime = this.guessMimeType(base64);
+    return `data:${mime};base64,${base64}`;
+  }
+
+  viewAttachment(base64: string) {
+    this.viewingAttachment.set(base64);
+  }
+
+  downloadAttachment(base64: string, index: number) {
+    const mime = this.guessMimeType(base64);
+    const ext = mime.split('/')[1];
+    const dataUrl = `data:${mime};base64,${base64}`;
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `lab-result-attachment-${index + 1}.${ext}`;
+    a.click();
   }
 }

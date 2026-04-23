@@ -601,8 +601,6 @@ export class ShellComponent implements OnDestroy, OnInit {
   dataService = inject(DataService);
   i18n = inject(I18nService);
   router = inject(Router);
-
-  router = inject(Router);
   private route = inject(ActivatedRoute);
 
   ngOnInit() {

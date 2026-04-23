@@ -13,7 +13,7 @@ import {
   signal,
   ɵɵdefineInjectable,
   ɵɵinject
-} from "./chunk-C7WIKZ6K.js";
+} from "./chunk-TUKDTMA6.js";
 
 // src/app/services/toast.service.ts
 var ToastService = class _ToastService {
@@ -107,6 +107,7 @@ var translations = {
   "nav.growthTracking": { sq: "Rritja", en: "Growth" },
   "nav.medications": { sq: "Medikamentet", en: "Medications" },
   // Sidebar
+  "sidebar.refresh": { sq: "Rifresko", en: "Refresh" },
   "sidebar.logout": { sq: "Dil nga Sistemi", en: "Sign Out" },
   // Language
   "language.label": { sq: "Gjuha", en: "Language" },
@@ -610,7 +611,36 @@ var translations = {
   "sync.error": { sq: "Gabim sinkronizimi", en: "Sync error" },
   "sync.conflict": { sq: "Konflikt", en: "Conflict" },
   "sync.retry": { sq: "Provo p\xEBrs\xEBri", en: "Retry" },
-  "sync.pendingCount": { sq: "{n} n\xEB pritje", en: "{n} pending" }
+  "sync.pendingCount": { sq: "{n} n\xEB pritje", en: "{n} pending" },
+  // Medication Tracker
+  "medTracker.title": { sq: "Medikamentet", en: "Medications" },
+  "medTracker.activeTab": { sq: "Aktiv", en: "Active" },
+  "medTracker.archivedTab": { sq: "Arkiv\xEB", en: "Archived" },
+  "medTracker.logDose": { sq: "Regjistro Doz\xEBn", en: "Log Dose" },
+  "medTracker.viewHistory": { sq: "Shiko Historikun", en: "View History" },
+  "medTracker.adherence": { sq: "P\xEBrputhshm\xEBria", en: "Adherence" },
+  "medTracker.adherenceOverall": { sq: "{pct}% p\xEBrputhshm\xEBri gjithsej", en: "{pct}% overall adherence" },
+  "medTracker.adherenceLabel": { sq: "medikamente n\xEB koh\xEB", en: "medications on time" },
+  "medTracker.doseHistory": { sq: "Historia e Dozave", en: "Dose History" },
+  "medTracker.doseTakenAt": { sq: "Data dhe Ora", en: "Date & Time" },
+  "medTracker.doseNotes": { sq: "Sh\xEBnime", en: "Notes" },
+  "medTracker.doseNotesPlaceholder": { sq: 'Opsionale, p.sh. "me ushqim"', en: 'Optional, e.g. "with food"' },
+  "medTracker.recentDose": { sq: "Doza e fundit: {time}", en: "Last dose: {time}" },
+  "medTracker.noDoses": { sq: "Ende nuk ka doza t\xEB regjistruara", en: "No doses logged yet" },
+  "medTracker.markLate": { sq: "Sh\xEBno si vonuar", en: "Mark as late" },
+  "medTracker.completedCourse": { sq: "Kurs i p\xEBrfunduar", en: "Course completed" },
+  "medTracker.noActiveMeds": { sq: "Nuk ka medikamente aktive", en: "No active medications" },
+  "medTracker.noArchivedMeds": { sq: "Nuk ka medikamente t\xEB arkivuar", en: "No archived medications" },
+  "medTracker.doseSaved": { sq: "Doza u regjistrua!", en: "Dose logged!" },
+  "medTracker.doseSaveError": { sq: "Ruajtja d\xEBshtoi. Provo p\xEBrs\xEBri.", en: "Save failed. Please try again." },
+  "medTracker.cancel": { sq: "Anulo", en: "Cancel" },
+  "medTracker.save": { sq: "Ruaj", en: "Save" },
+  "medTracker.asNeeded": { sq: "Sipas nevoj\xEBs", en: "As needed" },
+  "medTracker.archived": { sq: "Arkiv\xEB", en: "Archived" },
+  "medTracker.lastDoseAgo": { sq: "Doza e fundit: {n} {unit} m\xEB par\xEB", en: "Last dose: {n} {unit} ago" },
+  "medTracker.minutesAgo": { sq: "minuta", en: "minutes" },
+  "medTracker.hoursAgo": { sq: "or\xEB", en: "hours" },
+  "medTracker.daysAgo": { sq: "dit\xEB", en: "days" }
 };
 var I18nService = class _I18nService {
   constructor() {
@@ -1185,7 +1215,7 @@ var DataService = class _DataService {
   cacheTemperaturesToOffline(entries) {
     return __async(this, null, function* () {
       try {
-        const { OfflineService: OfflineService2 } = yield import("./chunk-OA3BFEGT.js");
+        const { OfflineService: OfflineService2 } = yield import("./chunk-SR4V7Y7C.js");
         const svc = new OfflineService2();
         yield svc.saveTemperaturesToOffline(entries);
       } catch (e) {
@@ -1195,7 +1225,7 @@ var DataService = class _DataService {
   getOfflineTemperatures(childId) {
     return __async(this, null, function* () {
       try {
-        const { OfflineService: OfflineService2 } = yield import("./chunk-OA3BFEGT.js");
+        const { OfflineService: OfflineService2 } = yield import("./chunk-SR4V7Y7C.js");
         const svc = new OfflineService2();
         return yield svc.getTemperaturesFromOffline(childId);
       } catch (e) {
@@ -1248,7 +1278,7 @@ var DataService = class _DataService {
   cacheGrowthToOffline(entries) {
     return __async(this, null, function* () {
       try {
-        const { OfflineService: OfflineService2 } = yield import("./chunk-OA3BFEGT.js");
+        const { OfflineService: OfflineService2 } = yield import("./chunk-SR4V7Y7C.js");
         const svc = new OfflineService2();
         yield svc.saveGrowthToOffline(entries);
       } catch (e) {
@@ -1258,7 +1288,7 @@ var DataService = class _DataService {
   getOfflineGrowth(childId) {
     return __async(this, null, function* () {
       try {
-        const { OfflineService: OfflineService2 } = yield import("./chunk-OA3BFEGT.js");
+        const { OfflineService: OfflineService2 } = yield import("./chunk-SR4V7Y7C.js");
         const svc = new OfflineService2();
         return yield svc.getGrowthFromOffline(childId);
       } catch (e) {
@@ -1285,7 +1315,7 @@ var DataService = class _DataService {
   cacheVaccinesToOffline(records) {
     return __async(this, null, function* () {
       try {
-        const { OfflineService: OfflineService2 } = yield import("./chunk-OA3BFEGT.js");
+        const { OfflineService: OfflineService2 } = yield import("./chunk-SR4V7Y7C.js");
         const svc = new OfflineService2();
         yield svc.saveVaccinesToOffline(records);
       } catch (e) {
@@ -1295,7 +1325,7 @@ var DataService = class _DataService {
   getOfflineVaccines(childId) {
     return __async(this, null, function* () {
       try {
-        const { OfflineService: OfflineService2 } = yield import("./chunk-OA3BFEGT.js");
+        const { OfflineService: OfflineService2 } = yield import("./chunk-SR4V7Y7C.js");
         const svc = new OfflineService2();
         return yield svc.getVaccinesFromOffline(childId);
       } catch (e) {
@@ -1601,7 +1631,7 @@ var DataService = class _DataService {
   cacheToOffline() {
     return __async(this, null, function* () {
       try {
-        const offlineService = new (yield import("./chunk-OA3BFEGT.js")).OfflineService();
+        const offlineService = new (yield import("./chunk-SR4V7Y7C.js")).OfflineService();
         yield offlineService.saveChildrenToOffline(this.children());
         const activeId = this.activeChildId();
         if (activeId) {
@@ -1617,7 +1647,7 @@ var DataService = class _DataService {
   loadFromOffline() {
     return __async(this, null, function* () {
       try {
-        const { OfflineService: OfflineService2 } = yield import("./chunk-OA3BFEGT.js");
+        const { OfflineService: OfflineService2 } = yield import("./chunk-SR4V7Y7C.js");
         const offlineService = new OfflineService2();
         const cachedChildren = yield offlineService.getChildrenFromOffline();
         if (cachedChildren.length > 0) {
@@ -1667,7 +1697,7 @@ var OfflineService = class _OfflineService {
         return this._syncService;
       const injector = window.__angularInjector__;
       if (injector) {
-        const { SyncService } = yield import("./chunk-GAOPM3OG.js");
+        const { SyncService } = yield import("./chunk-4L4P36FN.js");
         this._syncService = injector.get(SyncService);
       }
       if (!this._syncService) {
@@ -2066,4 +2096,4 @@ export {
   OfflineService,
   DataService
 };
-//# sourceMappingURL=chunk-GXWKIRAT.js.map
+//# sourceMappingURL=chunk-4SF4CTKH.js.map

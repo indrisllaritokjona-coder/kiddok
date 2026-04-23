@@ -66,3 +66,16 @@ export class UpdateMedicationDto {
   @IsOptional()
   active?: boolean;
 }
+
+export class CreateDoseLogDto {
+  @IsString()
+  @IsNotEmpty()
+  medicationId: string;
+
+  @IsDateString()
+  takenAt: string;
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
+}

@@ -8,7 +8,7 @@ import {
   setClassMetadata,
   signal,
   ɵɵdefineInjectable
-} from "./chunk-C7WIKZ6K.js";
+} from "./chunk-TUKDTMA6.js";
 
 // src/app/services/sync.service.ts
 var SyncService = class _SyncService {
@@ -33,7 +33,7 @@ var SyncService = class _SyncService {
   getSyncQueueEntries() {
     return __async(this, null, function* () {
       if (!this.offline) {
-        const { OfflineService } = yield import("./chunk-OA3BFEGT.js");
+        const { OfflineService } = yield import("./chunk-SR4V7Y7C.js");
         const injector = window.__angularInjector__;
         if (injector) {
           this.offline = injector.get(OfflineService);
@@ -134,4 +134,4 @@ var SyncService = class _SyncService {
 export {
   SyncService
 };
-//# sourceMappingURL=chunk-GAOPM3OG.js.map
+//# sourceMappingURL=chunk-4L4P36FN.js.map

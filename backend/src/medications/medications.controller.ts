@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, UsePipes, ValidationPipe } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { MedicationsService } from './medications.service';
-import { CreateMedicationDto, UpdateMedicationDto } from './medication.dto';
+import { CreateMedicationDto, UpdateMedicationDto, CreateDoseLogDto } from './medication.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('medications')
@@ -32,5 +32,17 @@ export class MedicationsController {
   @Delete(':id')
   remove(@Request() req, @Param('id') id: string) {
     return this.medicationsService.remove(req.user.userId, id);
+  }
+
+  // ─── Dose Log Endpoints ───────────────────────────────────────
+
+  @Post(':childId/doses')
+  logDose(@Request() req, @Param('childId') childId: string, @Body() dto: CreateDoseLogDto) {
+    return this.medicationsService.logDose(req.user.userId, childId, dto);
+  }
+
+  @Get(':childId/doses/:medicationId')
+  getDoseLogs(@Request() req, @Param('childId') childId: string, @Param('medicationId') medicationId: string) {
+    return this.medicationsService.getDoseLogs(req.user.userId, childId, medicationId);
   }
 }

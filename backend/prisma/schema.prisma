@@ -162,6 +162,17 @@ model Medication {
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  doseLogs     MedicationDoseLog[]
+}
+
+model MedicationDoseLog {
+  id            String      @id @default(uuid())
+  medicationId  String
+  medication    Medication  @relation(fields: [medicationId], references: [id], onDelete: Cascade)
+  takenAt       DateTime    @default(now())
+  notes         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }
 
 model ShareLink {

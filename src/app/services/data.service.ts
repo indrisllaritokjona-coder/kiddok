@@ -477,6 +477,19 @@ export class DataService {
   }
 
   async createTemperatureEntry(data: { childId: string; temperature: number; measuredAt: string; location?: string; notes?: string }): Promise<TemperatureEntry | null> {
+    if (!navigator.onLine) {
+      await this.offline.addToSyncQueue({
+        action: 'create',
+        entity: 'temperature',
+        endpoint: '/temperature-entries',
+        method: 'POST',
+        body: data,
+      });
+      const localEntry: TemperatureEntry = { ...data, id: 'local_' + Date.now(), createdAt: new Date().toISOString() };
+      this.temperatureEntries.update(current => [localEntry, ...current]);
+      this.toast.showKey('offline.queued');
+      return localEntry;
+    }
     try {
       const created = await firstValueFrom(
         this.http.post<TemperatureEntry>(`${this.API_URL}/temperature-entries`, data, this.getHeaders())
@@ -486,21 +499,52 @@ export class DataService {
       return created;
     } catch (err: any) {
       console.error('[DataService] createTemperatureEntry failed:', err);
-      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
-      return null;
+      await this.offline.addToSyncQueue({
+        action: 'create',
+        entity: 'temperature',
+        endpoint: '/temperature-entries',
+        method: 'POST',
+        body: data,
+      });
+      const localEntry: TemperatureEntry = { ...data, id: 'local_' + Date.now(), createdAt: new Date().toISOString() };
+      this.temperatureEntries.update(current => [localEntry, ...current]);
+      this.toast.showKey('offline.queued');
+      return localEntry;
     }
   }
 
   async deleteTemperatureEntry(id: string): Promise<void> {
+    // Optimistic local update
+    const updated = this.temperatureEntries().filter(e => e.id !== id);
+    this.temperatureEntries.set(updated);
+
+    if (!navigator.onLine) {
+      await this.offline.addToSyncQueue({
+        action: 'delete',
+        entity: 'temperature',
+        endpoint: `/temperature-entries/${id}`,
+        method: 'DELETE',
+        body: { id },
+      });
+      this.toast.showKey('offline.queued');
+      return;
+    }
+
     try {
       await firstValueFrom(
         this.http.delete<void>(`${this.API_URL}/temperature-entries/${id}`, this.getHeaders())
       );
-      const updated = this.temperatureEntries().filter(e => e.id !== id);
-      this.temperatureEntries.set(updated);
     } catch (err: any) {
       console.error('[DataService] deleteTemperatureEntry failed:', err);
-      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+      this.toast.showKey('error.api.generic');
+      // Re-queue for retry
+      await this.offline.addToSyncQueue({
+        action: 'delete',
+        entity: 'temperature',
+        endpoint: `/temperature-entries/${id}`,
+        method: 'DELETE',
+        body: { id },
+      });
     }
   }
 

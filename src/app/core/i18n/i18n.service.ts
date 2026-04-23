@@ -472,8 +472,8 @@ const translations = {
   'appointments.section.past': { sq: 'Të kaluara', en: 'Past' },
   'appointments.overdueCount': { sq: '{n} termin i vonuar', en: '{n} appointment overdue' },
   'appointments.overdueCountPlural': { sq: '{n} termine të vonuara', en: '{n} appointments overdue' },
-  'appointments.upcomingCount': { sq: '{n} termn i ardhshëm', en: '{n} upcoming appointment' },
-  'appointments.upcomingCountPlural': { sq: '{n} terme të ardhshme', en: '{n} upcoming appointments' },
+  'appointments.upcomingCount': { sq: '{n} termin i ardhshëm', en: '{n} upcoming appointment' },
+  'appointments.upcomingCountPlural': { sq: '{n} termine të ardhshme', en: '{n} upcoming appointments' },
   'appointments.overdue': { sq: 'Vonuar', en: 'Overdue' },
   'appointments.today': { sq: 'Sot', en: 'Today' },
   // Lab Results

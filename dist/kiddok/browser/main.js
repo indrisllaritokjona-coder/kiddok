@@ -3,7 +3,7 @@ import {
   I18nService,
   NotificationService,
   OfflineService
-} from "./chunk-FQBPUCWF.js";
+} from "./chunk-IWH5FZCO.js";
 import {
   APP_BOOTSTRAP_LISTENER,
   APP_ID,
@@ -205,6 +205,7 @@ import {
   ɵɵproperty,
   ɵɵpureFunction0,
   ɵɵpureFunction1,
+  ɵɵpureFunction2,
   ɵɵqueryRefresh,
   ɵɵreference,
   ɵɵrepeater,
@@ -230,7 +231,7 @@ import {
   ɵɵtwoWayListener,
   ɵɵtwoWayProperty,
   ɵɵviewQuery
-} from "./chunk-C4OL3AH6.js";
+} from "./chunk-UON6NLE4.js";
 
 // node_modules/@angular/common/fesm2022/_location-chunk.mjs
 /**
@@ -28555,8 +28556,8 @@ var MedicationsComponent = class _MedicationsComponent {
 // src/app/components/appointments/appointments.component.ts
 var _c09 = () => [1, 2, 3];
 var _c13 = (a0) => ({ appt: a0, section: "overdue" });
-var _c22 = (a0) => ({ appt: a0, section: "today" });
-var _c3 = (a0) => ({ appt: a0, section: "upcoming" });
+var _c22 = (a0, a1) => ({ appt: a0, section: a1 });
+var _c3 = (a0) => ({ appt: a0, section: "past-today" });
 var _forTrack012 = ($index, $item) => $item.id;
 function AppointmentsComponent_Conditional_6_Template(rf, ctx) {
   if (rf & 1) {
@@ -28692,9 +28693,9 @@ function AppointmentsComponent_Conditional_13_Conditional_1_For_8_Template(rf, c
   }
   if (rf & 2) {
     const appt_r5 = ctx.$implicit;
-    \u0275\u0275nextContext(3);
+    const ctx_r0 = \u0275\u0275nextContext(3);
     const apptCard_r4 = \u0275\u0275reference(15);
-    \u0275\u0275property("ngTemplateOutlet", apptCard_r4)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c22, appt_r5));
+    \u0275\u0275property("ngTemplateOutlet", apptCard_r4)("ngTemplateOutletContext", \u0275\u0275pureFunction2(2, _c22, appt_r5, ctx_r0.getSection(appt_r5)));
   }
 }
 function AppointmentsComponent_Conditional_13_Conditional_1_Template(rf, ctx) {
@@ -28706,7 +28707,7 @@ function AppointmentsComponent_Conditional_13_Conditional_1_Template(rf, ctx) {
     \u0275\u0275text(5);
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(6, "div", 39);
-    \u0275\u0275repeaterCreate(7, AppointmentsComponent_Conditional_13_Conditional_1_For_8_Template, 1, 4, "ng-container", null, _forTrack012);
+    \u0275\u0275repeaterCreate(7, AppointmentsComponent_Conditional_13_Conditional_1_For_8_Template, 1, 5, "ng-container", null, _forTrack012);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -28716,7 +28717,7 @@ function AppointmentsComponent_Conditional_13_Conditional_1_Template(rf, ctx) {
     \u0275\u0275advance(2);
     \u0275\u0275textInterpolate(ctx_r0.todayCount());
     \u0275\u0275advance(2);
-    \u0275\u0275repeater(ctx_r0.todayAppts());
+    \u0275\u0275repeater(ctx_r0.todayApptsFuture());
   }
 }
 function AppointmentsComponent_Conditional_13_Conditional_2_For_8_ng_container_0_Template(rf, ctx) {
@@ -28737,7 +28738,7 @@ function AppointmentsComponent_Conditional_13_Conditional_2_For_8_Template(rf, c
 }
 function AppointmentsComponent_Conditional_13_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 35)(1, "div", 36)(2, "span", 37);
+    \u0275\u0275elementStart(0, "div", 34)(1, "div", 36)(2, "span", 37);
     \u0275\u0275text(3);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(4, "span", 42);
@@ -28745,6 +28746,44 @@ function AppointmentsComponent_Conditional_13_Conditional_2_Template(rf, ctx) {
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(6, "div", 39);
     \u0275\u0275repeaterCreate(7, AppointmentsComponent_Conditional_13_Conditional_2_For_8_Template, 1, 4, "ng-container", null, _forTrack012);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.section.past"], " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r0.pastTodayAppts().length);
+    \u0275\u0275advance(2);
+    \u0275\u0275repeater(ctx_r0.pastTodayAppts());
+  }
+}
+function AppointmentsComponent_Conditional_13_Conditional_3_For_8_ng_container_0_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementContainer(0);
+  }
+}
+function AppointmentsComponent_Conditional_13_Conditional_3_For_8_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275template(0, AppointmentsComponent_Conditional_13_Conditional_3_For_8_ng_container_0_Template, 1, 0, "ng-container", 40);
+  }
+  if (rf & 2) {
+    const appt_r7 = ctx.$implicit;
+    const ctx_r0 = \u0275\u0275nextContext(3);
+    const apptCard_r4 = \u0275\u0275reference(15);
+    \u0275\u0275property("ngTemplateOutlet", apptCard_r4)("ngTemplateOutletContext", \u0275\u0275pureFunction2(2, _c22, appt_r7, ctx_r0.getSection(appt_r7)));
+  }
+}
+function AppointmentsComponent_Conditional_13_Conditional_3_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 35)(1, "div", 36)(2, "span", 37);
+    \u0275\u0275text(3);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "span", 43);
+    \u0275\u0275text(5);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(6, "div", 39);
+    \u0275\u0275repeaterCreate(7, AppointmentsComponent_Conditional_13_Conditional_3_For_8_Template, 1, 5, "ng-container", null, _forTrack012);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -28761,7 +28800,8 @@ function AppointmentsComponent_Conditional_13_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275conditionalCreate(0, AppointmentsComponent_Conditional_13_Conditional_0_Template, 9, 2, "div", 8);
     \u0275\u0275conditionalCreate(1, AppointmentsComponent_Conditional_13_Conditional_1_Template, 9, 2, "div", 34);
-    \u0275\u0275conditionalCreate(2, AppointmentsComponent_Conditional_13_Conditional_2_Template, 9, 2, "div", 35);
+    \u0275\u0275conditionalCreate(2, AppointmentsComponent_Conditional_13_Conditional_2_Template, 9, 2, "div", 34);
+    \u0275\u0275conditionalCreate(3, AppointmentsComponent_Conditional_13_Conditional_3_Template, 9, 2, "div", 35);
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
@@ -28769,12 +28809,14 @@ function AppointmentsComponent_Conditional_13_Template(rf, ctx) {
     \u0275\u0275advance();
     \u0275\u0275conditional(ctx_r0.todayCount() > 0 ? 1 : -1);
     \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r0.upcomingCount() > 0 ? 2 : -1);
+    \u0275\u0275conditional(ctx_r0.pastTodayAppts().length > 0 ? 2 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.upcomingCount() > 0 ? 3 : -1);
   }
 }
 function AppointmentsComponent_ng_template_14_Conditional_9_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 51);
+    \u0275\u0275elementStart(0, "span", 52);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -28786,7 +28828,19 @@ function AppointmentsComponent_ng_template_14_Conditional_9_Template(rf, ctx) {
 }
 function AppointmentsComponent_ng_template_14_Conditional_10_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 52);
+    \u0275\u0275elementStart(0, "span", 53);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.today"], " ");
+  }
+}
+function AppointmentsComponent_ng_template_14_Conditional_11_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 54);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -28796,108 +28850,108 @@ function AppointmentsComponent_ng_template_14_Conditional_10_Template(rf, ctx) {
     \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.upcoming"], " ");
   }
 }
-function AppointmentsComponent_ng_template_14_Conditional_15_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 55);
-    \u0275\u0275element(1, "lucide-icon", 62);
-    \u0275\u0275elementStart(2, "span");
-    \u0275\u0275text(3);
-    \u0275\u0275elementEnd()();
-  }
-  if (rf & 2) {
-    const appt_r8 = \u0275\u0275nextContext().appt;
-    \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(appt_r8.doctorName);
-  }
-}
 function AppointmentsComponent_ng_template_14_Conditional_16_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 55);
-    \u0275\u0275element(1, "lucide-icon", 63);
+    \u0275\u0275elementStart(0, "div", 57);
+    \u0275\u0275element(1, "lucide-icon", 64);
     \u0275\u0275elementStart(2, "span");
     \u0275\u0275text(3);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const appt_r8 = \u0275\u0275nextContext().appt;
+    const appt_r9 = \u0275\u0275nextContext().appt;
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(appt_r8.location);
+    \u0275\u0275textInterpolate(appt_r9.doctorName);
   }
 }
 function AppointmentsComponent_ng_template_14_Conditional_17_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 56);
+    \u0275\u0275elementStart(0, "div", 57);
+    \u0275\u0275element(1, "lucide-icon", 65);
+    \u0275\u0275elementStart(2, "span");
+    \u0275\u0275text(3);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const appt_r9 = \u0275\u0275nextContext().appt;
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(appt_r9.location);
+  }
+}
+function AppointmentsComponent_ng_template_14_Conditional_18_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 58);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const appt_r8 = \u0275\u0275nextContext().appt;
+    const appt_r9 = \u0275\u0275nextContext().appt;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", appt_r8.notes, " ");
+    \u0275\u0275textInterpolate1(" ", appt_r9.notes, " ");
   }
 }
 function AppointmentsComponent_ng_template_14_Template(rf, ctx) {
   if (rf & 1) {
-    const _r7 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 43)(1, "div", 44)(2, "div", 45)(3, "div", 46);
-    \u0275\u0275element(4, "lucide-icon", 47);
+    const _r8 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 44)(1, "div", 45)(2, "div", 46)(3, "div", 47);
+    \u0275\u0275element(4, "lucide-icon", 48);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "div", 48)(6, "div", 49)(7, "h3", 50);
+    \u0275\u0275elementStart(5, "div", 49)(6, "div", 50)(7, "h3", 51);
     \u0275\u0275text(8);
     \u0275\u0275elementEnd();
-    \u0275\u0275conditionalCreate(9, AppointmentsComponent_ng_template_14_Conditional_9_Template, 2, 1, "span", 51)(10, AppointmentsComponent_ng_template_14_Conditional_10_Template, 2, 1, "span", 52);
+    \u0275\u0275conditionalCreate(9, AppointmentsComponent_ng_template_14_Conditional_9_Template, 2, 1, "span", 52)(10, AppointmentsComponent_ng_template_14_Conditional_10_Template, 2, 1, "span", 53)(11, AppointmentsComponent_ng_template_14_Conditional_11_Template, 2, 1, "span", 54);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(11, "div", 53);
-    \u0275\u0275element(12, "lucide-icon", 54);
-    \u0275\u0275elementStart(13, "span");
-    \u0275\u0275text(14);
+    \u0275\u0275elementStart(12, "div", 55);
+    \u0275\u0275element(13, "lucide-icon", 56);
+    \u0275\u0275elementStart(14, "span");
+    \u0275\u0275text(15);
     \u0275\u0275elementEnd()();
-    \u0275\u0275conditionalCreate(15, AppointmentsComponent_ng_template_14_Conditional_15_Template, 4, 1, "div", 55);
-    \u0275\u0275conditionalCreate(16, AppointmentsComponent_ng_template_14_Conditional_16_Template, 4, 1, "div", 55);
+    \u0275\u0275conditionalCreate(16, AppointmentsComponent_ng_template_14_Conditional_16_Template, 4, 1, "div", 57);
+    \u0275\u0275conditionalCreate(17, AppointmentsComponent_ng_template_14_Conditional_17_Template, 4, 1, "div", 57);
     \u0275\u0275elementEnd()();
-    \u0275\u0275conditionalCreate(17, AppointmentsComponent_ng_template_14_Conditional_17_Template, 2, 1, "div", 56);
-    \u0275\u0275elementStart(18, "div", 57)(19, "button", 58);
-    \u0275\u0275listener("click", function AppointmentsComponent_ng_template_14_Template_button_click_19_listener() {
-      const appt_r8 = \u0275\u0275restoreView(_r7).appt;
+    \u0275\u0275conditionalCreate(18, AppointmentsComponent_ng_template_14_Conditional_18_Template, 2, 1, "div", 58);
+    \u0275\u0275elementStart(19, "div", 59)(20, "button", 60);
+    \u0275\u0275listener("click", function AppointmentsComponent_ng_template_14_Template_button_click_20_listener() {
+      const appt_r9 = \u0275\u0275restoreView(_r8).appt;
       const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.openEditModal(appt_r8));
+      return \u0275\u0275resetView(ctx_r0.openEditModal(appt_r9));
     });
-    \u0275\u0275element(20, "lucide-icon", 59);
-    \u0275\u0275text(21);
+    \u0275\u0275element(21, "lucide-icon", 61);
+    \u0275\u0275text(22);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(22, "button", 60);
-    \u0275\u0275listener("click", function AppointmentsComponent_ng_template_14_Template_button_click_22_listener() {
-      const appt_r8 = \u0275\u0275restoreView(_r7).appt;
+    \u0275\u0275elementStart(23, "button", 62);
+    \u0275\u0275listener("click", function AppointmentsComponent_ng_template_14_Template_button_click_23_listener() {
+      const appt_r9 = \u0275\u0275restoreView(_r8).appt;
       const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.confirmDelete(appt_r8));
+      return \u0275\u0275resetView(ctx_r0.confirmDelete(appt_r9));
     });
-    \u0275\u0275element(23, "lucide-icon", 61);
-    \u0275\u0275text(24);
+    \u0275\u0275element(24, "lucide-icon", 63);
+    \u0275\u0275text(25);
     \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
-    const appt_r8 = ctx.appt;
-    const section_r9 = ctx.section;
+    const appt_r9 = ctx.appt;
+    const section_r10 = ctx.section;
     const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275classProp("border-l-4", true)("border-red-400", section_r9 === "overdue")("border-amber-400", section_r9 === "today")("border-teal-400", section_r9 === "upcoming")("bg-red-50/30", section_r9 === "overdue")("bg-amber-50/30", section_r9 === "today")("bg-teal-50/30", section_r9 === "upcoming")("border", section_r9 === "today" || section_r9 === "overdue")("border-red-200", section_r9 === "overdue" || section_r9 === "today")("border-teal-200", section_r9 === "upcoming");
+    \u0275\u0275classProp("border-l-4", true)("border-red-400", section_r10 === "overdue")("border-amber-400", section_r10 === "today")("border-teal-400", section_r10 === "upcoming")("bg-red-50/30", section_r10 === "overdue")("bg-amber-50/30", section_r10 === "today")("bg-teal-50/30", section_r10 === "upcoming")("border-slate-300", section_r10 === "past-today")("bg-slate-50", section_r10 === "past-today")("border", section_r10 === "today" || section_r10 === "overdue" || section_r10 === "past-today")("border-red-200", section_r10 === "overdue")("border-amber-200", section_r10 === "today")("border-teal-200", section_r10 === "upcoming");
     \u0275\u0275advance(3);
-    \u0275\u0275classProp("bg-red-100", section_r9 === "overdue")("bg-amber-100", section_r9 === "today")("bg-teal-100", section_r9 === "upcoming");
+    \u0275\u0275classProp("bg-red-100", section_r10 === "overdue")("bg-amber-100", section_r10 === "today")("bg-teal-100", section_r10 === "upcoming")("bg-slate-100", section_r10 === "past-today");
     \u0275\u0275advance();
-    \u0275\u0275classProp("text-red-500", section_r9 === "overdue")("text-amber-500", section_r9 === "today")("text-teal-500", section_r9 === "upcoming");
+    \u0275\u0275classProp("text-red-500", section_r10 === "overdue")("text-amber-500", section_r10 === "today")("text-teal-500", section_r10 === "upcoming")("text-slate-400", section_r10 === "past-today");
     \u0275\u0275advance(3);
-    \u0275\u0275property("title", appt_r8.title);
+    \u0275\u0275property("title", appt_r9.title);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(appt_r8.title);
+    \u0275\u0275textInterpolate(appt_r9.title);
     \u0275\u0275advance();
-    \u0275\u0275conditional(section_r9 === "overdue" ? 9 : section_r9 === "upcoming" ? 10 : -1);
-    \u0275\u0275advance(5);
-    \u0275\u0275textInterpolate(ctx_r0.formatDateTime(appt_r8.dateTime));
+    \u0275\u0275conditional(section_r10 === "overdue" ? 9 : section_r10 === "today" ? 10 : section_r10 === "upcoming" ? 11 : -1);
+    \u0275\u0275advance(6);
+    \u0275\u0275textInterpolate(ctx_r0.formatDateTime(appt_r9.dateTime));
     \u0275\u0275advance();
-    \u0275\u0275conditional(appt_r8.doctorName ? 15 : -1);
+    \u0275\u0275conditional(appt_r9.doctorName ? 16 : -1);
     \u0275\u0275advance();
-    \u0275\u0275conditional(appt_r8.location ? 16 : -1);
+    \u0275\u0275conditional(appt_r9.location ? 17 : -1);
     \u0275\u0275advance();
-    \u0275\u0275conditional(appt_r8.notes ? 17 : -1);
+    \u0275\u0275conditional(appt_r9.notes ? 18 : -1);
     \u0275\u0275advance(4);
     \u0275\u0275textInterpolate1(" ", ctx_r0.i18n.t()["appointments.edit"], " ");
     \u0275\u0275advance(3);
@@ -28906,7 +28960,7 @@ function AppointmentsComponent_ng_template_14_Template(rf, ctx) {
 }
 function AppointmentsComponent_Conditional_16_Conditional_38_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 78);
+    \u0275\u0275elementStart(0, "div", 80);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -28918,7 +28972,7 @@ function AppointmentsComponent_Conditional_16_Conditional_38_Template(rf, ctx) {
 }
 function AppointmentsComponent_Conditional_16_Conditional_43_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "lucide-icon", 82);
+    \u0275\u0275element(0, "lucide-icon", 84);
     \u0275\u0275text(1);
   }
   if (rf & 2) {
@@ -28929,7 +28983,7 @@ function AppointmentsComponent_Conditional_16_Conditional_43_Template(rf, ctx) {
 }
 function AppointmentsComponent_Conditional_16_Conditional_44_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "lucide-icon", 83);
+    \u0275\u0275element(0, "lucide-icon", 85);
     \u0275\u0275text(1);
   }
   if (rf & 2) {
@@ -28940,111 +28994,111 @@ function AppointmentsComponent_Conditional_16_Conditional_44_Template(rf, ctx) {
 }
 function AppointmentsComponent_Conditional_16_Template(rf, ctx) {
   if (rf & 1) {
-    const _r10 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 64);
+    const _r11 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 66);
     \u0275\u0275listener("click", function AppointmentsComponent_Conditional_16_Template_div_click_0_listener() {
-      \u0275\u0275restoreView(_r10);
+      \u0275\u0275restoreView(_r11);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.closeModal());
     });
-    \u0275\u0275elementStart(1, "div", 65);
+    \u0275\u0275elementStart(1, "div", 67);
     \u0275\u0275listener("click", function AppointmentsComponent_Conditional_16_Template_div_click_1_listener($event) {
       return $event.stopPropagation();
     });
-    \u0275\u0275elementStart(2, "div", 66)(3, "h2", 67);
+    \u0275\u0275elementStart(2, "div", 68)(3, "h2", 69);
     \u0275\u0275text(4);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "button", 68);
+    \u0275\u0275elementStart(5, "button", 70);
     \u0275\u0275listener("click", function AppointmentsComponent_Conditional_16_Template_button_click_5_listener() {
-      \u0275\u0275restoreView(_r10);
+      \u0275\u0275restoreView(_r11);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.closeModal());
     });
-    \u0275\u0275element(6, "lucide-icon", 69);
+    \u0275\u0275element(6, "lucide-icon", 71);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(7, "div", 70)(8, "div")(9, "label", 71);
+    \u0275\u0275elementStart(7, "div", 72)(8, "div")(9, "label", 73);
     \u0275\u0275text(10);
-    \u0275\u0275elementStart(11, "span", 72);
+    \u0275\u0275elementStart(11, "span", 74);
     \u0275\u0275text(12, "*");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(13, "input", 73);
+    \u0275\u0275elementStart(13, "input", 75);
     \u0275\u0275twoWayListener("ngModelChange", function AppointmentsComponent_Conditional_16_Template_input_ngModelChange_13_listener($event) {
-      \u0275\u0275restoreView(_r10);
+      \u0275\u0275restoreView(_r11);
       const ctx_r0 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r0.formTitle, $event) || (ctx_r0.formTitle = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275listener("blur", function AppointmentsComponent_Conditional_16_Template_input_blur_13_listener() {
-      \u0275\u0275restoreView(_r10);
+      \u0275\u0275restoreView(_r11);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.showValidation.set(true));
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(14, "div")(15, "label", 71);
+    \u0275\u0275elementStart(14, "div")(15, "label", 73);
     \u0275\u0275text(16);
-    \u0275\u0275elementStart(17, "span", 72);
+    \u0275\u0275elementStart(17, "span", 74);
     \u0275\u0275text(18, "*");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(19, "input", 74);
+    \u0275\u0275elementStart(19, "input", 76);
     \u0275\u0275twoWayListener("ngModelChange", function AppointmentsComponent_Conditional_16_Template_input_ngModelChange_19_listener($event) {
-      \u0275\u0275restoreView(_r10);
+      \u0275\u0275restoreView(_r11);
       const ctx_r0 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r0.formDateTime, $event) || (ctx_r0.formDateTime = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(20, "div")(21, "label", 71);
+    \u0275\u0275elementStart(20, "div")(21, "label", 73);
     \u0275\u0275text(22);
-    \u0275\u0275elementStart(23, "span", 75);
+    \u0275\u0275elementStart(23, "span", 77);
     \u0275\u0275text(24);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(25, "input", 76);
+    \u0275\u0275elementStart(25, "input", 78);
     \u0275\u0275twoWayListener("ngModelChange", function AppointmentsComponent_Conditional_16_Template_input_ngModelChange_25_listener($event) {
-      \u0275\u0275restoreView(_r10);
+      \u0275\u0275restoreView(_r11);
       const ctx_r0 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r0.formDoctorName, $event) || (ctx_r0.formDoctorName = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(26, "div")(27, "label", 71);
+    \u0275\u0275elementStart(26, "div")(27, "label", 73);
     \u0275\u0275text(28);
-    \u0275\u0275elementStart(29, "span", 75);
+    \u0275\u0275elementStart(29, "span", 77);
     \u0275\u0275text(30);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(31, "input", 76);
+    \u0275\u0275elementStart(31, "input", 78);
     \u0275\u0275twoWayListener("ngModelChange", function AppointmentsComponent_Conditional_16_Template_input_ngModelChange_31_listener($event) {
-      \u0275\u0275restoreView(_r10);
+      \u0275\u0275restoreView(_r11);
       const ctx_r0 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r0.formLocation, $event) || (ctx_r0.formLocation = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(32, "div")(33, "label", 71);
+    \u0275\u0275elementStart(32, "div")(33, "label", 73);
     \u0275\u0275text(34);
-    \u0275\u0275elementStart(35, "span", 75);
+    \u0275\u0275elementStart(35, "span", 77);
     \u0275\u0275text(36);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(37, "textarea", 77);
+    \u0275\u0275elementStart(37, "textarea", 79);
     \u0275\u0275twoWayListener("ngModelChange", function AppointmentsComponent_Conditional_16_Template_textarea_ngModelChange_37_listener($event) {
-      \u0275\u0275restoreView(_r10);
+      \u0275\u0275restoreView(_r11);
       const ctx_r0 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r0.formNotes, $event) || (ctx_r0.formNotes = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275conditionalCreate(38, AppointmentsComponent_Conditional_16_Conditional_38_Template, 2, 1, "div", 78);
+    \u0275\u0275conditionalCreate(38, AppointmentsComponent_Conditional_16_Conditional_38_Template, 2, 1, "div", 80);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(39, "div", 79)(40, "button", 80);
+    \u0275\u0275elementStart(39, "div", 81)(40, "button", 82);
     \u0275\u0275listener("click", function AppointmentsComponent_Conditional_16_Template_button_click_40_listener() {
-      \u0275\u0275restoreView(_r10);
+      \u0275\u0275restoreView(_r11);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.closeModal());
     });
     \u0275\u0275text(41);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(42, "button", 81);
+    \u0275\u0275elementStart(42, "button", 83);
     \u0275\u0275listener("click", function AppointmentsComponent_Conditional_16_Template_button_click_42_listener() {
-      \u0275\u0275restoreView(_r10);
+      \u0275\u0275restoreView(_r11);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.saveAppointment());
     });
@@ -29099,37 +29153,37 @@ function AppointmentsComponent_Conditional_16_Template(rf, ctx) {
 }
 function AppointmentsComponent_Conditional_17_Template(rf, ctx) {
   if (rf & 1) {
-    const _r11 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 64);
+    const _r12 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 66);
     \u0275\u0275listener("click", function AppointmentsComponent_Conditional_17_Template_div_click_0_listener() {
-      \u0275\u0275restoreView(_r11);
+      \u0275\u0275restoreView(_r12);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.showDeleteModal.set(false));
     });
-    \u0275\u0275elementStart(1, "div", 84);
+    \u0275\u0275elementStart(1, "div", 86);
     \u0275\u0275listener("click", function AppointmentsComponent_Conditional_17_Template_div_click_1_listener($event) {
       return $event.stopPropagation();
     });
-    \u0275\u0275elementStart(2, "div", 85);
-    \u0275\u0275element(3, "lucide-icon", 86);
+    \u0275\u0275elementStart(2, "div", 87);
+    \u0275\u0275element(3, "lucide-icon", 88);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(4, "h3", 87);
+    \u0275\u0275elementStart(4, "h3", 89);
     \u0275\u0275text(5);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(6, "p", 88);
+    \u0275\u0275elementStart(6, "p", 90);
     \u0275\u0275text(7);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(8, "div", 89)(9, "button", 90);
+    \u0275\u0275elementStart(8, "div", 91)(9, "button", 92);
     \u0275\u0275listener("click", function AppointmentsComponent_Conditional_17_Template_button_click_9_listener() {
-      \u0275\u0275restoreView(_r11);
+      \u0275\u0275restoreView(_r12);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.showDeleteModal.set(false));
     });
     \u0275\u0275text(10);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(11, "button", 91);
+    \u0275\u0275elementStart(11, "button", 93);
     \u0275\u0275listener("click", function AppointmentsComponent_Conditional_17_Template_button_click_11_listener() {
-      \u0275\u0275restoreView(_r11);
+      \u0275\u0275restoreView(_r12);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.deleteAppointment());
     });
@@ -29254,7 +29308,11 @@ var AppointmentsComponent = class _AppointmentsComponent {
       /* istanbul ignore next */
       []
     ));
-    this.todayAppts = computed(() => this.appointments().filter((a) => this.isToday(a)).sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()), ...ngDevMode ? [{ debugName: "todayAppts" }] : (
+    this.pastTodayAppts = computed(() => this.appointments().filter((a) => this.isPastToday(a)).sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()), ...ngDevMode ? [{ debugName: "pastTodayAppts" }] : (
+      /* istanbul ignore next */
+      []
+    ));
+    this.todayApptsFuture = computed(() => this.appointments().filter((a) => this.isToday(a) && !this.isPastToday(a)).sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()), ...ngDevMode ? [{ debugName: "todayApptsFuture" }] : (
       /* istanbul ignore next */
       []
     ));
@@ -29279,6 +29337,18 @@ var AppointmentsComponent = class _AppointmentsComponent {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const apptDate = new Date(appt.dateTime);
     return apptDate >= todayStart && apptDate < now;
+  }
+  isPastToday(appt) {
+    return this.isToday(appt) && new Date(appt.dateTime) < /* @__PURE__ */ new Date();
+  }
+  getSection(appt) {
+    if (this.isOverdue(appt))
+      return "overdue";
+    if (this.isPastToday(appt))
+      return "past-today";
+    if (this.isToday(appt))
+      return "today";
+    return "upcoming";
   }
   ngOnInit() {
     this.loadAppointments();
@@ -29428,7 +29498,7 @@ var AppointmentsComponent = class _AppointmentsComponent {
     };
   }
   static {
-    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AppointmentsComponent, selectors: [["app-appointments"]], decls: 18, vars: 9, consts: [["apptCard", ""], [1, "min-h-screen", "bg-gray-50", "pb-24"], [1, "bg-white", "border-b", "border-gray-100", "px-4", "pt-6", "pb-4"], [1, "flex", "items-center", "justify-between"], [1, "text-3xl", "font-extrabold", "text-gray-800"], [1, "text-slate-400", "text-sm", "mt-1", "font-medium"], [1, "bg-indigo-500", "hover:bg-indigo-600", "text-white", "px-5", "py-2.5", "rounded-2xl", "font-bold", "shadow-sm", "transition-all", "flex", "items-center", "gap-2", "text-sm", 3, "click"], ["name", "plus", 1, "text-inherit"], [1, "px-4", "mt-4"], [1, "px-4", "mt-4", "space-y-3"], [1, "flex", "flex-col", "items-center", "justify-center", "mt-20", "px-4"], [1, "fixed", "inset-0", "z-50", "flex", "items-center", "justify-center", "p-4", "bg-black/40", "backdrop-blur-sm"], [1, "bg-red-50", "border", "border-red-200", "rounded-2xl", "p-4", "flex", "items-center", "gap-3"], [1, "w-10", "h-10", "bg-red-100", "rounded-full", "flex", "items-center", "justify-center", "flex-shrink-0"], ["name", "alert-circle", 1, "text-red-500", "w-5", "h-5"], [1, "flex-1"], [1, "font-bold", "text-red-700", "text-sm"], [1, "bg-white", "rounded-2xl", "p-5", "border", "border-gray-100", "animate-pulse"], [1, "flex", "gap-4"], [1, "w-12", "h-12", "rounded-xl", "bg-gray-200"], [1, "flex-1", "space-y-2"], [1, "h-4", "bg-gray-200", "rounded", "w-1/2"], [1, "h-3", "bg-gray-100", "rounded", "w-1/3"], ["width", "160", "height", "160", "viewBox", "0 0 160 160", "fill", "none", 1, "mb-6"], ["cx", "80", "cy", "80", "r", "60", "fill", "#F0FDF4"], ["x", "60", "y", "50", "width", "40", "height", "36", "rx", "4", "stroke", "#10B981", "stroke-width", "3", "fill", "none"], ["x1", "60", "y1", "62", "x2", "100", "y2", "62", "stroke", "#10B981", "stroke-width", "3"], ["x1", "60", "y1", "74", "x2", "100", "y2", "74", "stroke", "#10B981", "stroke-width", "3"], ["x1", "60", "y1", "86", "x2", "80", "y2", "86", "stroke", "#10B981", "stroke-width", "3"], ["d", "M80 95 L80 105 M75 100 L85 100", "stroke", "#10B981", "stroke-width", "3", "stroke-linecap", "round"], [1, "text-xl", "font-extrabold", "text-gray-700", "mb-2"], [1, "text-slate-400", "text-center", "mb-6", "text-sm"], [1, "bg-indigo-500", "hover:bg-indigo-600", "text-white", "px-6", "py-3", "rounded-2xl", "font-bold", "shadow-sm", "transition-all", "text-sm", 3, "click"], ["name", "plus", 1, "text-inherit", "inline", "w-4", "h-4", "mr-1"], [1, "px-4", "mt-6"], [1, "px-4", "mt-6", "mb-6"], [1, "flex", "items-center", "gap-2", "mb-3"], [1, "text-xs", "font-bold", "text-slate-400", "uppercase", "tracking-wider"], [1, "bg-red-100", "text-red-700", "text-xs", "font-semibold", "px-2", "py-0.5", "rounded-full"], [1, "space-y-3"], [4, "ngTemplateOutlet", "ngTemplateOutletContext"], [1, "bg-amber-100", "text-amber-700", "text-xs", "font-semibold", "px-2", "py-0.5", "rounded-full"], [1, "bg-teal-100", "text-teal-700", "text-xs", "font-semibold", "px-2", "py-0.5", "rounded-full"], [1, "bg-white", "rounded-2xl", "shadow-sm", "overflow-hidden"], [1, "p-5"], [1, "flex", "items-start", "gap-4"], [1, "w-12", "h-12", "rounded-xl", "flex", "items-center", "justify-center", "flex-shrink-0"], ["name", "calendar", 1, "w-5", "h-5"], [1, "flex-1", "min-w-0"], [1, "flex", "items-start", "justify-between", "gap-2"], [1, "font-bold", "text-gray-800", "text-base", "truncate", 3, "title"], [1, "text-xs", "font-semibold", "px-2.5", "py-1", "rounded-full", "bg-red-100", "text-red-700", "flex-shrink-0"], [1, "text-xs", "font-semibold", "px-2.5", "py-1", "rounded-full", "bg-teal-100", "text-teal-700", "flex-shrink-0"], [1, "flex", "items-center", "gap-2", "mt-1.5", "text-sm", "text-slate-500"], ["name", "clock", 1, "w-3.5", "h-3.5", "text-slate-400", "flex-shrink-0"], [1, "flex", "items-center", "gap-2", "mt-1", "text-xs", "text-slate-400"], [1, "mt-3", "text-xs", "text-slate-500", "bg-slate-50", "rounded-xl", "p-3"], [1, "flex", "items-center", "gap-2", "mt-4"], [1, "flex-1", "py-2", "rounded-xl", "text-xs", "font-semibold", "bg-slate-50", "hover:bg-slate-100", "text-slate-600", "transition-all", "flex", "items-center", "justify-center", "gap-1.5", 3, "click"], ["name", "pencil", 1, "w-3.5", "h-3.5"], [1, "flex-1", "py-2", "rounded-xl", "text-xs", "font-semibold", "bg-red-50", "hover:bg-red-100", "text-red-600", "transition-all", "flex", "items-center", "justify-center", "gap-1.5", 3, "click"], ["name", "trash-2", 1, "w-3.5", "h-3.5"], ["name", "stethoscope", 1, "w-3.5", "h-3.5", "flex-shrink-0"], ["name", "map-pin", 1, "w-3.5", "h-3.5", "flex-shrink-0"], [1, "fixed", "inset-0", "z-50", "flex", "items-center", "justify-center", "p-4", "bg-black/40", "backdrop-blur-sm", 3, "click"], [1, "bg-white", "rounded-3xl", "shadow-2xl", "w-full", "max-w-md", "max-h-[90vh]", "overflow-y-auto", 3, "click"], [1, "px-6", "pt-6", "pb-4", "border-b", "border-gray-100", "flex", "items-center", "justify-between"], [1, "text-xl", "font-extrabold", "text-gray-800"], [1, "p-2", "rounded-xl", "hover:bg-gray-100", "transition-colors", 3, "click"], ["name", "x", 1, "w-5", "h-5", "text-slate-400"], [1, "p-6", "space-y-5"], [1, "block", "text-xs", "font-bold", "text-indigo-700", "mb-2", "uppercase", "tracking-wider"], [1, "text-red-400", "normal-case", "font-normal", "text-xs", "ml-1"], ["type", "text", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "blur", "ngModel", "placeholder"], ["type", "datetime-local", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "transition-all", "text-gray-800", "text-sm", 3, "ngModelChange", "ngModel"], [1, "text-slate-400", "normal-case", "font-normal", "text-xs", "ml-1"], ["type", "text", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-indigo-500/10", "focus:border-indigo-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "ngModel", "placeholder"], ["rows", "2", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-indigo-500/10", "focus:border-indigo-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "resize-none", 3, "ngModelChange", "ngModel", "placeholder"], [1, "p-3", "bg-red-50", "border", "border-red-200", "rounded-xl", "text-red-600", "text-sm", "font-semibold"], [1, "px-6", "pb-6", "flex", "gap-3"], [1, "flex-1", "py-3.5", "rounded-2xl", "font-bold", "text-slate-600", "bg-slate-100", "hover:bg-slate-200", "transition-all", "text-sm", 3, "click"], [1, "flex-1", "py-3.5", "rounded-2xl", "font-bold", "text-white", "bg-indigo-500", "hover:bg-indigo-600", "disabled:opacity-50", "disabled:cursor-not-allowed", "transition-all", "text-sm", "flex", "items-center", "justify-center", "gap-2", 3, "click", "disabled"], ["name", "loader-2", 1, "w-4", "h-4", "animate-spin"], ["name", "check", 1, "w-4", "h-4"], [1, "bg-white", "rounded-3xl", "shadow-2xl", "w-full", "max-w-sm", "p-6", 3, "click"], [1, "w-14", "h-14", "bg-red-100", "rounded-2xl", "flex", "items-center", "justify-center", "mx-auto", "mb-4"], ["name", "trash-2", 1, "text-red-500", "w-6", "h-6"], [1, "text-lg", "font-extrabold", "text-gray-800", "text-center", "mb-2"], [1, "text-slate-500", "text-sm", "text-center", "mb-6", "font-medium"], [1, "flex", "gap-3"], [1, "flex-1", "py-3", "rounded-2xl", "font-bold", "text-slate-600", "bg-slate-100", "hover:bg-slate-200", "transition-all", "text-sm", 3, "click"], [1, "flex-1", "py-3", "rounded-2xl", "font-bold", "text-white", "bg-red-500", "hover:bg-red-600", "transition-all", "text-sm", 3, "click"]], template: function AppointmentsComponent_Template(rf, ctx) {
+    this.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AppointmentsComponent, selectors: [["app-appointments"]], decls: 18, vars: 9, consts: [["apptCard", ""], [1, "min-h-screen", "bg-gray-50", "pb-24"], [1, "bg-white", "border-b", "border-gray-100", "px-4", "pt-6", "pb-4"], [1, "flex", "items-center", "justify-between"], [1, "text-3xl", "font-extrabold", "text-gray-800"], [1, "text-slate-400", "text-sm", "mt-1", "font-medium"], [1, "bg-indigo-500", "hover:bg-indigo-600", "text-white", "px-5", "py-2.5", "rounded-2xl", "font-bold", "shadow-sm", "transition-all", "flex", "items-center", "gap-2", "text-sm", 3, "click"], ["name", "plus", 1, "text-inherit"], [1, "px-4", "mt-4"], [1, "px-4", "mt-4", "space-y-3"], [1, "flex", "flex-col", "items-center", "justify-center", "mt-20", "px-4"], [1, "fixed", "inset-0", "z-50", "flex", "items-center", "justify-center", "p-4", "bg-black/40", "backdrop-blur-sm"], [1, "bg-red-50", "border", "border-red-200", "rounded-2xl", "p-4", "flex", "items-center", "gap-3"], [1, "w-10", "h-10", "bg-red-100", "rounded-full", "flex", "items-center", "justify-center", "flex-shrink-0"], ["name", "alert-circle", 1, "text-red-500", "w-5", "h-5"], [1, "flex-1"], [1, "font-bold", "text-red-700", "text-sm"], [1, "bg-white", "rounded-2xl", "p-5", "border", "border-gray-100", "animate-pulse"], [1, "flex", "gap-4"], [1, "w-12", "h-12", "rounded-xl", "bg-gray-200"], [1, "flex-1", "space-y-2"], [1, "h-4", "bg-gray-200", "rounded", "w-1/2"], [1, "h-3", "bg-gray-100", "rounded", "w-1/3"], ["width", "160", "height", "160", "viewBox", "0 0 160 160", "fill", "none", 1, "mb-6"], ["cx", "80", "cy", "80", "r", "60", "fill", "#F0FDF4"], ["x", "60", "y", "50", "width", "40", "height", "36", "rx", "4", "stroke", "#10B981", "stroke-width", "3", "fill", "none"], ["x1", "60", "y1", "62", "x2", "100", "y2", "62", "stroke", "#10B981", "stroke-width", "3"], ["x1", "60", "y1", "74", "x2", "100", "y2", "74", "stroke", "#10B981", "stroke-width", "3"], ["x1", "60", "y1", "86", "x2", "80", "y2", "86", "stroke", "#10B981", "stroke-width", "3"], ["d", "M80 95 L80 105 M75 100 L85 100", "stroke", "#10B981", "stroke-width", "3", "stroke-linecap", "round"], [1, "text-xl", "font-extrabold", "text-gray-700", "mb-2"], [1, "text-slate-400", "text-center", "mb-6", "text-sm"], [1, "bg-indigo-500", "hover:bg-indigo-600", "text-white", "px-6", "py-3", "rounded-2xl", "font-bold", "shadow-sm", "transition-all", "text-sm", 3, "click"], ["name", "plus", 1, "text-inherit", "inline", "w-4", "h-4", "mr-1"], [1, "px-4", "mt-6"], [1, "px-4", "mt-6", "mb-6"], [1, "flex", "items-center", "gap-2", "mb-3"], [1, "text-xs", "font-bold", "text-slate-400", "uppercase", "tracking-wider"], [1, "bg-red-100", "text-red-700", "text-xs", "font-semibold", "px-2", "py-0.5", "rounded-full"], [1, "space-y-3"], [4, "ngTemplateOutlet", "ngTemplateOutletContext"], [1, "bg-amber-100", "text-amber-700", "text-xs", "font-semibold", "px-2", "py-0.5", "rounded-full"], [1, "bg-slate-100", "text-slate-500", "text-xs", "font-semibold", "px-2", "py-0.5", "rounded-full"], [1, "bg-teal-100", "text-teal-700", "text-xs", "font-semibold", "px-2", "py-0.5", "rounded-full"], [1, "bg-white", "rounded-2xl", "shadow-sm", "overflow-hidden"], [1, "p-5"], [1, "flex", "items-start", "gap-4"], [1, "w-12", "h-12", "rounded-xl", "flex", "items-center", "justify-center", "flex-shrink-0"], ["name", "calendar", 1, "w-5", "h-5"], [1, "flex-1", "min-w-0"], [1, "flex", "items-start", "justify-between", "gap-2"], [1, "font-bold", "text-gray-800", "text-base", "truncate", 3, "title"], [1, "text-xs", "font-semibold", "px-2.5", "py-1", "rounded-full", "bg-red-100", "text-red-700", "flex-shrink-0"], [1, "text-xs", "font-semibold", "px-2.5", "py-1", "rounded-full", "bg-amber-100", "text-amber-700", "flex-shrink-0"], [1, "text-xs", "font-semibold", "px-2.5", "py-1", "rounded-full", "bg-teal-100", "text-teal-700", "flex-shrink-0"], [1, "flex", "items-center", "gap-2", "mt-1.5", "text-sm", "text-slate-500"], ["name", "clock", 1, "w-3.5", "h-3.5", "text-slate-400", "flex-shrink-0"], [1, "flex", "items-center", "gap-2", "mt-1", "text-xs", "text-slate-400"], [1, "mt-3", "text-xs", "text-slate-500", "bg-slate-50", "rounded-xl", "p-3"], [1, "flex", "items-center", "gap-2", "mt-4"], [1, "flex-1", "py-2", "rounded-xl", "text-xs", "font-semibold", "bg-slate-50", "hover:bg-slate-100", "text-slate-600", "transition-all", "flex", "items-center", "justify-center", "gap-1.5", 3, "click"], ["name", "pencil", 1, "w-3.5", "h-3.5"], [1, "flex-1", "py-2", "rounded-xl", "text-xs", "font-semibold", "bg-red-50", "hover:bg-red-100", "text-red-600", "transition-all", "flex", "items-center", "justify-center", "gap-1.5", 3, "click"], ["name", "trash-2", 1, "w-3.5", "h-3.5"], ["name", "stethoscope", 1, "w-3.5", "h-3.5", "flex-shrink-0"], ["name", "map-pin", 1, "w-3.5", "h-3.5", "flex-shrink-0"], [1, "fixed", "inset-0", "z-50", "flex", "items-center", "justify-center", "p-4", "bg-black/40", "backdrop-blur-sm", 3, "click"], [1, "bg-white", "rounded-3xl", "shadow-2xl", "w-full", "max-w-md", "max-h-[90vh]", "overflow-y-auto", 3, "click"], [1, "px-6", "pt-6", "pb-4", "border-b", "border-gray-100", "flex", "items-center", "justify-between"], [1, "text-xl", "font-extrabold", "text-gray-800"], [1, "p-2", "rounded-xl", "hover:bg-gray-100", "transition-colors", 3, "click"], ["name", "x", 1, "w-5", "h-5", "text-slate-400"], [1, "p-6", "space-y-5"], [1, "block", "text-xs", "font-bold", "text-indigo-700", "mb-2", "uppercase", "tracking-wider"], [1, "text-red-400", "normal-case", "font-normal", "text-xs", "ml-1"], ["type", "text", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "blur", "ngModel", "placeholder"], ["type", "datetime-local", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "transition-all", "text-gray-800", "text-sm", 3, "ngModelChange", "ngModel"], [1, "text-slate-400", "normal-case", "font-normal", "text-xs", "ml-1"], ["type", "text", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-indigo-500/10", "focus:border-indigo-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "font-medium", 3, "ngModelChange", "ngModel", "placeholder"], ["rows", "2", 1, "w-full", "px-4", "py-3", "rounded-2xl", "border-2", "border-slate-200", "bg-slate-50", "focus:bg-white", "focus:ring-4", "focus:ring-indigo-500/10", "focus:border-indigo-500", "outline-none", "transition-all", "text-gray-800", "text-sm", "resize-none", 3, "ngModelChange", "ngModel", "placeholder"], [1, "p-3", "bg-red-50", "border", "border-red-200", "rounded-xl", "text-red-600", "text-sm", "font-semibold"], [1, "px-6", "pb-6", "flex", "gap-3"], [1, "flex-1", "py-3.5", "rounded-2xl", "font-bold", "text-slate-600", "bg-slate-100", "hover:bg-slate-200", "transition-all", "text-sm", 3, "click"], [1, "flex-1", "py-3.5", "rounded-2xl", "font-bold", "text-white", "bg-indigo-500", "hover:bg-indigo-600", "disabled:opacity-50", "disabled:cursor-not-allowed", "transition-all", "text-sm", "flex", "items-center", "justify-center", "gap-2", 3, "click", "disabled"], ["name", "loader-2", 1, "w-4", "h-4", "animate-spin"], ["name", "check", 1, "w-4", "h-4"], [1, "bg-white", "rounded-3xl", "shadow-2xl", "w-full", "max-w-sm", "p-6", 3, "click"], [1, "w-14", "h-14", "bg-red-100", "rounded-2xl", "flex", "items-center", "justify-center", "mx-auto", "mb-4"], ["name", "trash-2", 1, "text-red-500", "w-6", "h-6"], [1, "text-lg", "font-extrabold", "text-gray-800", "text-center", "mb-2"], [1, "text-slate-500", "text-sm", "text-center", "mb-6", "font-medium"], [1, "flex", "gap-3"], [1, "flex-1", "py-3", "rounded-2xl", "font-bold", "text-slate-600", "bg-slate-100", "hover:bg-slate-200", "transition-all", "text-sm", 3, "click"], [1, "flex-1", "py-3", "rounded-2xl", "font-bold", "text-white", "bg-red-500", "hover:bg-red-600", "transition-all", "text-sm", 3, "click"]], template: function AppointmentsComponent_Template(rf, ctx) {
       if (rf & 1) {
         \u0275\u0275elementStart(0, "div", 1)(1, "div", 2)(2, "div", 3)(3, "div")(4, "h1", 4);
         \u0275\u0275text(5);
@@ -29445,9 +29515,9 @@ var AppointmentsComponent = class _AppointmentsComponent {
         \u0275\u0275conditionalCreate(10, AppointmentsComponent_Conditional_10_Template, 9, 9, "div", 8);
         \u0275\u0275conditionalCreate(11, AppointmentsComponent_Conditional_11_Template, 3, 1, "div", 9);
         \u0275\u0275conditionalCreate(12, AppointmentsComponent_Conditional_12_Template, 15, 3, "div", 10);
-        \u0275\u0275conditionalCreate(13, AppointmentsComponent_Conditional_13_Template, 3, 3);
+        \u0275\u0275conditionalCreate(13, AppointmentsComponent_Conditional_13_Template, 4, 4);
         \u0275\u0275elementEnd();
-        \u0275\u0275template(14, AppointmentsComponent_ng_template_14_Template, 25, 41, "ng-template", null, 0, \u0275\u0275templateRefExtractor);
+        \u0275\u0275template(14, AppointmentsComponent_ng_template_14_Template, 26, 51, "ng-template", null, 0, \u0275\u0275templateRefExtractor);
         \u0275\u0275conditionalCreate(16, AppointmentsComponent_Conditional_16_Template, 45, 38, "div", 11);
         \u0275\u0275conditionalCreate(17, AppointmentsComponent_Conditional_17_Template, 13, 4, "div", 11);
       }
@@ -29583,8 +29653,25 @@ var AppointmentsComponent = class _AppointmentsComponent {
               <span class="bg-amber-100 text-amber-700 text-xs font-semibold px-2 py-0.5 rounded-full">{{ todayCount() }}</span>
             </div>
             <div class="space-y-3">
-              @for (appt of todayAppts(); track appt.id) {
-                <ng-container *ngTemplateOutlet="apptCard; context: { appt: appt, section: 'today' }"></ng-container>
+              @for (appt of todayApptsFuture(); track appt.id) {
+                <ng-container *ngTemplateOutlet="apptCard; context: { appt: appt, section: getSection(appt) }"></ng-container>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- PAST Section -->
+        @if (pastTodayAppts().length > 0) {
+          <div class="px-4 mt-6">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                {{ i18n.t()['appointments.section.past'] }}
+              </span>
+              <span class="bg-slate-100 text-slate-500 text-xs font-semibold px-2 py-0.5 rounded-full">{{ pastTodayAppts().length }}</span>
+            </div>
+            <div class="space-y-3">
+              @for (appt of pastTodayAppts(); track appt.id) {
+                <ng-container *ngTemplateOutlet="apptCard; context: { appt: appt, section: 'past-today' }"></ng-container>
               }
             </div>
           </div>
@@ -29601,7 +29688,7 @@ var AppointmentsComponent = class _AppointmentsComponent {
             </div>
             <div class="space-y-3">
               @for (appt of upcomingAppts(); track appt.id) {
-                <ng-container *ngTemplateOutlet="apptCard; context: { appt: appt, section: 'upcoming' }"></ng-container>
+                <ng-container *ngTemplateOutlet="apptCard; context: { appt: appt, section: getSection(appt) }"></ng-container>
               }
             </div>
           </div>
@@ -29620,8 +29707,11 @@ var AppointmentsComponent = class _AppointmentsComponent {
            [class.bg-red-50/30]="section === 'overdue'"
            [class.bg-amber-50/30]="section === 'today'"
            [class.bg-teal-50/30]="section === 'upcoming'"
-           [class.border]="section === 'today' || section === 'overdue'"
-           [class.border-red-200]="section === 'overdue' || section === 'today'"
+           [class.border-slate-300]="section === 'past-today'"
+           [class.bg-slate-50]="section === 'past-today'"
+           [class.border]="section === 'today' || section === 'overdue' || section === 'past-today'"
+           [class.border-red-200]="section === 'overdue'"
+           [class.border-amber-200]="section === 'today'"
            [class.border-teal-200]="section === 'upcoming'">
 
         <div class="p-5">
@@ -29630,11 +29720,13 @@ var AppointmentsComponent = class _AppointmentsComponent {
             <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                  [class.bg-red-100]="section === 'overdue'"
                  [class.bg-amber-100]="section === 'today'"
-                 [class.bg-teal-100]="section === 'upcoming'">
+                 [class.bg-teal-100]="section === 'upcoming'"
+                 [class.bg-slate-100]="section === 'past-today'">
               <lucide-icon name="calendar"
                 [class.text-red-500]="section === 'overdue'"
                 [class.text-amber-500]="section === 'today'"
                 [class.text-teal-500]="section === 'upcoming'"
+                [class.text-slate-400]="section === 'past-today'"
                 class="w-5 h-5"></lucide-icon>
             </div>
 
@@ -29645,6 +29737,10 @@ var AppointmentsComponent = class _AppointmentsComponent {
                 @if (section === 'overdue') {
                   <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-red-100 text-red-700 flex-shrink-0">
                     {{ i18n.t()['appointments.overdue'] }}
+                  </span>
+                } @else if (section === 'today') {
+                  <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 flex-shrink-0">
+                    {{ i18n.t()['appointments.today'] }}
                   </span>
                 } @else if (section === 'upcoming') {
                   <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-teal-100 text-teal-700 flex-shrink-0">
@@ -29843,7 +29939,7 @@ var AppointmentsComponent = class _AppointmentsComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AppointmentsComponent, { className: "AppointmentsComponent", filePath: "src/app/components/appointments/appointments.component.ts", lineNumber: 394 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AppointmentsComponent, { className: "AppointmentsComponent", filePath: "src/app/components/appointments/appointments.component.ts", lineNumber: 420 });
 })();
 
 // src/app/components/lab-results/lab-results.component.ts

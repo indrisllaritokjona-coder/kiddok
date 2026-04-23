@@ -132,8 +132,25 @@ export interface AppointmentRecord {
               <span class="bg-amber-100 text-amber-700 text-xs font-semibold px-2 py-0.5 rounded-full">{{ todayCount() }}</span>
             </div>
             <div class="space-y-3">
-              @for (appt of todayAppts(); track appt.id) {
-                <ng-container *ngTemplateOutlet="apptCard; context: { appt: appt, section: 'today' }"></ng-container>
+              @for (appt of todayApptsFuture(); track appt.id) {
+                <ng-container *ngTemplateOutlet="apptCard; context: { appt: appt, section: getSection(appt) }"></ng-container>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- PAST Section -->
+        @if (pastTodayAppts().length > 0) {
+          <div class="px-4 mt-6">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                {{ i18n.t()['appointments.section.past'] }}
+              </span>
+              <span class="bg-slate-100 text-slate-500 text-xs font-semibold px-2 py-0.5 rounded-full">{{ pastTodayAppts().length }}</span>
+            </div>
+            <div class="space-y-3">
+              @for (appt of pastTodayAppts(); track appt.id) {
+                <ng-container *ngTemplateOutlet="apptCard; context: { appt: appt, section: 'past-today' }"></ng-container>
               }
             </div>
           </div>
@@ -150,7 +167,7 @@ export interface AppointmentRecord {
             </div>
             <div class="space-y-3">
               @for (appt of upcomingAppts(); track appt.id) {
-                <ng-container *ngTemplateOutlet="apptCard; context: { appt: appt, section: 'upcoming' }"></ng-container>
+                <ng-container *ngTemplateOutlet="apptCard; context: { appt: appt, section: getSection(appt) }"></ng-container>
               }
             </div>
           </div>
@@ -169,8 +186,11 @@ export interface AppointmentRecord {
            [class.bg-red-50/30]="section === 'overdue'"
            [class.bg-amber-50/30]="section === 'today'"
            [class.bg-teal-50/30]="section === 'upcoming'"
-           [class.border]="section === 'today' || section === 'overdue'"
-           [class.border-red-200]="section === 'overdue' || section === 'today'"
+           [class.border-slate-300]="section === 'past-today'"
+           [class.bg-slate-50]="section === 'past-today'"
+           [class.border]="section === 'today' || section === 'overdue' || section === 'past-today'"
+           [class.border-red-200]="section === 'overdue'"
+           [class.border-amber-200]="section === 'today'"
            [class.border-teal-200]="section === 'upcoming'">
 
         <div class="p-5">
@@ -179,11 +199,13 @@ export interface AppointmentRecord {
             <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                  [class.bg-red-100]="section === 'overdue'"
                  [class.bg-amber-100]="section === 'today'"
-                 [class.bg-teal-100]="section === 'upcoming'">
+                 [class.bg-teal-100]="section === 'upcoming'"
+                 [class.bg-slate-100]="section === 'past-today'">
               <lucide-icon name="calendar"
                 [class.text-red-500]="section === 'overdue'"
                 [class.text-amber-500]="section === 'today'"
                 [class.text-teal-500]="section === 'upcoming'"
+                [class.text-slate-400]="section === 'past-today'"
                 class="w-5 h-5"></lucide-icon>
             </div>
 
@@ -194,6 +216,10 @@ export interface AppointmentRecord {
                 @if (section === 'overdue') {
                   <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-red-100 text-red-700 flex-shrink-0">
                     {{ i18n.t()['appointments.overdue'] }}
+                  </span>
+                } @else if (section === 'today') {
+                  <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 flex-shrink-0">
+                    {{ i18n.t()['appointments.today'] }}
                   </span>
                 } @else if (section === 'upcoming') {
                   <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-teal-100 text-teal-700 flex-shrink-0">
@@ -435,6 +461,17 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
     return apptDate >= todayStart && apptDate < now;
   }
 
+  isPastToday(appt: AppointmentRecord): boolean {
+    return this.isToday(appt) && new Date(appt.dateTime) < new Date();
+  }
+
+  getSection(appt: AppointmentRecord): string {
+    if (this.isOverdue(appt)) return 'overdue';
+    if (this.isPastToday(appt)) return 'past-today';
+    if (this.isToday(appt)) return 'today';
+    return 'upcoming';
+  }
+
   overdueCount = computed(() => this.appointments().filter(a => this.isOverdue(a)).length);
   todayCount = computed(() => this.appointments().filter(a => this.isToday(a)).length);
 
@@ -449,9 +486,15 @@ export class AppointmentsComponent implements OnInit, OnDestroy {
       .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
   );
 
-  todayAppts = computed(() =>
+  pastTodayAppts = computed(() =>
     this.appointments()
-      .filter(a => this.isToday(a))
+      .filter(a => this.isPastToday(a))
+      .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
+  );
+
+  todayApptsFuture = computed(() =>
+    this.appointments()
+      .filter(a => this.isToday(a) && !this.isPastToday(a))
       .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
   );
 

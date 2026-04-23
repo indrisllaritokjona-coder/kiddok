@@ -1,24 +1,32 @@
-﻿import { Component, inject, signal, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
+﻿import { Component, inject, signal, computed, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
 import { DataService, ChildProfile } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
-import { Router, ActivatedRoute, RouterOutlet } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
+import { HomeComponent } from './home.component';
+import { DiaryComponent } from './diary.component';
+import { TemperatureDiaryComponent } from './temperature-diary.component';
+import { GrowthTrackingComponent } from './growth-tracking.component';
+import { RecordsComponent } from './records.component';
+import { VaccinesComponent } from './vaccines.component';
+import { MedicationsComponent } from './medications/medications.component';
+import { AppointmentsComponent } from './appointments/appointments.component';
+import { LabResultsComponent } from './lab-results/lab-results.component';
 import { SidebarComponent } from './sidebar.component';
 import { HeaderComponent } from './header.component';
 import { BottomNavComponent } from './bottom-nav.component';
 import { FormsModule } from '@angular/forms';
 import { AddEditChildModalComponent } from '../features/child/add-edit-child-modal/add-edit-child-modal.component';
 import { SettingsPageComponent } from './settings/settings-page.component';
+import { AnalyticsComponent } from './analytics.component';
 import { OnboardingTourComponent } from './onboarding-tour.component';
 import { OfflineIndicatorComponent } from './offline-indicator.component';
-import { ExportModalComponent } from './export-modal/export-modal.component';
-import { ModalService } from '../services/modal.service';
 
 @Component({
     selector: 'app-shell',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, FormsModule, RouterOutlet, LucideAngularModule, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent, OnboardingTourComponent, OfflineIndicatorComponent, ExportModalComponent],
+    imports: [CommonModule, FormsModule, LucideAngularModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, MedicationsComponent, AppointmentsComponent, LabResultsComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent, AnalyticsComponent, OnboardingTourComponent, OfflineIndicatorComponent],
     template: `
 
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
@@ -41,7 +49,6 @@ import { ModalService } from '../services/modal.service';
           (switchProfileRequested)="goToSelector()"
           (backRequested)="goToSelector()"
           (localeToggleRequested)="i18n.toggleLocale()"
-          (exportRequested)="openExportModal()"
           [switching]="switching()"
         />
 
@@ -80,7 +87,7 @@ import { ModalService } from '../services/modal.service';
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   @for (child of dataService.children(); track child.id) {
                     <div class="bg-white rounded-[2rem] p-8 shadow-md border border-slate-100 hover:shadow-xl hover:border-primary-200 transition-all group relative card-hover">
-                      <button (click)="modal.openEditChild(child)"
+                      <button (click)="openEditModal(child)"
                               class="absolute top-5 right-5 w-9 h-9 rounded-xl bg-slate-50 hover:bg-primary-50 border border-slate-200 hover:border-primary-300 flex items-center justify-center text-slate-400 hover:text-primary-600 transition-all shadow-sm"
                               [attr.aria-label]="i18n.t()['child.editProfile']">
                         <lucide-icon name="pencil" class="text-base" aria-hidden="true"></lucide-icon>
@@ -276,7 +283,7 @@ import { ModalService } from '../services/modal.service';
                 @case ('analytics') { <app-analytics /> }
                 @case ('settings') {
                   <app-settings-page
-                    (openEditChild)="modal.openEditChild($event)"
+                    (openEditChild)="openEditModal($event)"
                     (openAddChild)="isAddingChild.set(true)"
                   />
                 }
@@ -292,22 +299,256 @@ import { ModalService } from '../services/modal.service';
       <!-- Bottom Nav (Mobile) -->
       <app-bottom-nav />
 
-      <!-- Export Modal (Sprint 5) -->
-      @if (showExportModal()) {
-        <app-export-modal
-          [childId]="dataService.activeChildId()!"
-          [isOpen]="showExportModal()"
-          (closed)="showExportModal.set(false)"
+      <!-- ══════════════════════════════════════════
+           ADD/EDIT CHILD MODAL (Sprint 7 — 3-step wizard)
+           ══════════════════════════════════════════ -->
+      @if (showChildModal()) {
+        <app-add-edit-child-modal
+          [mode]="isAddingChild() ? 'add' : 'edit'"
+          [child]="editingChild() ?? undefined"
+          (saved)="onChildSaved($event)"
+          (cancelled)="closeModal()"
         />
       }
 
       <!-- ══════════════════════════════════════════
-           ADD/EDIT CHILD MODAL (Sprint 7 — 3-step wizard)
-           ══════════════════════════════════════════ -->
-
-      <!-- ══════════════════════════════════════════
            EDIT CHILD MODAL (Overlay)
            ══════════════════════════════════════════ -->
+      @if (editingChild()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" [attr.aria-labelledby]="'edit-child-title'">
+          <!-- Backdrop -->
+          <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" (click)="closeEditModal()" aria-hidden="true"></div>
+
+          <!-- Modal Card -->
+          <div class="relative z-10 w-full max-w-md bg-white rounded-[2rem] shadow-[0_32px_80px_-12px_rgba(0,0,0,0.25)] border border-slate-100 overflow-hidden animate-slide-up">
+
+            <!-- Top accent -->
+            <div class="h-1.5 bg-gradient-to-r from-primary-600 via-primary-500 to-teal-400"></div>
+
+            <div class="p-10">
+
+              <!-- Header -->
+              <div class="flex items-center justify-between mb-8">
+                <h2 id="edit-child-title" class="text-2xl font-black text-gray-800 flex items-center gap-3">
+                  <lucide-icon name="pencil" class="text-inherit" aria-hidden="true"></lucide-icon>
+                  {{ i18n.t()['child.editProfile'] }}
+                </h2>
+                <button type="button" (click)="closeEditModal()"
+                        class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all shadow-sm border border-slate-200"
+                        aria-label="{{ i18n.t()['child.cancel'] }}">
+                  <lucide-icon name="x" class="text-inherit" aria-hidden="true"></lucide-icon>
+                </button>
+              </div>
+
+              <div class="space-y-6">
+
+                <!-- Name -->
+                <div>
+                  <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">
+                    {{ i18n.t()['child.fullName'] }}
+                  </label>
+                  <div class="relative">
+                    <input type="text" [(ngModel)]="editName"
+                           (input)="onEditNameInput($event)"
+                           (blur)="onEditNameBlur()"
+                           class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 transition-all text-lg text-gray-800 pr-10"
+                           [ngClass]="editNameInvalid() ? 'border-red-400 focus:ring-4 focus:ring-red-500/10 focus:border-red-500' : 'border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500'">
+                    <!-- Invalid indicator icon -->
+                    @if (editNameInvalid()) {
+                      <lucide-icon name="alert-circle" class="absolute right-3 top-1/2 -translate-y-1/2 text-red-400 text-xl animate-fade-in"></lucide-icon>
+                    }
+                  </div>
+                  @if (editNameInvalid()) {
+                    <p class="mt-2 text-sm text-red-500 font-medium flex items-center gap-1">
+                      <lucide-icon name="alert-circle" class="text-inherit"></lucide-icon>
+                      {{ i18n.isSq() ? 'Emri mund të përmbajë vetëm shkronja.' : 'Name can only contain letters.' }}
+                    </p>
+                  }
+                </div>
+
+                <!-- Date of Birth -->
+                <div>
+                  <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">
+                    {{ i18n.t()['child.dateOfBirth'] }}
+                  </label>
+                  <div class="relative">
+                    <input type="text" [(ngModel)]="editDob" (input)="onDateInput($event, v => editDob = v, i18n.locale())"
+                           [placeholder]="i18n.locale() === 'sq' ? 'DD/MM/YYYY' : 'MM/DD/YYYY'" maxlength="10"
+                           class="w-full px-5 py-4 pr-12 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-600 placeholder-gray-300">
+                    <button type="button" onclick="this.previousElementSibling.showPicker?.()"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-primary-500 hover:bg-primary-50 transition-all cursor-pointer">
+                      <lucide-icon name="calendar" class="text-inherit"></lucide-icon>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Blood Type with Verification Badge -->
+                <div>
+                  <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">
+                    {{ i18n.t()['child.bloodType'] }}
+                  </label>
+                  <div class="relative">
+                    <select [ngModel]="editBloodType()" (ngModelChange)="editBloodType.set($event)"
+                            class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 transition-all text-lg shadow-sm appearance-none"
+                            [ngClass]="editBloodType() ? 'border-teal-300 text-gray-800 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500' : 'border-slate-200 text-gray-600 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500'">
+                      <option value="">--</option>
+                      <option value="A+">A+</option>
+                      <option value="A-">A-</option>
+                      <option value="B+">B+</option>
+                      <option value="B-">B-</option>
+                      <option value="AB+">AB+</option>
+                      <option value="AB-">AB-</option>
+                      <option value="O+">O+</option>
+                      <option value="O-">O-</option>
+                    </select>
+                    <!-- Blood type verified badge (green checkmark) -->
+                    @if (editBloodType()) {
+                      <span class="absolute right-12 top-1/2 -translate-y-1/2 flex items-center gap-1 animate-fade-in">
+                        <lucide-icon name="badge-check" class="text-inherit"></lucide-icon>
+                      </span>
+                    }
+                    <lucide-icon name="chevron-down" class="text-inherit"></lucide-icon>
+                  </div>
+                  @if (editBloodType()) {
+                    <p class="mt-2 text-xs text-teal-600 font-medium flex items-center gap-1 animate-fade-in">
+                      <lucide-icon name="badge-check" class="text-inherit"></lucide-icon>
+                      {{ i18n.isSq() ? 'Grupi i gjakut u verifikua.' : 'Blood type verified.' }}
+                    </p>
+                  }
+                </div>
+
+                <!-- Issue #7: Gender -->
+                <div>
+                  <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">
+                    {{ i18n.t()['child.gender'] }}
+                  </label>
+                  <div class="relative">
+                    <select [(ngModel)]="editGender"
+                            class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-200 transition-all text-lg shadow-sm appearance-none focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500">
+                      <option value="">--</option>
+                      <option value="M">{{ i18n.isSq() ? 'Mashkull' : 'Male' }}</option>
+                      <option value="F">{{ i18n.isSq() ? 'Femer' : 'Female' }}</option>
+                    </select>
+                    <lucide-icon name="chevron-down" class="text-inherit"></lucide-icon>
+                  </div>
+                </div>
+
+                <!-- Issue #1: Birth Weight -->
+                <div>
+                  <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">
+                    {{ i18n.t()['child.birthWeight'] }}
+                  </label>
+                  <input type="number" step="0.01" [(ngModel)]="editBirthWeight"
+                         class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-800 shadow-sm placeholder-gray-300"
+                         [placeholder]="i18n.t()['placeholder.birthWeight']">
+                </div>
+
+                <!-- Issue #1: Delivery Doctor -->
+                <div>
+                  <label class="block text-xs font-bold text-primary-700 mb-2.5 ml-1 uppercase tracking-wider">
+                    {{ i18n.t()['child.deliveryDoctor'] }}
+                  </label>
+                  <input type="text" [(ngModel)]="editDeliveryDoctor"
+                         class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-800 shadow-sm placeholder-gray-300"
+                         [placeholder]="i18n.t()['placeholder.deliveryDoctor']">
+                </div>
+
+                <!-- Critical Allergies -->
+                <div>
+                  <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.criticalAllergies'] }}</label>
+                  <textarea [(ngModel)]="editChildAllergies" rows="2"
+                    class="w-full px-5 py-4 rounded-2xl bg-white border-2 border-slate-200 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-800 shadow-sm placeholder-gray-300 resize-none"
+                    [placeholder]="i18n.t()['placeholder.allergies']"></textarea>
+                </div>
+
+                <!-- Medical Notes -->
+                <div>
+                  <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.medicalNotes'] }}</label>
+                  <textarea [(ngModel)]="editChildMedicalNotes" rows="3"
+                    class="w-full px-5 py-4 rounded-2xl bg-white border-2 border-slate-200 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-800 shadow-sm placeholder-gray-300 resize-none"
+                    [placeholder]="i18n.t()['placeholder.medicalNotes']"></textarea>
+                </div>
+
+                <!-- Medical Document Upload -->
+                <div>
+                  <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.medicalDocument'] }}</label>
+                  <input type="file" accept=".pdf,image/*" (change)="onDocumentSelected($event)"
+                    class="w-full file:mr-4 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-primary-50 file:text-primary-700 file:font-bold file:cursor-pointer text-sm text-gray-500 cursor-pointer"
+                    [attr.aria-label]="i18n.t()['child.medicalDocument']">
+                  @if (documentError()) {
+                    <p class="text-red-500 text-xs mt-1">{{ documentError() }}</p>
+                  }
+                  @if (editChildDocument()) {
+                    <p class="text-teal-600 text-xs mt-1 flex items-center gap-1"><lucide-icon name="check-circle" class="text-inherit"></lucide-icon> {{ i18n.t()['child.documentAttached'] }}</p>
+                  }
+                </div>
+
+                <!-- Document Issue Date -->
+                @if (editChildDocument()) {
+                  <div>
+                    <label class="block text-sm font-bold text-primary-700 mb-3 ml-1 tracking-wide uppercase text-xs">{{ i18n.t()['child.documentIssueDate'] }}</label>
+                    <input type="date" [(ngModel)]="editChildDocumentDate"
+                      class="w-full px-5 py-4 rounded-2xl bg-white border-2 border-slate-200 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-lg text-gray-600 shadow-sm">
+                  </div>
+                }
+
+                <!-- Actions -->
+                <div class="flex flex-col gap-3 pt-4 border-t border-gray-100">
+                  <!-- Issue #9: Success Toast -->
+                  @if (saveSuccess()) {
+                    <div class="flex items-center gap-2 p-3 bg-teal-50 border border-teal-200 rounded-xl text-teal-700 text-sm font-medium animate-fade-in">
+                      <lucide-icon name="check-circle" class="text-inherit"></lucide-icon>
+                      {{ i18n.isSq() ? 'Ndryshimet u ruajtën!' : 'Changes saved!' }}
+                    </div>
+                  }
+                  <button type="button" (click)="saveEditChild()"
+                          class="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white py-4 rounded-2xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-base shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                          [disabled]="editNameInvalid() || saving()">
+                    @if (saving()) {
+                      <lucide-icon name="loader" class="text-inherit" aria-hidden="true"></lucide-icon>
+                      <span>{{ i18n.isSq() ? 'Duke ruajtur...' : 'Saving...' }}</span>
+                    } @else {
+                      <lucide-icon name="save" class="text-inherit" aria-hidden="true"></lucide-icon>
+                      {{ i18n.t()['sidebar.saveChanges'] }}
+                    }
+                  </button>
+                  <button type="button" (click)="showDeleteConfirm.set(true)"
+                          class="w-full border-2 border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 py-3.5 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 text-sm">
+                    <lucide-icon name="trash-2" class="text-inherit" aria-hidden="true"></lucide-icon>
+                    {{ i18n.t()['sidebar.deleteProfile'] }}
+                  </button>
+                </div>
+                <!-- Delete Confirmation Modal (Issue #5) -->
+                @if (showDeleteConfirm()) {
+                  <div class="mt-4 p-5 bg-red-50 border-2 border-red-200 rounded-2xl animate-fade-in">
+                    <div class="flex items-center gap-3 mb-3">
+                      <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                        <lucide-icon name="alert-triangle" class="text-inherit"></lucide-icon>
+                      </div>
+                      <div>
+                        <p class="font-bold text-gray-800 text-base">{{ i18n.isSq() ? 'Fshi profilin e fëmijës?' : 'Delete child profile?' }}</p>
+                        <p class="text-sm text-gray-500">{{ editingChild()?.name }}</p>
+                      </div>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-5">{{ i18n.isSq() ? 'Ky veprim nuk mund të kthehet. Të gjitha të dhënat do të fshihen përgjithmonë.' : 'This action cannot be undone. All data will be permanently deleted.' }}</p>
+                    <div class="flex gap-3">
+                      <button type="button" (click)="showDeleteConfirm.set(false)"
+                              class="flex-1 py-3 rounded-xl border-2 border-slate-200 text-gray-600 font-bold hover:bg-slate-100 transition-all text-sm">
+                        {{ i18n.isSq() ? 'Anulo' : 'Cancel' }}
+                      </button>
+                      <button type="button" (click)="confirmDeleteChild()"
+                              class="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-500 to-red-400 text-white font-bold hover:from-red-400 hover:to-red-300 transition-all text-sm shadow-sm flex items-center justify-center gap-2">
+                        <lucide-icon name="trash" class="text-inherit" aria-hidden="true"></lucide-icon>
+                        {{ i18n.isSq() ? 'Fshi' : 'Delete' }}
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      }
 
     </div>
   `,
@@ -360,7 +601,6 @@ export class ShellComponent implements OnDestroy, OnInit {
   dataService = inject(DataService);
   i18n = inject(I18nService);
   router = inject(Router);
-  modal = inject(ModalService);
   private route = inject(ActivatedRoute);
 
   ngOnInit() {
@@ -390,7 +630,6 @@ export class ShellComponent implements OnDestroy, OnInit {
 
   isAddingChild = signal(false);
   showChildModal = signal(false);
-  showExportModal = signal(false);
   settingsSaved = signal(false);
   viewState = signal<'selector' | 'app'>('selector');
   switching = signal(false);
@@ -495,10 +734,6 @@ export class ShellComponent implements OnDestroy, OnInit {
   currentTab = signal('home');
 
   // ── Edit Modal ─────────────────────────────────────────────────
-
-  openExportModal() {
-    this.showExportModal.set(true);
-  }
 
   openEditModal(child: ChildProfile) {
     this.editingChild.set(child);

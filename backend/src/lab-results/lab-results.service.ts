@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { ChildrenService } from '../children/children.service';
 import { CreateLabResultDto, UpdateLabResultDto } from './lab-result.dto';
-import { decode as atob } from 'atob';
+const atob = (str: string) => Buffer.from(str, 'base64').toString('binary');
 
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10MB decoded
 const MAX_ATTACHMENTS = 5;
@@ -71,8 +71,6 @@ export class LabResultsService {
         date: new Date(data.date),
         doctor: data.doctor || null,
         notes: data.notes || null,
-        type: data.type || null,
-        attachments: data.attachments || [],
         child: { connect: { id: childId } },
       },
     });
@@ -113,8 +111,6 @@ export class LabResultsService {
         ...(data.date && { date: new Date(data.date) }),
         ...(data.doctor !== undefined && { doctor: data.doctor }),
         ...(data.notes !== undefined && { notes: data.notes }),
-        ...(data.type !== undefined && { type: data.type }),
-        ...(data.attachments !== undefined && { attachments: data.attachments }),
       },
     });
   }

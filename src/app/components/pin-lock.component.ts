@@ -431,7 +431,7 @@ export class PinLockComponent {
     setTimeout(async () => {
       const success = await this.dataService.login(this.userId, this.password);
       if (success) {
-        this.router.navigate(['/child-selector']);
+        this.router.navigate(['/']);
       } else {
         this.errorMsg.set(this.i18n.t()['pin.invalidCredentials']);
         this.loading.set(false);
@@ -469,7 +469,7 @@ export class PinLockComponent {
       this.loading.set(false);
       // Mock: treat OTP as valid, complete the "login" and redirect
       this.dataService.login(this.forgotNid, '1234');
-      this.router.navigate(['/child-selector']);
+      this.router.navigate(['/']);
     }, 700);
   }
 }

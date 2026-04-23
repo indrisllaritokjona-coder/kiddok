@@ -13,7 +13,7 @@ exports.LabResultsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const children_service_1 = require("../children/children.service");
-const atob_1 = require("atob");
+const atob = (str) => Buffer.from(str, 'base64').toString('binary');
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
 const MAX_ATTACHMENTS = 5;
 const ALLOWED_BASE64_HEADERS = ['/9j/', 'iVBOR', 'UEs', 'JVBER', 'dGV4dC'];
@@ -21,7 +21,7 @@ function isValidBase64(str) {
     try {
         if (!/^[A-Za-z0-9+/]*={0,2}$/.test(str))
             return false;
-        const decoded = (0, atob_1.decode)(str);
+        const decoded = atob(str);
         if (decoded.includes('\0'))
             return false;
         return true;
@@ -32,7 +32,7 @@ function isValidBase64(str) {
 }
 function getDecodedSize(base64) {
     try {
-        return (0, atob_1.decode)(base64).length;
+        return atob(base64).length;
     }
     catch {
         return 0;
@@ -76,8 +76,6 @@ let LabResultsService = class LabResultsService {
                 date: new Date(data.date),
                 doctor: data.doctor || null,
                 notes: data.notes || null,
-                type: data.type || null,
-                attachments: data.attachments || [],
                 child: { connect: { id: childId } },
             },
         });
@@ -112,8 +110,6 @@ let LabResultsService = class LabResultsService {
                 ...(data.date && { date: new Date(data.date) }),
                 ...(data.doctor !== undefined && { doctor: data.doctor }),
                 ...(data.notes !== undefined && { notes: data.notes }),
-                ...(data.type !== undefined && { type: data.type }),
-                ...(data.attachments !== undefined && { attachments: data.attachments }),
             },
         });
     }

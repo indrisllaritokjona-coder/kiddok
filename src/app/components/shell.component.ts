@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
 import { DataService, ChildProfile } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
-import { Router, ActivatedRoute, RouterOutlet } from '@angular/router';
+import { Router, ActivatedRoute, RouterOutlet, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs';
 import { SidebarComponent } from './sidebar.component';
 import { HeaderComponent } from './header.component';
 import { BottomNavComponent } from './bottom-nav.component';
@@ -271,6 +272,15 @@ import { ExportModalComponent } from './export-modal/export-modal.component';
 
       <!-- Bottom Nav (Mobile) -->
       <app-bottom-nav />
+
+      <!-- Export Modal (Sprint 5) -->
+      @if (showExportModal()) {
+        <app-export-modal
+          [childId]="dataService.activeChildId()!"
+          [isOpen]="showExportModal()"
+          (closed)="showExportModal.set(false)"
+        />
+      }
 
       <!-- ══════════════════════════════════════════
            ADD/EDIT CHILD MODAL (Sprint 7 — 3-step wizard)
@@ -576,16 +586,7 @@ export class ShellComponent implements OnDestroy, OnInit {
   router = inject(Router);
   private route = inject(ActivatedRoute);
 
-  ngOnInit() {
-    // Sync currentTab from URL on init (direct URL navigation)
-    this.route.paramMap.subscribe(params => {
-      const tab = params.get('tab');
-      if (tab) {
-        this.currentTab.set(tab);
-        this.dataService.currentTab.set(tab);
-      }
-    });
-  }
+  ngOnInit() {}
 
   private navigateHandler = (e: Event) => {
     const route = (e as CustomEvent<string>).detail;
@@ -602,6 +603,19 @@ export class ShellComponent implements OnDestroy, OnInit {
   constructor() {
     // Listen for cross-component navigation events from home sub-components
     window.addEventListener('kiddok:navigate', this.navigateHandler);
+    
+    // Sync currentTab from URL changes
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd)
+    ).subscribe((e: any) => {
+      const url = e.urlAfterRedirects || e.url;
+      const parts = url.split('/').filter((p: string) => p);
+      const tab = parts[parts.length - 1];
+      if (tab && tab !== 'login') {
+        this.currentTab.set(tab);
+        this.dataService.currentTab.set(tab);
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -610,9 +624,16 @@ export class ShellComponent implements OnDestroy, OnInit {
 
   isAddingChild = signal(false);
   showChildModal = signal(false);
+  showExportModal = signal(false);
   settingsSaved = signal(false);
-  viewState = signal<'selector' | 'app'>('selector');
+  viewState = signal<'selector' | 'app'>(
+    localStorage.getItem('kiddok_active_child') ? 'app' : 'selector'
+  );
   switching = signal(false);
+
+  openExportModal() {
+    this.showExportModal.set(true);
+  }
 
   // ── Edit Child Modal signals ──────────────────────────────────
   editingChild = signal<ChildProfile | null>(null);
@@ -868,7 +889,7 @@ export class ShellComponent implements OnDestroy, OnInit {
 
   navigateTo(tabId: string) {
     // Navigate with router so the URL changes
-    this.router.navigate(['/child-selector', tabId], { replaceUrl: true });
+    this.router.navigate(['/', tabId], { replaceUrl: true });
   }
 
   // ── Add Child Form ─────────────────────────────────────────────

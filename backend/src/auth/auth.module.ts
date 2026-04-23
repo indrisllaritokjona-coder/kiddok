@@ -11,7 +11,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     UsersModule,
     PassportModule,
     JwtModule.register({
-      secret: 'kiddok_secret_key_123',
+      secret: process.env.JWT_SECRET || 'kiddok_secret_key_123',
       signOptions: { expiresIn: '7d' },
     }),
   ],

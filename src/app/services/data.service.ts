@@ -174,27 +174,79 @@ export class DataService {
   diaryEntries = signal<DiaryEntry[]>([]);
   labResults = signal<LabResultRecord[]>([]);
 
-  addDiaryEntry(entry: Omit<DiaryEntry, 'id'>): DiaryEntry {
-    const newEntry: DiaryEntry = { ...entry, id: 'de_' + Date.now() };
-    const updated = [newEntry, ...this.diaryEntries()];
-    this.diaryEntries.set(updated);
-    // Persist per child
-    const cid = entry.childId;
-    if (cid) {
-      try {
-        localStorage.setItem(`kiddok_diary_${cid}`, JSON.stringify(updated));
-      } catch {}
+  /** POST /diary-entries → merge response into signal */
+  async addDiaryEntry(entry: Omit<DiaryEntry, 'id'>): Promise<DiaryEntry | null> {
+    try {
+      const created = await firstValueFrom(
+        this.http.post<DiaryEntry>(`${this.API_URL}/diary-entries`, entry, this.getHeaders())
+      );
+      const updated = [created, ...this.diaryEntries()];
+      this.diaryEntries.set(updated);
+      // Also persist to localStorage for offline
+      this.saveDiaryLocally(entry.childId, updated);
+      return created;
+    } catch (err: any) {
+      console.error('[DataService] addDiaryEntry failed:', err);
+      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+      return null;
     }
-    return newEntry;
+  }
+
+  /** GET /diary-entries/child/:childId */
+  async loadDiaryEntries(childId: string): Promise<void> {
+    try {
+      const entries = await firstValueFrom(
+        this.http.get<DiaryEntry[]>(`${this.API_URL}/diary-entries/child/${childId}`, this.getHeaders())
+      );
+      this.diaryEntries.set(entries);
+      this.saveDiaryLocally(childId, entries);
+    } catch (err: any) {
+      console.error('[DataService] loadDiaryEntries failed:', err);
+      // Last-resort offline fallback
+      const stored = localStorage.getItem(`kiddok_diary_${childId}`);
+      this.diaryEntries.set(stored ? JSON.parse(stored) : []);
+      this.toast.show('Ngarkimi dështoi, u përdorën të dhëna offline', 'info');
+    }
+  }
+
+  /** PATCH /diary-entries/:id */
+  async updateDiaryEntry(id: string, data: Partial<DiaryEntry>): Promise<DiaryEntry | null> {
+    try {
+      const updated = await firstValueFrom(
+        this.http.patch<DiaryEntry>(`${this.API_URL}/diary-entries/${id}`, data, this.getHeaders())
+      );
+      const list = this.diaryEntries().map(e => e.id === id ? updated : e);
+      this.diaryEntries.set(list);
+      return updated;
+    } catch (err: any) {
+      console.error('[DataService] updateDiaryEntry failed:', err);
+      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+      return null;
+    }
+  }
+
+  /** DELETE /diary-entries/:id */
+  async deleteDiaryEntry(id: string): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.http.delete<void>(`${this.API_URL}/diary-entries/${id}`, this.getHeaders())
+      );
+      const list = this.diaryEntries().filter(e => e.id !== id);
+      this.diaryEntries.set(list);
+    } catch (err: any) {
+      console.error('[DataService] deleteDiaryEntry failed:', err);
+      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+    }
+  }
+
+  private saveDiaryLocally(childId: string, entries: DiaryEntry[]) {
+    try {
+      localStorage.setItem(`kiddok_diary_${childId}`, JSON.stringify(entries));
+    } catch {}
   }
 
   getDiaryEntriesByChild(childId: string): DiaryEntry[] {
     return this.diaryEntries().filter(e => e.childId === childId);
-  }
-
-  loadDiaryEntries(childId: string): void {
-    const stored = localStorage.getItem(`kiddok_diary_${childId}`);
-    this.diaryEntries.set(stored ? JSON.parse(stored) : []);
   }
 
   // ─── API calls ───────────────────────────────────────────────
@@ -587,6 +639,37 @@ export class DataService {
     }
   }
 
+  async exportChildData(
+    childId: string,
+    dateFrom: string,
+    dateTo: string,
+    format: 'pdf' | 'csv'
+  ): Promise<void> {
+    try {
+      const endpoint = `${this.API_URL}/export/${childId}/${format}?from=${encodeURIComponent(dateFrom)}&to=${encodeURIComponent(dateTo)}`;
+      const response = await firstValueFrom(
+        this.http.get(endpoint, {
+          ...this.getHeaders(),
+          responseType: 'blob',
+        })
+      ) as Blob;
+      const contentType = (response as any)['type'] ?? (format === 'pdf' ? 'application/pdf' : 'text/csv');
+      const blob = new Blob([response], { type: contentType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kiddok-health-report-${childId}-${new Date().toISOString().split('T')[0]}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      console.error('[DataService] exportChildData failed:', err);
+      this.toast.show('Eksportimi dështoi. Provoni përsëri.', 'error');
+      throw err;
+    }
+  }
+
   async createGrowthEntry(data: { childId: string; height?: number | null; weight?: number | null; measuredAt: string; notes?: string }): Promise<GrowthEntry | null> {
     try {
       const created = await firstValueFrom(
@@ -621,7 +704,7 @@ export class DataService {
     if (password === '1234') {
       try {
         const result = await firstValueFrom(
-          this.http.post<any>('http://localhost:3000/auth/dev-login', {
+          this.http.post<any>(`${this.API_URL}/auth/dev-login`, {
             pin: '1234',
             name: username || 'Dev Parent'
           })
@@ -703,8 +786,8 @@ export class DataService {
   }
 
   loadChildDetails(childId: string) {
-    const storedIllnesses = localStorage.getItem(`kiddok_illnesses_${childId}`);
-    this.illnesses.set(storedIllnesses ? JSON.parse(storedIllnesses) : []);
+    // Load illnesses from backend
+    this.loadIllnesses(childId);
     const storedRecords = localStorage.getItem(`kiddok_records_${childId}`);
     this.records.set(storedRecords ? JSON.parse(storedRecords) : []);
     this.loadTemperatureEntries(childId);
@@ -720,20 +803,83 @@ export class DataService {
 
   // ─── Medical Records (localStorage) ─────────────────────────
 
-  addIllness(data: any) {
+  // ─── Illnesses ───────────────────────────────────────────────
+
+  /** GET /illnesses/child/:childId → set this.illnesses signal */
+  async loadIllnesses(childId: string): Promise<void> {
+    try {
+      const episodes = await firstValueFrom(
+        this.http.get<IllnessEpisode[]>(`${this.API_URL}/illnesses/child/${childId}`, this.getHeaders())
+      );
+      this.illnesses.set(episodes);
+      this.saveIllnessesLocally(childId, episodes);
+    } catch (err: any) {
+      console.error('[DataService] loadIllnesses failed:', err);
+      // Last-resort offline fallback
+      const stored = localStorage.getItem(`kiddok_illnesses_${childId}`);
+      this.illnesses.set(stored ? JSON.parse(stored) : []);
+      this.toast.show('Ngarkimi dështoi, u përdorën të dhëna offline', 'info');
+    }
+  }
+
+  /** POST /illnesses */
+  async addIllness(data: any): Promise<IllnessEpisode | null> {
     const cid = this.activeChildId();
-    if (!cid) return;
-    const episode: IllnessEpisode = {
-      id: 'ill_' + Date.now(),
-      childId: cid,
-      title: data.title || '',
-      symptoms: data.symptoms || '',
-      medications: data.medications || '',
-      loggedAt: new Date().toISOString(),
-    };
-    const updated = [...this.illnesses(), episode];
-    this.illnesses.set(updated);
-    localStorage.setItem(`kiddok_illnesses_${cid}`, JSON.stringify(updated));
+    if (!cid) return null;
+    const payload = { childId: cid, title: data.title || '', symptoms: data.symptoms || '', medications: data.medications || '', notes: data.notes || '' };
+    try {
+      const episode = await firstValueFrom(
+        this.http.post<IllnessEpisode>(`${this.API_URL}/illnesses`, payload, this.getHeaders())
+      );
+      const updated = [...this.illnesses(), episode];
+      this.illnesses.set(updated);
+      this.saveIllnessesLocally(cid, updated);
+      return episode;
+    } catch (err: any) {
+      console.error('[DataService] addIllness failed:', err);
+      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+      return null;
+    }
+  }
+
+  /** PATCH /illnesses/:id */
+  async updateIllness(id: string, data: Partial<IllnessEpisode>): Promise<IllnessEpisode | null> {
+    try {
+      const updated = await firstValueFrom(
+        this.http.patch<IllnessEpisode>(`${this.API_URL}/illnesses/${id}`, data, this.getHeaders())
+      );
+      const list = this.illnesses().map(i => i.id === id ? updated : i);
+      this.illnesses.set(list);
+      const cid = this.activeChildId();
+      if (cid) this.saveIllnessesLocally(cid, list);
+      return updated;
+    } catch (err: any) {
+      console.error('[DataService] updateIllness failed:', err);
+      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+      return null;
+    }
+  }
+
+  /** DELETE /illnesses/:id */
+  async deleteIllness(id: string): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.http.delete<void>(`${this.API_URL}/illnesses/${id}`, this.getHeaders())
+      );
+      const list = this.illnesses().filter(i => i.id !== id);
+      this.illnesses.set(list);
+      const cid = this.activeChildId();
+      if (cid) this.saveIllnessesLocally(cid, list);
+    } catch (err: any) {
+      console.error('[DataService] deleteIllness failed:', err);
+      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+    }
+  }
+
+  private saveIllnessesLocally(childId: string, episodes: IllnessEpisode[]) {
+    try {
+      localStorage.setItem(`kiddok_illnesses_${childId}`, JSON.stringify(episodes));
+    } catch {}
   }
 
   addVaccine(data: any) {
@@ -755,12 +901,6 @@ export class DataService {
   // ─── Parent Profile ──────────────────────────────────────────
 
   async fetchParentProfile(): Promise<ParentProfile> {
-    const stored = this.loadFromStorage<ParentProfile>(this.PARENT_KEY);
-    if (stored) {
-      this.parentProfile.set(stored);
-      return stored;
-    }
-    // Try API
     try {
       const token = localStorage.getItem(this.AUTH_KEY);
       if (!token) return { name: '', surname: '', phone: '' };
@@ -770,7 +910,9 @@ export class DataService {
       this.parentProfile.set(profile);
       this.saveToStorage(this.PARENT_KEY, profile);
       return profile;
-    } catch {
+    } catch (err: any) {
+      console.error('[DataService] fetchParentProfile failed:', err);
+      this.toast.show('Ndodhi një gabim gjatë ngarkimit të profilit', 'error');
       return { name: '', surname: '', phone: '' };
     }
   }

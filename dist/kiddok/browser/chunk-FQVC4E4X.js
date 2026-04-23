@@ -13,7 +13,7 @@ import {
   DataService,
   I18nService,
   NotificationService
-} from "./chunk-IK3YYCP3.js";
+} from "./chunk-J6KXBRJB.js";
 import {
   Component,
   EventEmitter,
@@ -1357,4 +1357,4 @@ var SettingsPageComponent = class _SettingsPageComponent {
 export {
   SettingsPageComponent
 };
-//# sourceMappingURL=chunk-DVFA3AFZ.js.map
+//# sourceMappingURL=chunk-FQVC4E4X.js.map

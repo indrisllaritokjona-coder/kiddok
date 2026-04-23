@@ -1,7 +1,7 @@
 import {
   DataService,
   ToastService
-} from "./chunk-IK3YYCP3.js";
+} from "./chunk-J6KXBRJB.js";
 import {
   HttpClient,
   Injectable,
@@ -32,7 +32,7 @@ var OfflineService = class _OfflineService {
         return this._syncService;
       const injector = window.__angularInjector__;
       if (injector) {
-        const { SyncService } = yield import("./chunk-35PCI3JP.js");
+        const { SyncService } = yield import("./chunk-N74Y4VSB.js");
         this._syncService = injector.get(SyncService);
       }
       if (!this._syncService) {
@@ -428,4 +428,4 @@ var OfflineService = class _OfflineService {
 export {
   OfflineService
 };
-//# sourceMappingURL=chunk-22FRMPHE.js.map
+//# sourceMappingURL=chunk-SQH2D3Y5.js.map

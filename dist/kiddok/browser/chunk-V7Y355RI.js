@@ -1,6 +1,6 @@
 import {
   TooltipDirective
-} from "./chunk-MTRHY5T4.js";
+} from "./chunk-FLCUZMW2.js";
 import {
   CommonModule,
   DefaultValueAccessor,
@@ -22,7 +22,7 @@ import {
 import {
   DataService,
   I18nService
-} from "./chunk-IK3YYCP3.js";
+} from "./chunk-J6KXBRJB.js";
 import {
   Component,
   EventEmitter,
@@ -2694,4 +2694,4 @@ var VaccinesComponent = class _VaccinesComponent {
 export {
   VaccinesComponent
 };
-//# sourceMappingURL=chunk-UNG2R7ZM.js.map
+//# sourceMappingURL=chunk-V7Y355RI.js.map

@@ -822,25 +822,73 @@ var DataService = class _DataService {
       }
     });
   }
+  /** POST /diary-entries → merge response into signal */
   addDiaryEntry(entry) {
-    const newEntry = __spreadProps(__spreadValues({}, entry), { id: "de_" + Date.now() });
-    const updated = [newEntry, ...this.diaryEntries()];
-    this.diaryEntries.set(updated);
-    const cid = entry.childId;
-    if (cid) {
+    return __async(this, null, function* () {
       try {
-        localStorage.setItem(`kiddok_diary_${cid}`, JSON.stringify(updated));
-      } catch (e) {
+        const created = yield firstValueFrom(this.http.post(`${this.API_URL}/diary-entries`, entry, this.getHeaders()));
+        const updated = [created, ...this.diaryEntries()];
+        this.diaryEntries.set(updated);
+        this.saveDiaryLocally(entry.childId, updated);
+        return created;
+      } catch (err) {
+        console.error("[DataService] addDiaryEntry failed:", err);
+        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
+        return null;
       }
+    });
+  }
+  /** GET /diary-entries/child/:childId */
+  loadDiaryEntries(childId) {
+    return __async(this, null, function* () {
+      try {
+        const entries = yield firstValueFrom(this.http.get(`${this.API_URL}/diary-entries/child/${childId}`, this.getHeaders()));
+        this.diaryEntries.set(entries);
+        this.saveDiaryLocally(childId, entries);
+      } catch (err) {
+        console.error("[DataService] loadDiaryEntries failed:", err);
+        const stored = localStorage.getItem(`kiddok_diary_${childId}`);
+        this.diaryEntries.set(stored ? JSON.parse(stored) : []);
+        this.toast.show("Ngarkimi d\xEBshtoi, u p\xEBrdor\xEBn t\xEB dh\xEBna offline", "info");
+      }
+    });
+  }
+  /** PATCH /diary-entries/:id */
+  updateDiaryEntry(id, data) {
+    return __async(this, null, function* () {
+      try {
+        const updated = yield firstValueFrom(this.http.patch(`${this.API_URL}/diary-entries/${id}`, data, this.getHeaders()));
+        const list = this.diaryEntries().map((e) => e.id === id ? updated : e);
+        this.diaryEntries.set(list);
+        return updated;
+      } catch (err) {
+        console.error("[DataService] updateDiaryEntry failed:", err);
+        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
+        return null;
+      }
+    });
+  }
+  /** DELETE /diary-entries/:id */
+  deleteDiaryEntry(id) {
+    return __async(this, null, function* () {
+      try {
+        yield firstValueFrom(this.http.delete(`${this.API_URL}/diary-entries/${id}`, this.getHeaders()));
+        const list = this.diaryEntries().filter((e) => e.id !== id);
+        this.diaryEntries.set(list);
+      } catch (err) {
+        console.error("[DataService] deleteDiaryEntry failed:", err);
+        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
+      }
+    });
+  }
+  saveDiaryLocally(childId, entries) {
+    try {
+      localStorage.setItem(`kiddok_diary_${childId}`, JSON.stringify(entries));
+    } catch (e) {
     }
-    return newEntry;
   }
   getDiaryEntriesByChild(childId) {
     return this.diaryEntries().filter((e) => e.childId === childId);
-  }
-  loadDiaryEntries(childId) {
-    const stored = localStorage.getItem(`kiddok_diary_${childId}`);
-    this.diaryEntries.set(stored ? JSON.parse(stored) : []);
   }
   // ─── API calls ───────────────────────────────────────────────
   getHeaders() {
@@ -1037,7 +1085,7 @@ var DataService = class _DataService {
   cacheTemperaturesToOffline(entries) {
     return __async(this, null, function* () {
       try {
-        const { OfflineService } = yield import("./chunk-32ONGC76.js");
+        const { OfflineService } = yield import("./chunk-N3FOND27.js");
         const svc = new OfflineService();
         yield svc.saveTemperaturesToOffline(entries);
       } catch (e) {
@@ -1047,7 +1095,7 @@ var DataService = class _DataService {
   getOfflineTemperatures(childId) {
     return __async(this, null, function* () {
       try {
-        const { OfflineService } = yield import("./chunk-32ONGC76.js");
+        const { OfflineService } = yield import("./chunk-N3FOND27.js");
         const svc = new OfflineService();
         return yield svc.getTemperaturesFromOffline(childId);
       } catch (e) {
@@ -1140,7 +1188,7 @@ var DataService = class _DataService {
   cacheGrowthToOffline(entries) {
     return __async(this, null, function* () {
       try {
-        const { OfflineService } = yield import("./chunk-32ONGC76.js");
+        const { OfflineService } = yield import("./chunk-N3FOND27.js");
         const svc = new OfflineService();
         yield svc.saveGrowthToOffline(entries);
       } catch (e) {
@@ -1150,7 +1198,7 @@ var DataService = class _DataService {
   getOfflineGrowth(childId) {
     return __async(this, null, function* () {
       try {
-        const { OfflineService } = yield import("./chunk-32ONGC76.js");
+        const { OfflineService } = yield import("./chunk-N3FOND27.js");
         const svc = new OfflineService();
         return yield svc.getGrowthFromOffline(childId);
       } catch (e) {
@@ -1177,7 +1225,7 @@ var DataService = class _DataService {
   cacheVaccinesToOffline(records) {
     return __async(this, null, function* () {
       try {
-        const { OfflineService } = yield import("./chunk-32ONGC76.js");
+        const { OfflineService } = yield import("./chunk-N3FOND27.js");
         const svc = new OfflineService();
         yield svc.saveVaccinesToOffline(records);
       } catch (e) {
@@ -1187,7 +1235,7 @@ var DataService = class _DataService {
   getOfflineVaccines(childId) {
     return __async(this, null, function* () {
       try {
-        const { OfflineService } = yield import("./chunk-32ONGC76.js");
+        const { OfflineService } = yield import("./chunk-N3FOND27.js");
         const svc = new OfflineService();
         return yield svc.getVaccinesFromOffline(childId);
       } catch (e) {
@@ -1213,6 +1261,30 @@ var DataService = class _DataService {
       } catch (err) {
         console.error("[DataService] exportChildCsv failed:", err);
         this.toast.show("Eksportimi d\xEBshtoi. Provoni p\xEBrs\xEBri.", "error");
+      }
+    });
+  }
+  exportChildData(childId, dateFrom, dateTo, format) {
+    return __async(this, null, function* () {
+      try {
+        const endpoint = `${this.API_URL}/export/${childId}/${format}?from=${encodeURIComponent(dateFrom)}&to=${encodeURIComponent(dateTo)}`;
+        const response = yield firstValueFrom(this.http.get(endpoint, __spreadProps(__spreadValues({}, this.getHeaders()), {
+          responseType: "blob"
+        })));
+        const contentType = response["type"] ?? (format === "pdf" ? "application/pdf" : "text/csv");
+        const blob = new Blob([response], { type: contentType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `kiddok-health-report-${childId}-${(/* @__PURE__ */ new Date()).toISOString().split("T")[0]}.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } catch (err) {
+        console.error("[DataService] exportChildData failed:", err);
+        this.toast.show("Eksportimi d\xEBshtoi. Provoni p\xEBrs\xEBri.", "error");
+        throw err;
       }
     });
   }
@@ -1247,7 +1319,7 @@ var DataService = class _DataService {
     return __async(this, null, function* () {
       if (password === "1234") {
         try {
-          const result = yield firstValueFrom(this.http.post("http://localhost:3000/auth/dev-login", {
+          const result = yield firstValueFrom(this.http.post(`${this.API_URL}/auth/dev-login`, {
             pin: "1234",
             name: username || "Dev Parent"
           }));
@@ -1309,8 +1381,7 @@ var DataService = class _DataService {
     this.loadChildDetails(id);
   }
   loadChildDetails(childId) {
-    const storedIllnesses = localStorage.getItem(`kiddok_illnesses_${childId}`);
-    this.illnesses.set(storedIllnesses ? JSON.parse(storedIllnesses) : []);
+    this.loadIllnesses(childId);
     const storedRecords = localStorage.getItem(`kiddok_records_${childId}`);
     this.records.set(storedRecords ? JSON.parse(storedRecords) : []);
     this.loadTemperatureEntries(childId);
@@ -1324,21 +1395,81 @@ var DataService = class _DataService {
     }, 0);
   }
   // ─── Medical Records (localStorage) ─────────────────────────
+  // ─── Illnesses ───────────────────────────────────────────────
+  /** GET /illnesses/child/:childId → set this.illnesses signal */
+  loadIllnesses(childId) {
+    return __async(this, null, function* () {
+      try {
+        const episodes = yield firstValueFrom(this.http.get(`${this.API_URL}/illnesses/child/${childId}`, this.getHeaders()));
+        this.illnesses.set(episodes);
+        this.saveIllnessesLocally(childId, episodes);
+      } catch (err) {
+        console.error("[DataService] loadIllnesses failed:", err);
+        const stored = localStorage.getItem(`kiddok_illnesses_${childId}`);
+        this.illnesses.set(stored ? JSON.parse(stored) : []);
+        this.toast.show("Ngarkimi d\xEBshtoi, u p\xEBrdor\xEBn t\xEB dh\xEBna offline", "info");
+      }
+    });
+  }
+  /** POST /illnesses */
   addIllness(data) {
-    const cid = this.activeChildId();
-    if (!cid)
-      return;
-    const episode = {
-      id: "ill_" + Date.now(),
-      childId: cid,
-      title: data.title || "",
-      symptoms: data.symptoms || "",
-      medications: data.medications || "",
-      loggedAt: (/* @__PURE__ */ new Date()).toISOString()
-    };
-    const updated = [...this.illnesses(), episode];
-    this.illnesses.set(updated);
-    localStorage.setItem(`kiddok_illnesses_${cid}`, JSON.stringify(updated));
+    return __async(this, null, function* () {
+      const cid = this.activeChildId();
+      if (!cid)
+        return null;
+      const payload = { childId: cid, title: data.title || "", symptoms: data.symptoms || "", medications: data.medications || "", notes: data.notes || "" };
+      try {
+        const episode = yield firstValueFrom(this.http.post(`${this.API_URL}/illnesses`, payload, this.getHeaders()));
+        const updated = [...this.illnesses(), episode];
+        this.illnesses.set(updated);
+        this.saveIllnessesLocally(cid, updated);
+        return episode;
+      } catch (err) {
+        console.error("[DataService] addIllness failed:", err);
+        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
+        return null;
+      }
+    });
+  }
+  /** PATCH /illnesses/:id */
+  updateIllness(id, data) {
+    return __async(this, null, function* () {
+      try {
+        const updated = yield firstValueFrom(this.http.patch(`${this.API_URL}/illnesses/${id}`, data, this.getHeaders()));
+        const list = this.illnesses().map((i) => i.id === id ? updated : i);
+        this.illnesses.set(list);
+        const cid = this.activeChildId();
+        if (cid)
+          this.saveIllnessesLocally(cid, list);
+        return updated;
+      } catch (err) {
+        console.error("[DataService] updateIllness failed:", err);
+        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
+        return null;
+      }
+    });
+  }
+  /** DELETE /illnesses/:id */
+  deleteIllness(id) {
+    return __async(this, null, function* () {
+      try {
+        yield firstValueFrom(this.http.delete(`${this.API_URL}/illnesses/${id}`, this.getHeaders()));
+        const list = this.illnesses().filter((i) => i.id !== id);
+        this.illnesses.set(list);
+        const cid = this.activeChildId();
+        if (cid)
+          this.saveIllnessesLocally(cid, list);
+      } catch (err) {
+        console.error("[DataService] deleteIllness failed:", err);
+        this.toast.show("Ndodhi nj\xEB gabim, provoni p\xEBrs\xEBri", "error");
+      }
+    });
+  }
+  saveIllnessesLocally(childId, episodes) {
+    try {
+      localStorage.setItem(`kiddok_illnesses_${childId}`, JSON.stringify(episodes));
+    } catch (e) {
+    }
   }
   addVaccine(data) {
     const cid = this.activeChildId();
@@ -1359,11 +1490,6 @@ var DataService = class _DataService {
   // ─── Parent Profile ──────────────────────────────────────────
   fetchParentProfile() {
     return __async(this, null, function* () {
-      const stored = this.loadFromStorage(this.PARENT_KEY);
-      if (stored) {
-        this.parentProfile.set(stored);
-        return stored;
-      }
       try {
         const token = localStorage.getItem(this.AUTH_KEY);
         if (!token)
@@ -1372,7 +1498,9 @@ var DataService = class _DataService {
         this.parentProfile.set(profile);
         this.saveToStorage(this.PARENT_KEY, profile);
         return profile;
-      } catch (e) {
+      } catch (err) {
+        console.error("[DataService] fetchParentProfile failed:", err);
+        this.toast.show("Ndodhi nj\xEB gabim gjat\xEB ngarkimit t\xEB profilit", "error");
         return { name: "", surname: "", phone: "" };
       }
     });
@@ -1493,7 +1621,7 @@ var DataService = class _DataService {
   cacheToOffline() {
     return __async(this, null, function* () {
       try {
-        const offlineService = new (yield import("./chunk-32ONGC76.js")).OfflineService();
+        const offlineService = new (yield import("./chunk-N3FOND27.js")).OfflineService();
         yield offlineService.saveChildrenToOffline(this.children());
         const activeId = this.activeChildId();
         if (activeId) {
@@ -1509,7 +1637,7 @@ var DataService = class _DataService {
   loadFromOffline() {
     return __async(this, null, function* () {
       try {
-        const { OfflineService } = yield import("./chunk-32ONGC76.js");
+        const { OfflineService } = yield import("./chunk-N3FOND27.js");
         const offlineService = new OfflineService();
         const cachedChildren = yield offlineService.getChildrenFromOffline();
         if (cachedChildren.length > 0) {
@@ -1775,4 +1903,4 @@ export {
   NotificationService,
   DataService
 };
-//# sourceMappingURL=chunk-IK3YYCP3.js.map
+//# sourceMappingURL=chunk-J6KXBRJB.js.map

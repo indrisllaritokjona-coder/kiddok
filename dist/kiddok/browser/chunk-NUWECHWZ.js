@@ -11,7 +11,7 @@ import {
 import {
   DataService,
   I18nService
-} from "./chunk-IK3YYCP3.js";
+} from "./chunk-J6KXBRJB.js";
 import {
   Component,
   Pipe,
@@ -1451,4 +1451,4 @@ export {
   AppointmentsComponent,
   ReplacePipe
 };
-//# sourceMappingURL=chunk-TUUQGKCM.js.map
+//# sourceMappingURL=chunk-NUWECHWZ.js.map

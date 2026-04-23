@@ -1,6 +1,6 @@
 import {
   I18nService
-} from "./chunk-IK3YYCP3.js";
+} from "./chunk-J6KXBRJB.js";
 import {
   Directive,
   ElementRef,
@@ -187,4 +187,4 @@ var TooltipDirective = class _TooltipDirective {
 export {
   TooltipDirective
 };
-//# sourceMappingURL=chunk-MTRHY5T4.js.map
+//# sourceMappingURL=chunk-FLCUZMW2.js.map

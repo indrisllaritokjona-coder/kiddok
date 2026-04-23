@@ -40,6 +40,7 @@ import { ExportModalComponent } from './export-modal/export-modal.component';
           (switchProfileRequested)="goToSelector()"
           (backRequested)="goToSelector()"
           (localeToggleRequested)="i18n.toggleLocale()"
+          (exportRequested)="openExportModal()"
           [switching]="switching()"
         />
 

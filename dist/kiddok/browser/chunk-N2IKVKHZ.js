@@ -11,7 +11,7 @@ import {
 import {
   DataService,
   I18nService
-} from "./chunk-IK3YYCP3.js";
+} from "./chunk-J6KXBRJB.js";
 import {
   Component,
   __async,
@@ -2029,4 +2029,4 @@ var MedicationsComponent = class _MedicationsComponent {
 export {
   MedicationsComponent
 };
-//# sourceMappingURL=chunk-VYPR24YF.js.map
+//# sourceMappingURL=chunk-N2IKVKHZ.js.map

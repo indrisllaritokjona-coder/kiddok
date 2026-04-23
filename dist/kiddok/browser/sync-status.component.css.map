@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["angular:styles/component:css;b725cede7c70f89fba2ae49c92e2661499739ddfe04878dca5f42619334d656c;C:/Users/g_gus/Desktop/jona/kiddok/src/app/components/sync-status.component.ts"],
+  "sourcesContent": ["\n    .animate-slide-up {\n      animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);\n    }\n    @keyframes slideUp {\n      from { opacity: 0; transform: translateY(24px); }\n      to { opacity: 1; transform: translateY(0); }\n    }\n  "],
+  "mappings": ";AACI,CAAC;AACC,aAAW,QAAQ,MAAM,aAAa,IAAI,EAAE,CAAC,EAAE,GAAG,EAAE;AACtD;AACA,WAFa;AAGX;AAAO,aAAS;AAAG,eAAW,WAAW;AAAO;AAChD;AAAK,aAAS;AAAG,eAAW,WAAW;AAAI;AAC7C;",
+  "names": []
+}

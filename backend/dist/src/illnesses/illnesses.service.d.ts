@@ -6,45 +6,45 @@ export declare class IllnessesService {
     constructor(prisma: PrismaService);
     getByChild(childId: string, userId: string): Promise<{
         id: string;
-        childId: string;
-        loggedAt: Date;
-        notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         medications: string | null;
+        notes: string | null;
+        childId: string;
+        loggedAt: Date;
         title: string;
         symptoms: string | null;
     }[]>;
     create(userId: string, dto: CreateIllnessDto): Promise<{
         id: string;
-        childId: string;
-        loggedAt: Date;
-        notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         medications: string | null;
+        notes: string | null;
+        childId: string;
+        loggedAt: Date;
         title: string;
         symptoms: string | null;
     }>;
     update(id: string, userId: string, data: UpdateIllnessDto): Promise<{
         id: string;
-        childId: string;
-        loggedAt: Date;
-        notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         medications: string | null;
+        notes: string | null;
+        childId: string;
+        loggedAt: Date;
         title: string;
         symptoms: string | null;
     }>;
     delete(id: string, userId: string): Promise<{
         id: string;
-        childId: string;
-        loggedAt: Date;
-        notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         medications: string | null;
+        notes: string | null;
+        childId: string;
+        loggedAt: Date;
         title: string;
         symptoms: string | null;
     }>;

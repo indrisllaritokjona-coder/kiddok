@@ -17,7 +17,10 @@ const users_service_1 = require("../../users/users.service");
 let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy) {
     usersService;
     constructor(usersService) {
-        const secret = process.env.JWT_SECRET || 'kiddok_secret_key_123';
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            throw new Error('JWT_SECRET environment variable is not set. Production requires a secure secret.');
+        }
         super({
             jwtFromRequest: passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,

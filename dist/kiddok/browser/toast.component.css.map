@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["angular:styles/component:css;0081357b92c64ced585dfc57c35de66c524eca7ab1c165cb4370f239721f4a11;C:/Users/g_gus/Desktop/jona/kiddok/src/app/components/toast.component.ts"],
+  "sourcesContent": ["\n    .animate-slide-up {\n      animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);\n    }\n    @keyframes slideUp {\n      from { opacity: 0; transform: translateY(16px); }\n      to { opacity: 1; transform: translateY(0); }\n    }\n  "],
+  "mappings": ";AACI,CAAC;AACC,aAAW,QAAQ,MAAM,aAAa,IAAI,EAAE,CAAC,EAAE,GAAG,EAAE;AACtD;AACA,WAFa;AAGX;AAAO,aAAS;AAAG,eAAW,WAAW;AAAO;AAChD;AAAK,aAAS;AAAG,eAAW,WAAW;AAAI;AAC7C;",
+  "names": []
+}

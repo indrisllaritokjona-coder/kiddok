@@ -6,45 +6,45 @@ export declare class IllnessesController {
     constructor(illnessesService: IllnessesService);
     getByChild(req: any, childId: string): Promise<{
         id: string;
-        childId: string;
-        loggedAt: Date;
-        notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         medications: string | null;
+        notes: string | null;
+        childId: string;
+        loggedAt: Date;
         title: string;
         symptoms: string | null;
     }[]>;
     create(req: any, dto: CreateIllnessDto): Promise<{
         id: string;
-        childId: string;
-        loggedAt: Date;
-        notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         medications: string | null;
+        notes: string | null;
+        childId: string;
+        loggedAt: Date;
         title: string;
         symptoms: string | null;
     }>;
     update(req: any, id: string, dto: UpdateIllnessDto): Promise<{
         id: string;
-        childId: string;
-        loggedAt: Date;
-        notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         medications: string | null;
+        notes: string | null;
+        childId: string;
+        loggedAt: Date;
         title: string;
         symptoms: string | null;
     }>;
     delete(req: any, id: string): Promise<{
         id: string;
-        childId: string;
-        loggedAt: Date;
-        notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         medications: string | null;
+        notes: string | null;
+        childId: string;
+        loggedAt: Date;
         title: string;
         symptoms: string | null;
     }>;

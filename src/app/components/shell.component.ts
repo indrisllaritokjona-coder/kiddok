@@ -1,9 +1,9 @@
-﻿import { Component, inject, signal, computed, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+﻿import { Component, inject, signal, computed, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
 import { DataService, ChildProfile } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { HomeComponent } from './home.component';
 import { DiaryComponent } from './diary.component';
 import { TemperatureDiaryComponent } from './temperature-diary.component';
@@ -597,10 +597,24 @@ import { OfflineIndicatorComponent } from './offline-indicator.component';
     }
   `]
 })
-export class ShellComponent {
+export class ShellComponent implements OnDestroy, OnInit {
   dataService = inject(DataService);
   i18n = inject(I18nService);
   router = inject(Router);
+
+  router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  ngOnInit() {
+    // Sync currentTab from URL on init (direct URL navigation)
+    this.route.paramMap.subscribe(params => {
+      const tab = params.get('tab');
+      if (tab) {
+        this.currentTab.set(tab);
+        this.dataService.currentTab.set(tab);
+      }
+    });
+  }
 
   private navigateHandler = (e: Event) => {
     const route = (e as CustomEvent<string>).detail;
@@ -875,21 +889,8 @@ export class ShellComponent {
   }
 
   navigateTo(tabId: string) {
-    if (tabId === 'settings') {
-      this.loadParentIntoForm();
-      this.settingsSaved.set(false);
-    }
-    if (tabId === 'home') {
-      this.currentTab.set('home');
-      this.dataService.currentTab.set('home');
-    } else {
-      if (this.viewState() === 'selector') {
-        this.dataService.switchChild(this.dataService.activeChildId() ?? '');
-        this.viewState.set('app');
-      }
-      this.currentTab.set(tabId);
-      this.dataService.currentTab.set(tabId);
-    }
+    // Navigate with router so the URL changes
+    this.router.navigate(['/child-selector', tabId], { replaceUrl: true });
   }
 
   // ── Add Child Form ─────────────────────────────────────────────

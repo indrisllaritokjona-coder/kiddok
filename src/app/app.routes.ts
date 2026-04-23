@@ -4,6 +4,7 @@ import { PinLockComponent } from './components/pin-lock.component';
 
 export const routes: Routes = [
   { path: 'login', component: PinLockComponent },
-  { path: 'child-selector', component: ShellComponent },
+  { path: 'child-selector', redirectTo: 'child-selector/home', pathMatch: 'full' },
+  { path: 'child-selector/:tab', component: ShellComponent },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
 ];

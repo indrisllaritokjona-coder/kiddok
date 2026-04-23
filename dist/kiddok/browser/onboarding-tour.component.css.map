@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["angular:styles/component:css;e9eda34df72db1d415ed5eed0aea5dc142d278ebcc9c309b0b9276cc52f10532;C:/Users/g_gus/Desktop/jona/kiddok/src/app/components/onboarding-tour.component.ts"],
-  "sourcesContent": ["\n    :host { display: block; }\n\n    .animate-slide-up {\n      animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);\n    }\n    @keyframes slideUp {\n      from { opacity: 0; transform: translateY(24px) scale(0.96); }\n      to   { opacity: 1; transform: translateY(0) scale(1); }\n    }\n\n    button:active { transform: scale(0.98); }\n  "],
-  "mappings": ";AACI;AAAQ,WAAS;AAAO;AAExB,CAAC;AACC,aAAW,QAAQ,MAAM,aAAa,IAAI,EAAE,CAAC,EAAE,GAAG,EAAE;AACtD;AACA,WAFa;AAGX;AAAO,aAAS;AAAG,eAAW,WAAW,MAAM,MAAM;AAAO;AAC5D;AAAO,aAAS;AAAG,eAAW,WAAW,GAAG,MAAM;AAAI;AACxD;AAEA,MAAM;AAAU,aAAW,MAAM;AAAO;",
-  "names": []
-}

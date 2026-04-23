@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["angular:styles/component:css;624a3b2b0761329dce4b2c1df2a300b46b83d39a02fc937ffa859c598d788fb9;C:/Users/g_gus/Desktop/jona/kiddok/src/app/components/vaccines/vaccine-alert-card.component.ts"],
-  "sourcesContent": ["\n    :host { display: block; }\n\n    @keyframes pulse-dot {\n      0%, 100% { opacity: 1; transform: scale(1); }\n      50%       { opacity: 0.5; transform: scale(1.4); }\n    }\n  "],
-  "mappings": ";AACI;AAAQ,WAAS;AAAO;AAExB,WAAW;AACT;AAAW,aAAS;AAAG,eAAW,MAAM;AAAI;AAC5C;AAAY,aAAS;AAAK,eAAW,MAAM;AAAM;AACnD;",
-  "names": []
-}

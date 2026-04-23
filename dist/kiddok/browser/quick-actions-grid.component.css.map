@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["angular:styles/component:css;ffe880c17c89bc6a80a66933bf8953ed18956244dd18fa4abbc056f4106d3288;C:/Users/g_gus/Desktop/jona/kiddok/src/app/components/home/quick-actions-grid.component.ts"],
-  "sourcesContent": ["\n    :host { display: block; }\n    button { transition: transform 200ms ease, box-shadow 200ms ease; }\n    button:hover { transform: translateY(-4px); }\n    button:active { transform: scale(0.95); }\n  "],
-  "mappings": ";AACI;AAAQ,WAAS;AAAO;AACxB;AAAS,cAAY,UAAU,MAAM,IAAI,EAAE,WAAW,MAAM;AAAM;AAClE,MAAM;AAAS,aAAW,WAAW;AAAO;AAC5C,MAAM;AAAU,aAAW,MAAM;AAAO;",
-  "names": []
-}

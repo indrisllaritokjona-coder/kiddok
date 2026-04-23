@@ -1,0 +1,107 @@
+{
+  "configVersion": 1,
+  "timestamp": 1776970325149,
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/chunk-4WAWWZAF.js",
+        "/chunk-FVVBXVWT.js",
+        "/chunk-OOJDKMLN.js",
+        "/chunk-QWYCK25B.js",
+        "/favicon.ico",
+        "/index.html",
+        "/main-GBA22NNC.js",
+        "/manifest.webmanifest",
+        "/polyfills-5CFQRCPP.js",
+        "/styles-ZJJ4QPYT.css"
+      ],
+      "patterns": []
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/assets/icons/icon-128x128.png",
+        "/assets/icons/icon-144x144.png",
+        "/assets/icons/icon-152x152.png",
+        "/assets/icons/icon-192x192.png",
+        "/assets/icons/icon-384x384.png",
+        "/assets/icons/icon-512x512.png",
+        "/assets/icons/icon-72x72.png",
+        "/assets/icons/icon-96x96.png"
+      ],
+      "patterns": []
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "api-freshness",
+      "patterns": [
+        "\\/children\\/.*",
+        "\\/temperature-entries\\/.*",
+        "\\/growth-entries\\/.*",
+        "\\/vaccines\\/.*",
+        "\\/parent\\/.*",
+        "\\/auth\\/.*"
+      ],
+      "strategy": "freshness",
+      "maxSize": 100,
+      "maxAge": 86400000,
+      "timeoutMs": 5000,
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "version": 1
+    }
+  ],
+  "hashTable": {
+    "/assets/icons/icon-128x128.png": "deb2d41cfcdcd9f840d7c77b6f2a643d2e3a6db0",
+    "/assets/icons/icon-144x144.png": "1e2dea409784737c50c8a4b99dac2c12951e785a",
+    "/assets/icons/icon-152x152.png": "fb5383b06b37962e9e3506fb2ad728ab1861f118",
+    "/assets/icons/icon-192x192.png": "77933c3e841ed5cfe8cb8335990a77d81926f827",
+    "/assets/icons/icon-384x384.png": "2c8f33ef6a7ff89f52bf6ae4673187d0e563f56f",
+    "/assets/icons/icon-512x512.png": "9140a3a66d7c7186604c3386b85282fb0be6611c",
+    "/assets/icons/icon-72x72.png": "8a5b95499c5b2268749b4fcf0bf95c93bd7cab2a",
+    "/assets/icons/icon-96x96.png": "69f49d1d200d55b38ebeb498d72dd96a18e41e2b",
+    "/chunk-4WAWWZAF.js": "4f24e7ded7fd697a6960e4ad5901ca9c230fd15e",
+    "/chunk-FVVBXVWT.js": "9b5798e791835d95f92c560479dd6739a773214d",
+    "/chunk-OOJDKMLN.js": "a77a9992df9a8b68cc2743b7922e0ec9ed407e5a",
+    "/chunk-QWYCK25B.js": "913cdb476595dcca8c58997f352ee95918983f4c",
+    "/favicon.ico": "dd122581c8cd44d0227f9c305581ffcb4b6f1b46",
+    "/index.html": "4910ae46158e5366851e65958880e6ab22aec117",
+    "/main-GBA22NNC.js": "b410c19b2e5eef117766ddeeb9c6dd6ad3846f2e",
+    "/manifest.webmanifest": "e2c38a38d43d3104208adcddc54a8bd6093e64c2",
+    "/polyfills-5CFQRCPP.js": "f2241e9a25858f895ce299d15f6f22e849e2fd72",
+    "/styles-ZJJ4QPYT.css": "22cab362d5e7d30e3568e5155d419c89f2ef17b1"
+  },
+  "navigationUrls": [
+    {
+      "positive": true,
+      "regex": "^\\/.*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*\\.[^/]*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*\\/.*$"
+    }
+  ],
+  "navigationRequestStrategy": "performance"
+}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["angular:styles/component:css;a2709995141d048a4ebcb02005abc701a9327c289ac4c32b9b5325c9f1b50ac0;C:/Users/g_gus/Desktop/jona/kiddok/src/app/components/offline-indicator.component.ts"],
-  "sourcesContent": ["\n    .animate-slide-down {\n      animation: slideDown 0.3s ease-out;\n    }\n    @keyframes slideDown {\n      from { opacity: 0; transform: translateY(-100%); }\n      to { opacity: 1; transform: translateY(0); }\n    }\n  "],
-  "mappings": ";AACI,CAAC;AACC,aAAW,UAAU,KAAK;AAC5B;AACA,WAFa;AAGX;AAAO,aAAS;AAAG,eAAW,WAAW;AAAQ;AACjD;AAAK,aAAS;AAAG,eAAW,WAAW;AAAI;AAC7C;",
-  "names": []
-}

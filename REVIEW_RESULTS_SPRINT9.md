@@ -1,76 +1,134 @@
-# REVIEW_RESULTS_SPRINT9.md — Sprint 9: E2E + Backend Unit Tests Audit
+# REVIEW_RESULTS_SPRINT9.md — Reviewer/Refiner
 
-**Date:** 2026-04-23
+**Project:** KidDok
+**Sprint:** 9
 **Reviewer:** kiddok-reviewer
-**Status:** ✅ Approved — with follow-up recommendations
+**Date:** 2026-04-23
 
 ---
 
-## Verification
+## 1. Security Audit
 
-| Check | Result |
-|-------|--------|
-| E2E tests (9/9 Playwright) | ✅ Confirmed passing |
-| Backend unit test (1/1) | ✅ Confirmed passing |
-| PIN locator fix | ✅ Verified correct |
-| Test file committed | ✅ `3097a96` |
+### ✅ Health Controller (`/health`) — PASS
+- Intentional: public endpoint for Docker/lb health checks
+- Returns only `{ status: 'ok', timestamp }` — no sensitive data
+- Correct: no `@UseGuards` applied
 
----
+### ✅ JWT 7-day expiration — PASS
+- `auth.module.ts` confirmed: `signOptions: { expiresIn: '7d' }`
+- `auth.module.ts` also uses `process.env.JWT_SECRET` as primary (with fallback for dev)
 
-## E2E Review
+### ✅ CORS — PASS
+- `.env.example` documents `ALLOWED_ORIGINS` with comma-separated list
+- Defaults to `[/^http:\/\/localhost:\d+$/]` when env var absent
+- Credentials and allowed headers correctly configured in `main.ts`
+- Note: production must set `ALLOWED_ORIGINS=https://app.kiddok.al`
 
-### Test Quality
-- **9/9 tests passing** across Login Flow, Child Profile Add, Navigation, and Records Page.
-- Fix applied to `should show error on invalid PIN`: locator changed from `text=Invalid, gabim, pasaktë` → `page.locator('p.text-red-600').first()`. This is correct — the Angular component renders the i18n error inside `<p class="text-red-600">` via `@if (errorMsg())`. The old literal string locators didn't match the actual rendered text.
-- Tests run in 19.3s with 4 Chromium workers — good parallelism.
+### ✅ ValidationPipe — PASS
+- `main.ts` global pipe: `whitelist: true, forbidNonWhitelisted: true, transform: true`
+- All DTOs properly typed (`UpdateDiaryEntryDto`, `UpdateIllnessDto`, etc.) replacing `any`
 
-### Security Notes
-- No auth token or credentials hardcoded in test files (PIN `1234` is a test fixture, acceptable).
-- No SQL or NoSQL injection patterns in test data — clean.
+### ✅ Rate Limiting — PASS
+- Global `ThrottlerModule` in `app.module.ts`: 100 req/min per IP
+- Auth endpoints explicitly guarded with `@UseGuards(ThrottlerGuard)` + 5 req/min throttle:
+  - `POST /auth/login`
+  - `POST /auth/dev-login`
 
-### Gaps (Acknowledged)
-- No E2E coverage for: Growth Tracking, Diary, Vaccines, Settings pages.
-- These are real gaps but outside Sprint 9 scope. Flagged correctly in TEST_RESULTS.
-
----
-
-## Backend Unit Tests Review
-
-### Test Quality
-- **1/1 test passing**: `AppController > root > should return "Hello World!"` — baseline smoke test.
-- Only `app.controller.spec.ts` exists. **Zero service-layer tests.**
-
-### Critical Gaps
-| Service | Has Tests? | Risk |
-|---------|-----------|------|
-| `ChildrenService` | ❌ No | Ownership checks, CRUD, DTO validation untested |
-| `TemperatureEntriesService` | ❌ No | Future-date validation, range checks untested |
-| `GrowthEntriesService` | ❌ No | Height/weight validation untested |
-| `AuthService` | ❌ No | Login/logout logic untested |
-
-These are not new findings — the test results correctly flag them. But the risk is real: any regression in service logic (e.g., broken ownership check, invalid date validation) will not be caught by the current suite.
-
-### Sprint 17 Target
-Targeting 80%+ backend coverage is the right goal. A `*.spec.ts` alongside each service file is the standard NestJS pattern and should be straightforward to add.
+### ✅ environment.prod.ts — PASS
+- Only contains `production: true`, `apiUrl`, `useMocks: false`
+- No hardcoded secrets, DB URLs, or JWT keys
 
 ---
 
-## Recommendations
+## 2. ⚠️ Critical Finding: JWT Strategy fallback regression
 
-### Immediate (Sprint 10)
-1. **Add at least one service test** — `ChildrenService.spec.ts` or `AuthService.spec.ts` would give the highest confidence for the next sprint's auth/ownership work.
-2. **E2E for one new page** — Growth Tracking or Diary would be the most valuable next addition given pending fixes (chart memory leak, OnDestroy missing).
+**File:** `backend/src/auth/strategies/jwt.strategy.ts`
 
-### Long-term (Sprint 17)
-3. **Backend coverage to 80%+** — create `*.spec.ts` for all services. Jest + NestJS testing pattern is already wired up.
-4. **Complete E2E suite** — Growth, Diary, Vaccines, Settings.
+**Before (expected):** Throw if `JWT_SECRET` is unset
+```ts
+const secret = process.env.JWT_SECRET;
+if (!secret) { throw new Error('JWT_SECRET environment variable is not set'); }
+```
+
+**After (regression):**
+```ts
+const secret = process.env.JWT_SECRET || 'kiddok_secret_key_123';
+```
+
+**Impact:** If production deployment omits `JWT_SECRET`, the app starts with the **default dev secret**. Tokens signed with the dev secret remain valid for 7 days — an attacker who knows the default secret can forge tokens for any user.
+
+**Fix required:**
+```ts
+const secret = process.env.JWT_SECRET;
+if (!secret) { throw new Error('JWT_SECRET environment variable is not set'); }
+super({ secret, ... });
+```
+
+This should be treated as a **must-fix before production**.
 
 ---
 
-## Verdict
+## 3. Performance Audit
 
-**✅ Approve Sprint 9.** The fix is correct, tests are green, and gaps are honestly documented. No blocking issues. The test infrastructure is solid — coverage expansion is the right next step.
+### ✅ Bundle size — PASS
+- `angular.json` budget lowered from `1mb` → `700kb`
+- Tester reported 683KB raw bundle — within budget with margin
+
+### ✅ Lazy loading — PASS
+- All 11 route children in `app.routes.ts` use `loadComponent()`:
+  ```
+  home, diary, temperature, growth, records, vaccines,
+  medications, appointments, lab-results, analytics, settings
+  ```
+- `ShellComponent` and `PinLockComponent` are the only eagerly-loaded components
+
+### ✅ ngsw-config.json — PASS
+- `dataGroups[0].cacheConfig` uses `strategy: "freshness"` for all API routes
+- `timeout: "10s"` — falls back to stale cache if API is unreachable
+- Asset groups use `prefetch` for app shell, `lazy` for assets
 
 ---
 
-*Reviewed by kiddok-reviewer — Sprint 9*
+## 4. Smoke Tests Coverage (e2e/smoke.spec.ts)
+
+15 tests covering:
+- Login, child CRUD, temperature, growth, vaccines, medications, appointments, diary
+- Offline mode queue, reconnect sync, logout, JWT enforcement, Docker health, prod build
+
+**Note:** Test SM13 (production build) requires a separate `npx serve` on port 4201 — not part of the default Docker stack. Not a blocker.
+
+---
+
+## 5. Summary
+
+| Area | Status | Notes |
+|------|--------|-------|
+| Health controller | ✅ PASS | Public, intentional |
+| JWT expiration | ✅ PASS | 7d confirmed |
+| CORS configuration | ✅ PASS | Env-documented, safe defaults |
+| ValidationPipe | ✅ PASS | whitelist + forbidNonWhitelisted |
+| Rate limiting | ✅ PASS | Global + auth-specific |
+| environment.prod.ts | ✅ PASS | No hardcoded secrets |
+| JWT Strategy fallback | ⚠️ REGRESSION | Must-fix: remove default secret |
+| Bundle size | ✅ PASS | 683KB < 700KB |
+| Lazy loading | ✅ PASS | All routes use loadComponent |
+| Service worker cache | ✅ PASS | freshness strategy, 10s timeout |
+
+---
+
+## Required Fix Before Production
+
+**File:** `backend/src/auth/strategies/jwt.strategy.ts`
+
+```typescript
+// FIX: Remove fallback secret — env var must always be set in production
+const secret = process.env.JWT_SECRET;
+if (!secret) {
+  throw new Error('JWT_SECRET environment variable is not set');
+}
+super({
+  secret,  // <— use variable directly, not with ||
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  ignoreExpiration: false,
+});
+```

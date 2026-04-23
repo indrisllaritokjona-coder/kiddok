@@ -1,32 +1,22 @@
-﻿import { Component, inject, signal, computed, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
 import { DataService, ChildProfile } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
-import { Router, ActivatedRoute } from '@angular/router';
-import { HomeComponent } from './home.component';
-import { DiaryComponent } from './diary.component';
-import { TemperatureDiaryComponent } from './temperature-diary.component';
-import { GrowthTrackingComponent } from './growth-tracking.component';
-import { RecordsComponent } from './records.component';
-import { VaccinesComponent } from './vaccines.component';
-import { MedicationsComponent } from './medications/medications.component';
-import { AppointmentsComponent } from './appointments/appointments.component';
-import { LabResultsComponent } from './lab-results/lab-results.component';
+import { Router, ActivatedRoute, RouterOutlet } from '@angular/router';
 import { SidebarComponent } from './sidebar.component';
 import { HeaderComponent } from './header.component';
 import { BottomNavComponent } from './bottom-nav.component';
 import { FormsModule } from '@angular/forms';
 import { AddEditChildModalComponent } from '../features/child/add-edit-child-modal/add-edit-child-modal.component';
-import { SettingsPageComponent } from './settings/settings-page.component';
-import { AnalyticsComponent } from './analytics.component';
 import { OnboardingTourComponent } from './onboarding-tour.component';
 import { OfflineIndicatorComponent } from './offline-indicator.component';
+import { ExportModalComponent } from './export-modal/export-modal.component';
 
 @Component({
     selector: 'app-shell',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, FormsModule, LucideAngularModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, MedicationsComponent, AppointmentsComponent, LabResultsComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent, AnalyticsComponent, OnboardingTourComponent, OfflineIndicatorComponent],
+    imports: [CommonModule, FormsModule, LucideAngularModule, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, OnboardingTourComponent, OfflineIndicatorComponent, ExportModalComponent, RouterOutlet],
     template: `
 
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
@@ -270,24 +260,7 @@ import { OfflineIndicatorComponent } from './offline-indicator.component';
           <!-- ===== MAIN APP VIEW ===== -->
           @else {
             <div class="animate-fade-in h-full">
-              @switch (currentTab()) {
-                @case ('home') { <app-home /> }
-                @case ('diary') { <app-diary /> }
-                @case ('temperature') { <app-temperature-diary /> }
-                @case ('growth') { <app-growth-tracking /> }
-                @case ('records') { <app-records /> }
-                @case ('vaccines') { <app-vaccines /> }
-                @case ('medications') { <app-medications /> }
-                @case ('appointments') { <app-appointments /> }
-                @case ('lab-results') { <app-lab-results /> }
-                @case ('analytics') { <app-analytics /> }
-                @case ('settings') {
-                  <app-settings-page
-                    (openEditChild)="openEditModal($event)"
-                    (openAddChild)="isAddingChild.set(true)"
-                  />
-                }
-              }
+              <router-outlet (activate)="onActivate($event)"></router-outlet>
             </div>
           }
         </div>
@@ -618,6 +591,13 @@ export class ShellComponent implements OnDestroy, OnInit {
     const route = (e as CustomEvent<string>).detail;
     this.navigateTo(route);
   };
+
+  onActivate(componentRef: any) {
+    if (componentRef.openEditChild && componentRef.openAddChild) {
+      componentRef.openEditChild.subscribe((child: any) => this.openEditModal(child));
+      componentRef.openAddChild.subscribe(() => this.isAddingChild.set(true));
+    }
+  }
 
   constructor() {
     // Listen for cross-component navigation events from home sub-components

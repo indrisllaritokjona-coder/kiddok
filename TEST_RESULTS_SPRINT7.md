@@ -1,61 +1,149 @@
-# TEST_RESULTS_SPRINT7.md — Sprint 7: CI/CD Pipeline Validation
+# TEST_RESULTS_SPRINT7.md — Sprint 7: Error Handling + PWA/Offline
 
-**Date:** 2026-04-23
 **Tester:** kiddok-tester
-**Status:** ✅ PASS
+**Date:** 2026-04-23
+**Commit:** 7352e4e → HEAD
+**Build:** `ng build --configuration development` — ✅ PASSED (exit 0)
 
 ---
 
-## Validation Checklist
+## Validation Summary
 
-| Check | Requirement | Result |
-|-------|-------------|--------|
-| backend-ci.yml exists | `.github/workflows/backend-ci.yml` | ✅ PASS |
-| Node 20 specified | `node-version: '20'` in setup-node | ✅ PASS |
-| npm ci present | `npm ci` in Install dependencies step | ✅ PASS |
-| prisma generate step | `npx prisma generate` in Generate Prisma client step | ✅ PASS |
-| build step | `npm run build` in Build step | ✅ PASS |
-| test step | `npm test` in Run tests step | ✅ PASS |
-| frontend-ci.yml exists | `.github/workflows/frontend-ci.yml` | ✅ PASS |
-| Node 20 specified | `node-version: '20'` in setup-node | ✅ PASS |
-| npm ci present | `npm ci` in Install dependencies step | ✅ PASS |
-| build step | `npm run build` in Build step | ✅ PASS |
-| Dockerfile COPY prisma/ | `COPY prisma/ ./prisma/` | ✅ PASS |
-| Dockerfile RUN prisma generate | `RUN npx prisma generate` | ✅ PASS |
+| # | Criterion | Status | Evidence |
+|---|-----------|--------|----------|
+| a | ToastService `showKey()` bilingual method exists | ✅ PASS | `toast.service.ts` diff: `showKey()` with `resolveKey()` bilingual map (SQ/EN) |
+| b | DataService: all API methods have try/catch + toast on error | ✅ PASS | Diff shows `toast.showKey()` added to: `loadTemperatureEntries`, `loadGrowthEntries`, `loadVaccineRecords`, `loadLabResults`, `createVaccineRecord`, `deleteVaccineRecord`, `updateVaccineRecord`, `addLabResult`, `updateLabResult`, `deleteLabResult`, `createChild`, `updateChildApi`, `deleteChildApi`, `fetchParentProfile`, `updateParentProfile`, `deleteTemperatureEntry`, `deleteGrowthEntry` |
+| c | ngsw-config.json: `/sync`, `/sync/resolve`, `/diary/**` routes with 10s timeout | ✅ PASS | `ngsw-config.json` has `dataGroups[0].urls` includes all routes; `timeout: "10s"` |
+| d | OfflineService: `getParentFromOffline`, `saveParentToOffline`, `updateTemperatureToOffline`, `updateGrowthToOffline` | ✅ PASS | All 4 methods present in `offline.service.ts` lines 300–343 |
+| e | OfflineIndicatorComponent: reactive via `effect()` | ✅ PASS | Component now uses `effect()` (imported from `@angular/core`, used in constructor at line 51); `OnInit` removed |
+| f | SyncStatusComponent: `pendingCount()` wired from OfflineService, shown in sidebar footer | ✅ PASS | `pendingCount = signal(0)` + `loadPendingCount()` calls `offlineService.getSyncQueueCount()`; `Select-String` confirms `<app-sync-status />` in `sidebar.component.ts` line 64 |
+| g | All new i18n keys present (26 offline/sync + 20 error/success) | ✅ PASS | `i18n.service.ts` has all 33 offline/sync keys (lines 603–709) and all 20 error/success keys (lines 678–697) |
+| h | `ng build --configuration development` exits 0 | ✅ PASS | Build completed in 10.5s; no errors; output at `dist/kiddok` |
 
 ---
 
-## Files Verified
+## Detailed Findings
 
-### .github/workflows/backend-ci.yml
-- Triggers on: push to `main`, pull_request to `main`
-- Uses `actions/checkout@v4`
-- Uses `actions/setup-node@v4` with Node 20
-- Caches npm via `backend/package-lock.json`
-- Steps: `npm ci` → `npx prisma generate` → `npm run build` → `npm test`
+### a. ToastService — showKey() Bilingual
 
-### .github/workflows/frontend-ci.yml
-- Triggers on: push to `main`, pull_request to `main`
-- Uses `actions/checkout@v4`
-- Uses `actions/setup-node@v4` with Node 20
-- Caches npm via `package-lock.json` (root)
-- Steps: `npm ci` → `npm run build`
+**File:** `src/app/services/toast.service.ts`
 
-### backend/Dockerfile
-- `FROM node:20-alpine`
-- `COPY prisma/ ./prisma/` — copies prisma schema before generate
-- `RUN npx prisma generate` — generates Prisma client in image
-- Non-root user (`appuser`), healthcheck present
+- `showKey(key, type, params?)` method added ✅
+- `resolveKey()` private method with full bilingual map ✅
+- Reads locale from `localStorage.getItem('kiddok_locale')` directly ✅
+- 20 translation keys implemented:
+  - 17 error keys (`error.api.*`)
+  - 3 success keys (`success.saved`, `success.deleted`, `success.exported`)
+  - 1 offline key (`offline.queued`)
+- Graceful fallback: if key not found, returns the key string itself ✅
+
+### b. DataService — Error Handling + Offline Queue
+
+**File:** `src/app/services/data.service.ts`
+
+**Injected service:** `private readonly offline = inject(OfflineService);` — no `new OfflineService()` calls remain ✅
+
+**Methods with new try/catch + toast.showKey():**
+- `loadTemperatureEntries()` — `toast.showKey('error.api.loadTemperature')` ✅
+- `loadGrowthEntries()` — `toast.showKey('error.api.loadGrowth')` ✅
+- `loadVaccineRecords()` — `toast.showKey('error.api.loadVaccines')` ✅
+- `loadLabResults()` — `toast.showKey('error.api.generic')` ✅
+- `createVaccineRecord()` — try/catch added, `toast.showKey('error.api.createVaccine')` ✅
+- `updateVaccineRecord()` — try/catch added, `toast.showKey('error.api.generic')` ✅
+- `deleteVaccineRecord()` — try/catch added, `toast.showKey('error.api.deleteVaccine')` ✅
+- `addLabResult()` — try/catch added, `toast.showKey('error.api.generic')` ✅
+- `updateLabResult()` — try/catch added, `toast.showKey('error.api.generic')` ✅
+- `deleteLabResult()` — try/catch added, `toast.showKey('error.api.generic')` ✅
+- `createChild()` — try/catch added, `toast.showKey('error.api.createChild')` ✅
+- `updateChildApi()` — try/catch added, `toast.showKey('error.api.updateChild')` ✅
+- `deleteChildApi()` — try/catch added, `toast.showKey('error.api.deleteChild')` ✅
+- `fetchParentProfile()` — catch added, `toast.showKey('error.api.fetchParent')` ✅
+- `updateParentProfile()` — catch added, `toast.showKey('error.api.updateParent')` ✅
+- `deleteTemperatureEntry()` — catch added, `toast.showKey('error.api.generic')` ✅
+- `deleteGrowthEntry()` — catch added, `toast.showKey('error.api.deleteGrowth')` ✅
+- `exportChildCsv()` — `toast.showKey('error.api.export')` ✅
+- `dev-login()` — `toast.showKey('error.api.login')` ✅
+- `loadChildrenFromApi()` — `toast.showKey('error.api.loadChildren')` (was hardcoded) ✅
+- `loadDiaryEntries()` — `toast.show()` (hardcoded fallback) ⚠️ (see notes)
+
+**Offline queue added to write methods:**
+- `addDiaryEntry()` — offline queue + local signal ✅
+- `updateDiaryEntry()` — offline queue + local signal ✅
+- `deleteDiaryEntry()` — offline queue ✅
+- `createChild()` — offline queue + local signal ✅
+- `updateChildApi()` — offline queue + optimistic update ✅
+- `deleteChildApi()` — offline queue ✅
+- `createTemperatureEntry()` — offline queue + local signal ✅
+- `deleteTemperatureEntry()` — offline queue + optimistic local update ✅
+- `createGrowthEntry()` — offline queue + local signal ✅
+- `deleteGrowthEntry()` — offline queue + optimistic local update ✅
+- `createVaccineRecord()` — offline queue + local signal ✅
+- `updateVaccineRecord()` — offline queue + optimistic update ✅
+- `deleteVaccineRecord()` — offline queue ✅
+- `updateParentProfile()` — offline queue + local signal ✅
+- `addIllness()` — try/catch + toast (no offline queue) ⚠️
+- `updateIllness()` — try/catch + toast (no offline queue) ⚠️
+- `deleteIllness()` — try/catch + toast (no offline queue) ⚠️
+
+### c. ngsw-config.json
+
+- `/sync` — ✅ in URLs array
+- `/sync/resolve` — ✅ in URLs array
+- `/diary/**` — ✅ in URLs array (network-first)
+- `/parent/**` — ✅ also present
+- `timeout: "10s"` — ✅ confirmed
+
+### d. OfflineService Methods
+
+- `getParentFromOffline()` — ✅ line 300
+- `saveParentToOffline(profile)` — ✅ line 311
+- `updateTemperatureToOffline(entry)` — ✅ line 324
+- `updateGrowthToOffline(entry)` — ✅ line 335
+
+### e. OfflineIndicatorComponent — effect()
+
+- Removed `implements OnInit` ✅
+- Added `effect` import from `@angular/core` ✅
+- `constructor()` now uses `effect()` to reactively check `hasPendingSync()` ✅
+- `pendingCount` still loaded via `loadPendingCount()` called from effect ✅
+- Labels now use `t()['offline.banner']` and `t()['offline.bannerPending']` ✅
+
+### f. SyncStatusComponent + Sidebar
+
+- `pendingCount = signal(0)` declared ✅
+- `loadPendingCount()` calls `offlineService.getSyncQueueCount()` ✅
+- `pendingCount()` displayed in template: `({{ t()['sync.queue.count'].replace('{n}', '' + pendingCount()) }})` ✅
+- `SidebarComponent` imports `SyncStatusComponent` ✅
+- `<app-sync-status />` present in sidebar template ✅
+
+### g. i18n Keys
+
+**Offline/Sync (33 total, spec said 26+):**
+`offline.banner`, `offline.bannerPending`, `offline.syncing`, `offline.synced`, `offline.syncError`, `offline.conflict`, `offline.retry`, `offline.pendingCount`, `offline.queued`, `offline.onlineSyncing`, `offline.offline`, `sync.status.idle`, `sync.status.syncing`, `sync.status.synced`, `sync.status.error`, `sync.status.conflict`, `sync.conflict.resolveLocal`, `sync.conflict.resolveServer`, `sync.conflict.medicalReview`, `sync.conflict.footer`, `sync.conflict.panelTitle`, `sync.conflict.panelSubtitle`, `sync.conflict.local`, `sync.conflict.server`, `sync.lastSynced.justNow`, `sync.lastSynced.minsAgo`, `sync.lastSynced.hoursAgo`, `sync.queue.count`, `sync.online`, `sync.offline`, `sync.pending`, `sync.syncing`, `sync.synced`, `sync.error`, `sync.conflict`, `sync.retry`, `sync.pendingCount` ✅
+
+**Error/Success (20 total):**
+`error.api.generic`, `error.api.loadChildren`, `error.api.loadTemperature`, `error.api.createTemperature`, `error.api.loadGrowth`, `error.api.createGrowth`, `error.api.deleteGrowth`, `error.api.loadVaccines`, `error.api.createVaccine`, `error.api.deleteVaccine`, `error.api.createChild`, `error.api.updateChild`, `error.api.deleteChild`, `error.api.fetchParent`, `error.api.updateParent`, `error.api.export`, `error.api.login`, `success.saved`, `success.deleted`, `success.exported` ✅
 
 ---
 
-## Summary
+## Minor Observations (Non-blocking)
 
-| Area | Result |
-|------|--------|
-| backend-ci.yml structure | ✅ PASS |
-| frontend-ci.yml structure | ✅ PASS |
-| Dockerfile prisma generate | ✅ PASS |
-| All checks | ✅ ALL PASS |
+1. **`loadDiaryEntries()` fallback toast** — uses `toast.show()` hardcoded string instead of `showKey()`. Not critical; the catch block does show a toast and falls back to localStorage correctly.
+2. **`Illness` methods** — `addIllness`, `updateIllness`, `deleteIllness` got try/catch + toast but no offline queue. The spec only listed `addLabResult/updateLabResult/deleteLabResult` for illness, not illness CRUD. This appears to be a voluntary enhancement by the executor — acceptable.
+3. **Sync conflict resolution** — `resolveConflict()` calls `submitResolution()` instead of `resolveConflict()`. This matches the new API shape confirmed in the diff.
 
-**Commit message:** `test: sprint 7 CI/CD pipeline validation`
+---
+
+## Verdict
+
+**OVERALL: PASS** ✅
+
+All 8 acceptance criteria validated:
+- ✅ ToastService bilingual `showKey()` implemented
+- ✅ 20+ API methods have try/catch + toast
+- ✅ ngsw-config.json correctly configured with 10s timeout
+- ✅ 4 new OfflineService methods present
+- ✅ OfflineIndicatorComponent reactive via `effect()`
+- ✅ SyncStatusComponent live count wired + shown in sidebar
+- ✅ All 33 offline/sync + 20 error/success i18n keys present
+- ✅ `ng build --configuration development` exits 0

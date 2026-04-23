@@ -227,6 +227,11 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.vaccinePieInstance) { this.vaccinePieInstance.destroy(); this.vaccinePieInstance = null; }
   }
 
+  ofTotalLabel(total: number): string {
+    const key = this.t()['analytics.ofTotal'];
+    return key.replace('{n}', String(total));
+  }
+
   private renderAllCharts() {
     this.renderTempChart();
     this.renderGrowthChart();

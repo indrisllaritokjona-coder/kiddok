@@ -16,7 +16,7 @@ interface NavTab {
   standalone: true,
   imports: [CommonModule, LucideAngularModule],
   template: `
-    <nav class="lg:hidden fixed bottom-0 w-full bg-white border-t border-stone-200 z-50 h-16"
+    <nav class="lg:hidden fixed bottom-0 w-full bg-white dark:bg-slate-800 border-t border-stone-200 dark:border-slate-700 z-50 h-16"
          style="padding-bottom: env(safe-area-inset-bottom);"
          aria-label="Main navigation">
       <div class="flex flex-row h-full">
@@ -25,7 +25,9 @@ interface NavTab {
             type="button"
             class="flex flex-col items-center justify-center gap-1 flex-1 h-full py-2 px-1 transition-colors duration-200 appearance-none bg-transparent border-none cursor-pointer"
             [class.text-indigo-600]="currentTab() === tab.id"
+            [class.dark:text-purple-400]="currentTab() === tab.id"
             [class.text-stone-500]="currentTab() !== tab.id"
+            [class.dark:text-slate-400]="currentTab() !== tab.id"
             (click)="navigate(tab.id)"
             [attr.aria-label]="label(tab.labelKey)"
             [attr.aria-current]="currentTab() === tab.id ? 'page' : null">

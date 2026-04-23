@@ -17,10 +17,11 @@ import {
   Baby, Database, Download, Heart, CalendarDays, CalendarCheck,
   Activity, FileCheck, Bell, ThermometerSun, FilePlus,
   ClipboardList, LayoutList, Shield, Scale, HeartPulse, Stethoscope,
-  Pill, Target, ChartBar, Waves
+  Pill, Target, ChartBar, Waves, Palette
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
+import { ThemeService } from './services/theme.service';
 
 // Register Italian locale — same DD/MM/YYYY and Monday-first week as Albania
 registerLocaleData(itLocale);
@@ -46,7 +47,7 @@ export const appConfig: ApplicationConfig = {
         Baby, Database, Download, Heart, CalendarDays, CalendarCheck,
         Activity, FileCheck, Bell, ThermometerSun, FilePlus,
         ClipboardList, LayoutList, Shield, Scale, HeartPulse, Stethoscope,
-        Pill, Target, ChartBar, Waves
+        Pill, Target, ChartBar, Waves, Palette
       })
     ),
   ]

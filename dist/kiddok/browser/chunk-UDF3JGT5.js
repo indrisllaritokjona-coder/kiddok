@@ -1,6 +1,7 @@
 import {
   HttpClient,
   Injectable,
+  Injector,
   NgZone,
   __async,
   __spreadProps,
@@ -2365,7 +2366,7 @@ var OfflineService = class _OfflineService {
         return this._syncService;
       const injector = window.__angularInjector__;
       if (injector) {
-        const { SyncService } = yield import("./chunk-4BGU5AWM.js");
+        const { SyncService } = yield import("./chunk-J6U2LHVO.js");
         this._syncService = injector.get(SyncService);
       }
       if (!this._syncService) {
@@ -2376,9 +2377,9 @@ var OfflineService = class _OfflineService {
   }
   constructor() {
     this.http = inject(HttpClient);
-    this.dataService = inject(DataService);
     this.toast = inject(ToastService);
     this.ngZone = inject(NgZone);
+    this.injector = inject(Injector);
     this._syncService = null;
     this.isOnline = signal(navigator.onLine, ...ngDevMode ? [{ debugName: "isOnline" }] : (
       /* istanbul ignore next */
@@ -2719,7 +2720,7 @@ var OfflineService = class _OfflineService {
           const deleteStore = deleteTx.objectStore(STORE_SYNC_QUEUE);
           for (const entry of entries) {
             const bodyId = entry.body?.id;
-            if (entry.id !== void 0 && !conflictEntityIds.has(bodyId) && result.failedCount === 0) {
+            if (entry.id !== void 0 && !conflictEntityIds.has(bodyId)) {
               deleteStore.delete(entry.id);
             }
           }
@@ -2757,13 +2758,14 @@ var OfflineService = class _OfflineService {
   cacheAllData() {
     return __async(this, null, function* () {
       try {
-        yield this.saveChildrenToOffline(this.dataService.children());
-        const activeChildId = this.dataService.activeChildId();
+        const dataService = this.injector.get(DataService);
+        yield this.saveChildrenToOffline(dataService.children());
+        const activeChildId = dataService.activeChildId();
         if (activeChildId) {
-          yield this.saveTemperaturesToOffline(this.dataService.temperatureEntries());
-          yield this.saveGrowthToOffline(this.dataService.growthEntries());
-          yield this.saveVaccinesToOffline(this.dataService.vaccineRecords());
-          yield this.saveDiaryToOffline(this.dataService.diaryEntries());
+          yield this.saveTemperaturesToOffline(dataService.temperatureEntries());
+          yield this.saveGrowthToOffline(dataService.growthEntries());
+          yield this.saveVaccinesToOffline(dataService.vaccineRecords());
+          yield this.saveDiaryToOffline(dataService.diaryEntries());
         }
       } catch (err) {
         console.error("[OfflineService] cacheAllData failed:", err);
@@ -2779,14 +2781,15 @@ var OfflineService = class _OfflineService {
         this.getVaccinesFromOffline(childId),
         this.getDiaryFromOffline(childId)
       ]);
+      const dataService = this.injector.get(DataService);
       if (temps.length > 0)
-        this.dataService.temperatureEntries.set(temps);
+        dataService.temperatureEntries.set(temps);
       if (growth.length > 0)
-        this.dataService.growthEntries.set(growth);
+        dataService.growthEntries.set(growth);
       if (vaccines.length > 0)
-        this.dataService.vaccineRecords.set(vaccines);
+        dataService.vaccineRecords.set(vaccines);
       if (diary.length > 0)
-        this.dataService.diaryEntries.set(diary);
+        dataService.diaryEntries.set(diary);
     });
   }
   loadCachedChildren() {
@@ -2817,4 +2820,4 @@ export {
   OfflineService,
   DataService
 };
-//# sourceMappingURL=chunk-RD3QEML6.js.map
+//# sourceMappingURL=chunk-UDF3JGT5.js.map

@@ -18,7 +18,7 @@ import {
 import {
   DataService,
   I18nService
-} from "./chunk-RD3QEML6.js";
+} from "./chunk-UDF3JGT5.js";
 import {
   ChangeDetectionStrategy,
   Component,
@@ -1989,4 +1989,4 @@ var HomeComponent = class _HomeComponent {
 export {
   HomeComponent
 };
-//# sourceMappingURL=chunk-6S574JYL.js.map
+//# sourceMappingURL=chunk-XTCJNK3X.js.map

@@ -17,7 +17,7 @@ import {
 import {
   DataService,
   I18nService
-} from "./chunk-RD3QEML6.js";
+} from "./chunk-UDF3JGT5.js";
 import {
   Component,
   __async,
@@ -1959,4 +1959,4 @@ var LabResultsComponent = class _LabResultsComponent {
 export {
   LabResultsComponent
 };
-//# sourceMappingURL=chunk-YUGAGALH.js.map
+//# sourceMappingURL=chunk-UE5QQMUA.js.map

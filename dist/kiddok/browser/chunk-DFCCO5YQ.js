@@ -33,7 +33,7 @@ var SyncService = class _SyncService {
   getSyncQueueEntries() {
     return __async(this, null, function* () {
       if (!this.offline) {
-        const { OfflineService } = yield import("./chunk-DWN2COQU.js");
+        const { OfflineService } = yield import("./chunk-3L4KLGY7.js");
         const injector = window.__angularInjector__;
         if (injector) {
           this.offline = injector.get(OfflineService);
@@ -140,4 +140,4 @@ var SyncService = class _SyncService {
 export {
   SyncService
 };
-//# sourceMappingURL=chunk-FCVOZU6W.js.map
+//# sourceMappingURL=chunk-DFCCO5YQ.js.map

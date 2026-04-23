@@ -13,7 +13,7 @@ import {
 import {
   DataService,
   I18nService
-} from "./chunk-RD3QEML6.js";
+} from "./chunk-UDF3JGT5.js";
 import {
   Component,
   inject,
@@ -441,4 +441,4 @@ var RecordsComponent = class _RecordsComponent {
 export {
   RecordsComponent
 };
-//# sourceMappingURL=chunk-6KMLQASO.js.map
+//# sourceMappingURL=chunk-6WY7WSU4.js.map

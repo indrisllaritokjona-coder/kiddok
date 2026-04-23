@@ -89,14 +89,14 @@ import { ExportModalComponent } from './export-modal/export-modal.component';
                 }
               </div>
             }
-            @if (dataService.children().length === 0 && !isAddingChild()) {
+            @if (dataService.children().length === 0) {
               <div class="h-full flex flex-col items-center justify-center text-center animate-slide-up max-w-lg mx-auto">
                 <div class="w-40 h-40 bg-gradient-to-tr from-primary-100 to-teal-50 text-primary-500 rounded-full flex items-center justify-center mb-10 shadow-glass border border-white">
                   <lucide-icon name="party-popper" [size]="80" class="opacity-80"></lucide-icon>
                 </div>
                 <h2 class="text-3xl lg:text-4xl font-extrabold text-gray-800 mb-4 tracking-tight">{{ i18n.t()['child.welcome'] }}</h2>
                 <p class="text-gray-500 text-lg mb-10 leading-relaxed">{{ i18n.t()['child.welcomeSub'] }}</p>
-                <button (click)="isAddingChild.set(true)" class="bg-slate-900 hover:bg-primary-600 text-white px-10 py-5 rounded-2xl font-bold shadow-[0_10px_20px_rgba(0,0,0,0.1)] transition-all transform hover:-translate-y-1 flex items-center gap-3 text-lg w-full sm:w-auto justify-center">
+                <button (click)="showChildModal.set(true)" class="bg-slate-900 hover:bg-primary-600 text-white px-10 py-5 rounded-2xl font-bold shadow-[0_10px_20px_rgba(0,0,0,0.1)] transition-all transform hover:-translate-y-1 flex items-center gap-3 text-lg w-full sm:w-auto justify-center">
                   <lucide-icon name="plus" class="bg-white/20 rounded-full p-1" aria-hidden="true"></lucide-icon> {{ i18n.t()['child.addNew'] }}
                 </button>
               </div>
@@ -133,7 +133,7 @@ import { ExportModalComponent } from './export-modal/export-modal.component';
                       </div>
                     </div>
                   }
-                  <button type="button" (click)="isAddingChild.set(true)"
+                  <button type="button" (click)="showChildModal.set(true)"
                           class="bg-slate-50 rounded-[2rem] p-8 shadow-md border-2 border-dashed border-slate-200 hover:border-primary-300 hover:bg-primary-50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 text-center group w-full text-left">
                     <div class="w-16 h-16 rounded-full bg-slate-100 group-hover:bg-primary-100 flex items-center justify-center transition-all">
                       <lucide-icon name="plus" class="text-3xl text-slate-400 group-hover:text-primary-500 transition-colors" aria-hidden="true"></lucide-icon>
@@ -275,13 +275,23 @@ import { ExportModalComponent } from './export-modal/export-modal.component';
                          [placeholder]="i18n.t()['placeholder.deliveryDoctor']">
                 </div>
                 <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-100 mt-4">
-                  <button type="button" (click)="submitNewChild()"
-                          class="flex-1 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white py-4.5 rounded-2xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-lg shadow-md"
-                          [disabled]="addNameInvalid() && newChildName.length > 0">
-                    <lucide-icon name="save" class="text-inherit" aria-hidden="true"></lucide-icon> {{ i18n.t()['child.saveProfile'] }}
-                  </button>
-                  <button type="button" (click)="cancelAddChild()"
-                          class="px-8 py-4.5 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-colors text-lg hover:-translate-y-0.5">{{ i18n.t()['child.cancel'] }}</button>
+                  <div class="w-full">
+                    @if (addFormError()) {
+                      <p class="text-red-500 text-sm font-bold mb-3 animate-fade-in flex items-center gap-2">
+                        <lucide-icon name="alert-circle" class="text-inherit"></lucide-icon>
+                        {{ addFormError() }}
+                      </p>
+                    }
+                    <div class="flex gap-4 w-full">
+                      <button type="button" (click)="submitNewChild()"
+                              class="flex-1 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white py-4.5 rounded-2xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-lg shadow-md"
+                              [disabled]="addNameInvalid() && newChildName.length > 0">
+                        <lucide-icon name="save" class="text-inherit" aria-hidden="true"></lucide-icon> {{ i18n.t()['child.saveProfile'] }}
+                      </button>
+                      <button type="button" (click)="cancelAddChild()"
+                              class="px-8 py-4.5 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-colors text-lg hover:-translate-y-0.5">{{ i18n.t()['child.cancel'] }}</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -316,7 +326,7 @@ import { ExportModalComponent } from './export-modal/export-modal.component';
            ══════════════════════════════════════════ -->
       @if (showChildModal()) {
         <app-add-edit-child-modal
-          [mode]="isAddingChild() ? 'add' : 'edit'"
+          [mode]="editingChild() ? 'edit' : 'add'"
           [child]="editingChild() ?? undefined"
           (saved)="onChildSaved($event)"
           (cancelled)="closeModal()"
@@ -626,7 +636,7 @@ export class ShellComponent implements OnDestroy, OnInit {
   onActivate(componentRef: any) {
     if (componentRef.openEditChild && componentRef.openAddChild) {
       componentRef.openEditChild.subscribe((child: any) => this.openEditModal(child));
-      componentRef.openAddChild.subscribe(() => this.isAddingChild.set(true));
+      componentRef.openAddChild.subscribe(() => this.showChildModal.set(true));
     }
   }
 
@@ -712,6 +722,7 @@ export class ShellComponent implements OnDestroy, OnInit {
 
   // ── Add Child Form signals ─────────────────────────────────────
   addNameInvalid = signal(false);
+  addFormError = signal<string | null>(null);
 
   // ── Parent Profile fields ──────────────────────────────────────
   parentName = '';
@@ -759,6 +770,7 @@ export class ShellComponent implements OnDestroy, OnInit {
     const value = (event.target as HTMLInputElement).value;
     this.newChildName = value;
     this.addNameInvalid.set(this.hasNameError(value));
+    this.addFormError.set(null);
   }
 
   onAddNameBlur() {
@@ -943,13 +955,17 @@ export class ShellComponent implements OnDestroy, OnInit {
   // ── Add Child Form ─────────────────────────────────────────────
 
   submitNewChild() {
+    this.addFormError.set(null);
     // Block if name has error
     if (this.hasNameError(this.newChildName)) {
       this.addNameInvalid.set(true);
       return;
     }
 
-    if (!this.newChildName || !this.newChildDob) return;
+    if (!this.newChildName || !this.newChildDob) {
+      this.addFormError.set(this.i18n.isSq() ? 'Emri dhe datëlindja janë të detyrueshme.' : 'Name and date of birth are required.');
+      return;
+    }
 
     const isoDate = this.toIso(this.newChildDob, this.i18n.locale());
     this.dataService.createChild({
@@ -1004,6 +1020,7 @@ export class ShellComponent implements OnDestroy, OnInit {
     this.newChildDocumentDate = '';
     this.newChildDocumentError.set(null);
     this.addNameInvalid.set(false);
+    this.addFormError.set(null);
   }
 
   logout() {

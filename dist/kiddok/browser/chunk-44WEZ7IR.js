@@ -10,7 +10,7 @@ import {
 import {
   DataService,
   I18nService
-} from "./chunk-RD3QEML6.js";
+} from "./chunk-UDF3JGT5.js";
 import {
   Component,
   computed,
@@ -1434,4 +1434,4 @@ var DiaryComponent = class _DiaryComponent {
 export {
   DiaryComponent
 };
-//# sourceMappingURL=chunk-6KQDATAT.js.map
+//# sourceMappingURL=chunk-44WEZ7IR.js.map

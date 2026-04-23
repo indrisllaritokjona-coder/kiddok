@@ -1,4 +1,4 @@
-﻿import { Component, inject, computed } from '@angular/core'
+import { Component, inject, computed } from '@angular/core'
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
@@ -51,6 +51,7 @@ interface NavItem {
             class="sidebar__nav-item"
             [class.sidebar__nav-item--active]="currentTab() === item.id"
             (click)="navigateTo(item.id)"
+            [disabled]="!activeChild()"
             [attr.aria-current]="currentTab() === item.id ? 'page' : null"
           >
             <lucide-icon [name]="item.icon" class="sidebar__nav-icon" aria-hidden="true"></lucide-icon>
@@ -258,7 +259,7 @@ interface NavItem {
       border: none;
       background: transparent;
       cursor: pointer;
-      transition: background 0.2s ease;
+      transition: background 0.2s ease, opacity 0.2s ease;
       width: 100%;
       text-align: left;
       font-family: 'Inter', sans-serif;
@@ -267,11 +268,16 @@ interface NavItem {
       color: #78716c;
     }
 
-    .sidebar__nav-item:hover {
+    .sidebar__nav-item:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .sidebar__nav-item:not(:disabled):hover {
       background: #f5f5f4;
     }
 
-    .dark .sidebar__nav-item:hover {
+    .dark .sidebar__nav-item:not(:disabled):hover {
       background: #1e293b;
     }
 

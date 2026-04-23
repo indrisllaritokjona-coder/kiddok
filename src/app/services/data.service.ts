@@ -263,6 +263,12 @@ export class DataService {
       this.cacheToOffline();
     } catch (err: any) {
       console.error('[DataService] loadChildrenFromApi failed:', err);
+      // On 401 (Unauthorized), clear auth and redirect to login
+      if (err?.status === 401 || err?.status === 403) {
+        this.logout();
+        window.location.href = '/login';
+        return;
+      }
       this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
       // Fallback to offline cached data
       await this.loadFromOffline();

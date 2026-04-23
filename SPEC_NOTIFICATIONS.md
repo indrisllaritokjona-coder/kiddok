@@ -1,457 +1,450 @@
-# SPEC.md — Sprint 7: Notifications & Reminders Module
+# SPEC.md — Sprint 7: Notifications & Reminders
 
-**Status:** Draft
-**Sprint:** 7
-**Created:** 2026-04-23
-**Architect:** kiddok-architect
+## 1. Architecture
 
----
+### 1.1 High-Level Overview
 
-## 1. Overview
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         KidDok Architecture                          │
+├──────────────┬──────────────────────┬───────────────────────────────┤
+│   Frontend   │   Browser Notif API  │      Backend (NestJS)         │
+│  (Angular)   │   ←──── push ────→   │  ┌─────────────────────────┐  │
+│              │                       │  │  NotificationsModule    │  │
+│ ┌──────────┐ │                       │  │  ┌───────────────────┐  │  │
+│ │  Bell    │ │   ┌──────────────┐   │  │  │ NotificationSvc   │  │  │
+│ │  Badge   │ │◄──│ SW / Events  │   │  │  │ CronSchedulerSvc  │  │  │
+│ └────┬─────┘ │   └──────────────┘   │  │  └───────────────────┘  │  │
+│      │ click │                       │  └─────────────────────────┘  │
+│ ┌────▼──────▼──────┐                │           │                    │
+│ │ NotificationPanel │                │  ┌───────▼────────────────┐ │
+│ │ (sidebar overlay) │                │  │    Prisma (Postgres)   │ │
+│ └───────────────────┘                │  │    notification table   │ │
+└──────────────────────────────────────┴──────────────────────────────────┘
+```
 
-**Component:** `NotificationService` (frontend), `NotificationsModule` (backend), `NotificationPanelComponent` (UI), `NotificationBellComponent` (sidebar), daily cron job (backend)
-**Purpose:** Bell icon in sidebar with unread badge → notification panel, browser push notifications for upcoming vaccines (3 days), appointments (24h), medication doses, and in-app notification persistence.
-**Priority:** HIGH
+### 1.2 Tech Stack
+
+- **Frontend**: Angular 17+, standalone components, `@angular/localize` for i18n
+- **Backend**: NestJS + `@nestjs/schedule` (already installed)
+- **Database**: PostgreSQL via Prisma ORM
+- **Browser APIs**: Notifications API, Service Worker (optional for future push)
+- **i18n**: `@ngx-translate/core` or Angular built-in i18n (SQ + EN)
 
 ---
 
 ## 2. Data Model
 
-### 2.1 Prisma Schema — Notification Model
+### 2.1 Prisma Schema
 
 ```prisma
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      String   // 'vaccine_reminder' | 'medication_due' | 'appointment_reminder' | 'diary_reminder'
+  type      NotificationType
   message   String
   read      Boolean  @default(false)
-  metadata  Json?    // { childId, recordId, recordType } for deep-linking
   createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+}
+
+enum NotificationType {
+  VACCINE_REMINDER
+  MEDICATION_DUE
+  APPOINTMENT_REMINDER
+  DIARY_REMINDER
 }
 ```
 
-**User relation update:**
-```prisma
-model User {
-  // ...existing fields
-  notifications Notification[]
-}
-```
-
-### 2.2 Frontend Interface
+### 2.2 TypeScript Interfaces
 
 ```typescript
-interface Notification {
+// shared/src/models/notification.model.ts
+export enum NotificationType {
+  VACCINE_REMINDER      = 'VACCINE_REMINDER',
+  MEDICATION_DUE        = 'MEDICATION_DUE',
+  APPOINTMENT_REMINDER  = 'APPOINTMENT_REMINDER',
+  DIARY_REMINDER        = 'DIARY_REMINDER',
+}
+
+export interface Notification {
   id: string;
   userId: string;
-  type: 'vaccine_reminder' | 'medication_due' | 'appointment_reminder' | 'diary_reminder';
+  type: NotificationType;
   message: string;
   read: boolean;
-  metadata?: {
-    childId: string;
-    recordId: string;
-    recordType: string;
-  };
-  createdAt: string; // ISO
+  createdAt: Date;
+}
+
+export interface CreateNotificationDto {
+  userId: string;
+  type: NotificationType;
+  message: string;
 }
 ```
 
 ---
 
-## 3. UI Design
+## 3. Backend Specification
 
-### 3.1 Bell Icon in Sidebar
+### 3.1 API Endpoints
 
-**Position:** Top-right of sidebar, above nav items
-**Icon:** `notifications` (Material Symbol, Outlined, 24px)
-**Badge:**
-- Shape: 16px circle, rose-500 background (`#F43F5E`)
-- Position: top-right of bell icon, offset -4px
-- Shows unread count (capped at "9+" for 10+)
-- Hidden when count = 0
-- Animate: subtle scale pulse on new notification (keyframe 0→1.2→1, 300ms)
+| Method | Endpoint                     | Auth     | Description                     |
+|--------|------------------------------|----------|---------------------------------|
+| GET    | `/notifications`             | JWT      | List all notifications for user |
+| PATCH  | `/notifications/:id/read`    | JWT      | Mark single notification as read |
+| PATCH  | `/notifications/read-all`    | JWT      | Mark all user notifications read |
+| DELETE | `/notifications/:id`          | JWT      | Dismiss/delete notification     |
+| DELETE | `/notifications`              | JWT      | Clear all read notifications     |
 
-### 3.2 Notification Panel
-
-**Trigger:** Click/tap bell icon
-**Style:** Slide-in overlay panel from right, 380px wide, white bg, rounded-l-3xl
-**Backdrop:** Semi-transparent dark overlay (`rgba(0,0,0,0.3)`), closes panel on click
-
-**Panel layout (top → bottom):**
-
-```
-┌─────────────────────────────────────┐
-│ Header: "Njoftimet" / "Notifications"│
-│  [Mark all read] button (right)     │
-├─────────────────────────────────────┤
-│ [Filter chips: All | Vaccine | Med  │
-│  Appt | Diary]                      │
-├─────────────────────────────────────┤
-│ Notification List (scrollable)      │
-│  └── NotificationItem × n          │
-│                                     │
-│ (empty state if no notifications)   │
-└─────────────────────────────────────┘
-```
-
-### 3.3 Notification Item Card
-
-```
-┌──────────────────────────────────────┐
-│ [Icon]  [Type label]   [Time ago]   │
-│                                       │
-│  Notification message text            │
-│                                       │
-│  [Mark read]              [Delete]   │
-└──────────────────────────────────────┘
-```
-
-**Visual states:**
-
-| State | Style |
-|-------|-------|
-| Unread | White bg, left border 3px rose-400, slightly elevated shadow |
-| Read | Stone-50 bg, no border, flat |
-
-**Icons per type:**
-- `vaccine_reminder` → `vaccines` (indigo)
-- `medication_due` → `medication` (emerald)
-- `appointment_reminder` → `calendar_today` (amber)
-- `diary_reminder` → `edit_note` (teal)
-
-**Time format:** Relative — "5 min", "2 orë", "dje" / "5 min", "2 hrs", "yesterday"
-
-**Actions:**
-- Click card body → mark read + navigate to relevant record
-- "Mark read" button → mark read (no navigation)
-- "Delete" button → delete notification (confirm toast)
-
-### 3.4 Empty State
-
-- SVG bell illustration (muted stone-300)
-- `"Nuk ka njoftime të reja"` / `"No new notifications"`
-- Subtext: `"Do të shihni njoftimet këtu kur të ketë diçka të rëndësishme"`
-
-### 3.5 Filter Chips
-
-- Pill buttons: All | Vaksinat | Medikamentet | Takimet | Ditari
-- Active chip: indigo-100 bg, indigo-700 text
-- Inactive: stone-100 bg, stone-500 text
-
----
-
-## 4. Backend API
-
-### 4.1 Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/notifications` | List notifications for authenticated user |
-| PATCH | `/notifications/:id/read` | Mark single notification as read |
-| PATCH | `/notifications/read-all` | Mark all notifications as read |
-| DELETE | `/notifications/:id` | Delete a single notification |
-| DELETE | `/notifications/delete-read` | Delete all read notifications |
-
-### 4.2 GET /notifications
-
-**Auth:** Bearer JWT
-**Query params:** `?page=1&limit=20&type=vaccine_reminder`
-**Response 200:**
+#### GET /notifications
+**Query params**: `?read=true|false&limit=50&offset=0`
+**Response 200**:
 ```json
 {
-  "notifications": [
-    {
-      "id": "cuid",
-      "type": "vaccine_reminder",
-      "message": "DTaP-3 për Emma-n është për shkak pas 3 ditësh",
-      "read": false,
-      "metadata": {
-        "childId": "uuid",
-        "recordId": "cuid",
-        "recordType": "vaccine"
-      },
-      "createdAt": "2026-04-23T08:00:00.000Z"
-    }
-  ],
-  "unreadCount": 5,
-  "total": 12
+  "data": [Notification],
+  "total": 120,
+  "unread": 5
 }
 ```
 
-### 4.3 PATCH /notifications/:id/read
+#### PATCH /notifications/:id/read
+**Response 200**: `{ "id": "...", "read": true }`
 
-**Response 200:** Updated notification
-**Response 404:** Not found
+#### PATCH /notifications/read-all
+**Response 200**: `{ "updated": 5 }`
 
-### 4.4 Module Structure
+#### DELETE /notifications/:id
+**Response 200**: `{ "deleted": true }`
 
-```
-backend/src/notifications/
-├── notifications.controller.ts
-├── notifications.service.ts
-├── notifications.module.ts
-└── notifications.cron.ts
-```
+#### DELETE /notifications
+**Query params**: `?readOnly=true` (clears all read)
+**Response 200**: `{ "deleted": 12 }`
 
----
-
-## 5. Daily Cron Job
-
-**Schedule:** Every day at 07:00 (local server time)
-**Implementation:** `@Cron(CronExpression.EVERY_DAY_AT_7AM)` in `NotificationsCron`
-**Imports:** `AppointmentsService`, `VaccinesService`, `MedicationsService`
-
-### 5.1 Checks
-
-| Check | Condition | Notification Type |
-|-------|-----------|------------------|
-| Vaccines | `dueDate` within 3 days, not completed | `vaccine_reminder` |
-| Appointments | `dateTime` within 24 hours, not past | `appointment_reminder` |
-| Medications | Active medication with `frequency` = daily/pattern suggesting dose due | `medication_due` |
-
-### 5.2 Deduplication
-
-Before inserting, check if a `Notification` with same `{userId, type, metadata.recordId}` and `createdAt` within last 24h already exists. Skip if duplicate.
-
-### 5.3 Cron Implementation Pattern
+### 3.2 NotificationService
 
 ```typescript
 @Injectable()
-export class NotificationsCron {
-  constructor(
-    private prisma: PrismaService,
-    private appointmentsService: AppointmentsService,
-    private vaccinesService: VaccinesService,
-    private medicationsService: MedicationsService,
-  ) {}
+export class NotificationService {
+  findAll(userId: string, filters?: { read?: boolean }): Promise<PaginatedResult>
+  markAsRead(id: string, userId: string): Promise<Notification>
+  markAllAsRead(userId: string): Promise<number>
+  dismiss(id: string, userId: string): Promise<void>
+  clearRead(userId: string): Promise<number>
+  create(dto: CreateNotificationDto): Promise<Notification>
+}
+```
 
-  @Cron(CronExpression.EVERY_DAY_AT_7AM)
+### 3.3 Cron Scheduler Service
+
+Runs daily at **06:00 AM** server time:
+
+```typescript
+@Injectable()
+export class NotificationCronService {
+  @Cron('0 6 * * *', { name: 'notification-daily-check' })
   async checkUpcomingEvents(): Promise<void> {
-    // 1. Get all users with active children
-    // 2. For each user, check vaccines, appointments, medications
-    // 3. Insert Notification records (not push — cron only persists)
+    // 1. Vaccines due within 3 days → VACCINE_REMINDER
+    // 2. Appointments within 24 hours → APPOINTMENT_REMINDER
+    // 3. Medication doses due today → MEDICATION_DUE
   }
 }
 ```
 
+#### Cron Logic Details
+
+**Vaccine Reminders**
+```sql
+SELECT v.id, v.childId, v.vaccineName, v.dueDate
+FROM vaccine_records v
+JOIN children c ON c.id = v.childId
+WHERE v.dueDate BETWEEN NOW() AND NOW() + INTERVAL '3 days'
+  AND v.id NOT IN (SELECT refId FROM notifications WHERE type = 'VACCINE_REMINDER' AND createdAt > NOW() - INTERVAL '1 day')
+```
+
+**Appointment Reminders**
+```sql
+SELECT a.id, a.childId, a.title, a.dateTime
+FROM appointments a
+WHERE a.dateTime BETWEEN NOW() AND NOW() + INTERVAL '24 hours'
+  AND a.id NOT IN (SELECT refId FROM notifications WHERE type = 'APPOINTMENT_REMINDER' AND createdAt > NOW() - INTERVAL '1 day')
+```
+
+**Medication Doses**
+```sql
+SELECT md.id, md.childId, md.medicationName, md.times
+FROM medication_doses md
+WHERE md.active = true
+  AND EXISTS (SELECT 1 FROM jsonb_array_elements_text(md.times) t WHERE t = to_char(NOW(), 'HH24:MI'))
+```
+
 ---
 
-## 6. Browser Push Notifications
+## 4. Frontend Specification
 
-### 6.1 Permission Flow
+### 4.1 Component Breakdown
 
-1. On first bell icon click, if `Notification.permission === 'default'`, show a small inline tooltip/popover near the bell:
-   - `"Aktivo njoftimet e shfletuesit?"` / `"Enable browser notifications?"`
-   - `[Po]` `[Jo]` buttons
-2. If user clicks `Po` → call `NotificationService.requestPermission()`
-3. If permission denied (`'denied'`) → show persistent small warning icon on bell, tooltip: `"Njoftimet e shfletuesit janë bllokuar"` / `"Browser notifications are blocked"`
+```
+src/app/
+├── features/
+│   └── notifications/
+│       ├── notification-bell/           ← Standalone component
+│       │   ├── notification-bell.component.ts
+│       │   ├── notification-bell.component.html
+│       │   └── notification-bell.component.scss
+│       ├── notification-panel/          ← Sidebar overlay panel
+│       │   ├── notification-panel.component.ts
+│       │   ├── notification-panel.component.html
+│       │   └── notification-panel.component.scss
+│       └── notifications.routes.ts
+├── services/
+│   └── notification.service.ts
+└── i18n/
+    ├── sq.json
+    └── en.json
+```
 
-### 6.2 Push on Cron Events
+### 4.2 NotificationBellComponent
 
-- Cron job **persists** notifications to DB (fire-and-forget to notification table)
-- **Separately**, after persisting, the cron service calls `NotificationGateway` (WebSocket) to push real-time to connected clients
-- If client is offline but push permission granted → `NotificationService.send()` called server-side via WebSocket ACK (or future: Firebase Cloud Messaging)
-- For now: push via WebSocket gateway injected into cron
+- **Input**: `unreadCount: number`
+- **Output**: `opened: EventEmitter<void>`
+- **States**: default (bell icon), has-unread (badge with count), permission-denied (muted bell)
+- **Badge**: Red circle, max display "99+"
+- **Behavior**: Click → emits `opened` event → parent opens panel
 
-### 6.3 NotificationGateway (WebSocket)
+### 4.3 NotificationPanelComponent
+
+- **Input**: `isOpen: boolean`
+- **Output**: `closed: EventEmitter<void>`
+- **Sections**:
+  1. Header: "Notifications" + "Mark all read" button
+  2. Empty state: icon + message in SQ/EN
+  3. Notification list (scrollable, virtual scroll for >50 items)
+  4. Each item: icon by type, message, relative time, dismiss (×) button
+- **Behavior**:
+  - Auto-refresh every 60 seconds
+  - Swipe-to-dismiss on mobile
+  - Click item → mark read + navigate to relevant section
+
+### 4.4 NotificationService (Frontend)
 
 ```typescript
-@WebSocketGateway()
-export class NotificationGateway {
-  @WebSocketServer() server: Server;
+@Injectable({ providedIn: 'root' })
+export class NotificationService {
+  getNotifications(params?: { read?: boolean }): Observable<NotificationResponse>
+  markAsRead(id: string): Observable<Notification>
+  markAllRead(): Observable<{ updated: number }>
+  dismiss(id: string): Observable<void>
+  requestBrowserPermission(): Observable<NotificationPermission>
+  showBrowserNotification(title: string, options?: NotificationOptions): void
+}
+```
 
-  @SubscribeMessage('subscribeNotifications')
-  handleSubscribe(client: Socket, userId: string) {
-    client.join(`user:${userId}`);
-  }
+### 4.5 Browser Notification Integration
 
-  sendToUser(userId: string, notification: Notification) {
-    this.server.to(`user:${userId}`).emit('newNotification', notification);
+```typescript
+// notification.service.ts (frontend)
+requestBrowserPermission(): Observable<NotificationPermission> {
+  return from(Notification.requestPermission());
+}
+
+showBrowserNotification(title: string, body: string, icon?: string): void {
+  if (Notification.permission === 'granted') {
+    new Notification(title, { body, icon: icon ?? '/assets/icons/bell.svg' });
   }
 }
 ```
 
+**Permission flow**:
+1. On first user interaction with bell → request permission
+2. If granted → enable browser push
+3. If denied → show in-app only, hide browser notif button
+4. If default → prompt again after user sees in-app panel
+
 ---
 
-## 7. Component Structure (Frontend)
+## 5. i18n Strings
+
+### 5.1 Key Translations
+
+| Key                         | SQ                               | EN                            |
+|-----------------------------|----------------------------------|-------------------------------|
+| `notifications.title`      | Njoftimet                        | Notifications                  |
+| `notifications.empty`       | Nuk keni njoftime të reja         | No new notifications           |
+| `notifications.markAllRead` | Shëno të gjitha si të lexuara     | Mark all as read              |
+| `notifications.dismiss`     | Fshij                            | Dismiss                        |
+| `notif.vaccine_reminder`    | Vaksina për %s përfundon më %s   | Vaccine %s due on %s           |
+| `notif.medication_due`      | Medikamenti %s duhet marrë tani  | Medication %s is due now       |
+| `notif.appointment_reminder`| Termini për %s nesër në %s       | Appointment for %s tomorrow at %s |
+| `notif.diary_reminder`      | Kujtesë për ditarin e fëmiut      | Diary reminder for child       |
+| `notif.permission.denied`   | Njoftimet e shfletuesit janë bllokuar | Browser notifications are blocked |
+| `notif.browser.enabled`    | Njoftimet e shfletuesit aktive   | Browser notifications enabled |
+
+---
+
+## 6. Data Flow
+
+### 6.1 Cron Generation Flow
 
 ```
-src/app/components/
-├── notification-bell/
-│   ├── notification-bell.component.ts
-│   ├── notification-bell.component.html
-│   └── notification-bell.component.scss
-└── notification-panel/
-    ├── notification-panel.component.ts
-    ├── notification-panel.component.html
-    ├── notification-panel.component.scss
-    └── notification-item/
-        ├── notification-item.component.ts
-        ├── notification-item.component.html
-        └── notification-item.component.scss
-
-src/app/services/
-├── notifications.service.ts   (NEW — wraps REST calls)
+CronTrigger (06:00)
+    ↓
+Vaccine/Appointment/Medication queries
+    ↓
+NotificationService.create() per event
+    ↓
+Prisma: INSERT notification
+    ↓
+[Future]: Push via WebSocket or SSE to connected clients
+    ↓
+Frontend polls /notifications or receives WS event
+    ↓
+NotificationBell badge count updates
+    ↓
+[If permission granted] Browser Notification fires
 ```
 
-**Note:** `NotificationService.ts` already exists (from previous sprint) — rename to `NotificationPreferencesService` if needed, or extend it.
-
----
-
-## 8. File Locations
+### 6.2 User Interaction Flow
 
 ```
-backend/src/notifications/
-├── notifications.controller.ts
-├── notifications.service.ts
-├── notifications.module.ts
-└── notifications.cron.ts
-
-frontend/src/app/components/notification-bell/
-├── notification-bell.component.ts
-├── notification-bell.component.html
-└── notification-bell.component.scss
-
-frontend/src/app/components/notification-panel/
-├── notification-panel.component.ts
-├── notification-panel.component.html
-├── notification-panel.component.scss
-└── notification-item/
-    ├── notification-item.component.ts
-    ├── notification-item.component.html
-    └── notification-item.component.scss
-
-frontend/src/app/services/
-└── notifications.service.ts  (NEW — HTTP client wrapper)
-```
-
----
-
-## 9. i18n Keys
-
-| Key | SQ | EN |
-|-----|----|----|
-| `notifications.title` | Njoftimet | Notifications |
-| `notifications.markAllRead` | Shëno të gjitha si të lexuara | Mark all as read |
-| `notifications.empty` | Nuk ka njoftime të reja | No new notifications |
-| `notifications.emptyHint` | Do të shihni njoftimet këtu kur të ketë diçka të rëndësishme | You'll see notifications here when something important happens |
-| `notifications.filter.all` | Të gjitha | All |
-| `notifications.filter.vaccines` | Vaksinat | Vaccines |
-| `notifications.filter.medications` | Medikamentet | Medications |
-| `notifications.filter.appointments` | Takimet | Appointments |
-| `notifications.filter.diary` | Ditari | Diary |
-| `notifications.type.vaccine_reminder` | Vaksina | Vaccine |
-| `notifications.type.medication_due` | Medikament | Medication |
-| `notifications.type.appointment_reminder` | Takim | Appointment |
-| `notifications.type.diary_reminder` | Ditari | Diary |
-| `notifications.delete` | Fshi | Delete |
-| `notifications.markRead` | Shëno si të lexuar | Mark as read |
-| `notifications.permission.title` | Aktivo njoftimet e shfletuesit? | Enable browser notifications? |
-| `notifications.permission.denied` | Njoftimet e shfletuesit janë bllokuar | Browser notifications are blocked |
-| `notifications.permission.enable` | Po | Yes |
-| `notifications.permission.no` | Jo | No |
-| `notifications.time.now` | Tani | Now |
-| `notifications.time.minutes` | {n} min | {n} min |
-| `notifications.time.hours` | {n} orë | {n} hrs |
-| `notifications.time.yesterday` | Dje | Yesterday |
-| `notifications.time.days` | {n} ditë | {n} days |
-| `notifications.push.title.vaccine` | Vaksina për shkak! | Vaccine due soon! |
-| `notifications.push.body.vaccine` | {name} — për shkak {days} ditë | {name} — due in {days} days |
-| `notifications.push.title.appointment` | Takim nesër! | Appointment tomorrow! |
-| `notifications.push.body.appointment` | {title} me {doctor} në {location} | {title} with {doctor} at {location} |
-| `notifications.push.title.medication` | Medikament për shkak! | Medication due! |
-| `notifications.push.body.medication` | {name} — doza e ardhshme | {name} — next dose |
-| `notifications.deleted` | Njoftimi u fshi | Notification deleted |
-| `notifications.deletedAll` | Të gjitha njoftimet u fshinë | All notifications deleted |
-| `notifications.markedRead` | Shëno si të lexuar | Marked as read |
-
----
-
-## 10. Edge Cases
-
-| Scenario | Handling |
-|----------|----------|
-| `Notification.permission === 'denied'` | Show lock/warning icon on bell, tooltip explains blocked state |
-| `Notification.permission === 'default'` | Show permission prompt on first bell click |
-| No upcoming events | Show empty state in panel |
-| User has no children | Skip cron checks for that user |
-| Notification deleted while panel open | Remove from list with fade-out animation |
-| Bell clicked while panel open | Close panel |
-| Network error loading notifications | Show inline error + retry button |
-| Very long notification message | Truncate at 120 chars with "..." + full text in tooltip |
-| 10+ unread | Badge shows "9+" |
-| Mark all read | All items animate to "read" state simultaneously |
-| Duplicate cron notifications | Deduplication check — skip if exists within 24h |
-
----
-
-## 11. Technical Approach
-
-### 11.1 Backend (NestJS + Prisma)
-
-- **Prisma:** Add `Notification` model, update `User` relation
-- **Module:** `NotificationsModule` with controller + service + cron
-- **Auth:** All endpoints require JWT guard
-- **Cron:** `@nestjs/schedule` already installed; `NotificationsCron` runs daily checks
-- **WebSocket:** `NotificationGateway` for real-time push to frontend
-- **DTOs:** `CreateNotificationDto` (internal), `NotificationResponseDto`
-
-### 11.2 Frontend (Angular 19+)
-
-- **Signals:** `notifications = signal<Notification[]>([])`, `unreadCount = signal(0)`, `panelOpen = signal(false)`, `activeFilter = signal<'all'|'vaccine_reminder'|'medication_due'|'appointment_reminder'|'diary_reminder'>('all')`
-- **Services:** `NotificationsService` wraps REST calls (GET, PATCH, DELETE)
-- **WebSocket:** Connect via `NotificationGateway` client on app init; subscribe to `user:${userId}` room
-- **Bell Component:** Standalone, reads `unreadCount`, toggles `panelOpen`
-- **Panel Component:** Slides in from right, fetches notifications on open
-- **Integration:** `NotificationBellComponent` added to `SidebarComponent` (top nav area)
-
-### 11.3 WebSocket Client Integration
-
-```typescript
-// In app initialization
-socket.emit('subscribeNotifications', userId);
-socket.on('newNotification', (notif: Notification) => {
-  this.notifications.update(n => [notif, ...n]);
-  this.unreadCount.update(c => c + 1);
-});
+User clicks bell icon
+    ↓
+Parent component opens NotificationPanel
+    ↓
+Service GET /notifications → renders list
+    ↓
+User reads / dismisses notification
+    ↓
+PATCH /notifications/:id/read  OR  DELETE /notifications/:id
+    ↓
+Badge count updates reactively
 ```
 
 ---
 
-## 12. Acceptance Criteria
+## 7. Edge Cases
 
-- [ ] Bell icon appears in sidebar with unread count badge (hidden when 0)
-- [ ] Badge pulses briefly when new notification arrives
-- [ ] Clicking bell opens notification panel from right
-- [ ] Notifications are grouped by type filter chips
-- [ ] Unread notifications have rose left border; read ones are muted
-- [ ] "Mark all read" marks all notifications as read with animation
-- [ ] "Delete" removes notification with fade-out
-- [ ] Cron job runs daily and creates notification records for vaccines due in 3 days
-- [ ] Cron job creates notifications for appointments within 24h
-- [ ] Cron deduplicates — no double notifications within 24h
-- [ ] Browser push permission requested on first bell click
-- [ ] Permission denied state shows warning icon on bell
-- [ ] All i18n labels work in SQ and EN
-- [ ] Panel closes on backdrop click or ESC key
-- [ ] WebSocket push delivers new notifications in real-time
-- [ ] Backend persists notifications to PostgreSQL
-- [ ] Mobile responsive — panel is full-width on small screens
+| Edge Case                          | Handling Strategy                                        |
+|------------------------------------|----------------------------------------------------------|
+| Browser permission denied          | Show in-app notifications only; bell shows permission icon with tooltip |
+| No upcoming events                 | Show empty state with friendly illustration + message    |
+| Mark all read with 0 unread         | Button disabled/grayed out, no-op API call               |
+| Delete notification not owned by user | 403 Forbidden, logged as security event                 |
+| Concurrent mark-all-read requests  | Use optimistic UI updates; debounce rapid clicks         |
+| Notification created while panel open | Auto-append to list without full refresh, badge updates |
+| Very large unread count (>999)      | Badge shows "999+"                                       |
+| User switches child context         | Notifications scoped to current child + parent user      |
+| App open + cron fires               | No duplicate notifications for same event (de-dup by refId + type + 24h window) |
+| Offline user                       | Queue notifications locally; sync on reconnect (future)   |
 
 ---
 
-## 13. Dependencies
+## 8. Component Tree
 
-### Backend
-- `@nestjs/schedule` (already installed)
-- `@nestjs/websockets` + `@nestjs/platform-socket.io` (for NotificationGateway)
-
-### Frontend
-- `socket.io-client` (for WebSocket connection to gateway)
-- No new UI libraries required (Tailwind + Material Symbols already in use)
+```
+AppComponent
+├── SidebarComponent
+│   ├── NavLinksComponent
+│   ├── ChildSwitcherComponent
+│   └── NotificationBellComponent   ← [SPRINT 7 NEW]
+└── RouterOutlet
+    └── Pages (growth, diary, vaccines, etc.)
+        └── Modals/Overlays
+            └── NotificationPanelComponent ← [SPRINT 7 NEW]
+```
 
 ---
 
-*Sprint 7 — Architect: notifications & reminders spec complete*
+## 9. Execution Roadmap
+
+### Phase 1: Backend Foundation (1–1.5 days)
+- [ ] Add `Notification` model + migration to Prisma schema
+- [ ] Create `notifications.controller.ts` with all 5 endpoints
+- [ ] Implement `NotificationService` (CRUD + mark-read-all)
+- [ ] Write unit tests for service (Jest)
+
+### Phase 2: Cron Engine (0.5 day)
+- [ ] Create `NotificationCronService` with `@Cron('0 6 * * *')`
+- [ ] Implement vaccine query (3-day window)
+- [ ] Implement appointment query (24h window)
+- [ ] Implement medication dose query (today, time-based)
+- [ ] De-duplication logic (same refId+type within 24h → skip)
+- [ ] Unit tests for cron service
+
+### Phase 3: Frontend Core (1–1.5 days)
+- [ ] `NotificationService` (Angular service, HTTP calls)
+- [ ] `NotificationBellComponent` (standalone, badge, click emitter)
+- [ ] `NotificationPanelComponent` (list, empty state, dismiss)
+- [ ] Add to `SidebarComponent` layout
+- [ ] i18n: add `sq.json` + `en.json` strings
+
+### Phase 4: Browser Notifications (0.5 day)
+- [ ] `requestBrowserPermission()` flow in service
+- [ ] Permission state handling (granted/denied/default)
+- [ ] Push notification trigger when new notification arrives
+- [ ] Graceful degradation if permission denied
+
+### Phase 5: Polish & Integration (0.5 day)
+- [ ] Real-time badge count via polling or signal updates
+- [ ] Scroll virtualization for large notification lists
+- [ ] Mobile swipe-to-dismiss
+- [ ] E2E test (Playwright): bell → panel → mark read → badge updates
+
+---
+
+## 10. File Changes Summary
+
+```
+backend/
+├── prisma/schema.prisma                    (+ Notification model)
+├── src/notifications/
+│   ├── notifications.module.ts               (new)
+│   ├── notifications.controller.ts          (new)
+│   ├── notifications.service.ts             (new)
+│   ├── notifications-cron.service.ts        (new)
+│   ├── dto/
+│   │   ├── list-notifications.dto.ts       (new)
+│   │   └── create-notification.dto.ts      (new)
+│   └── entities/
+│       └── notification.entity.ts           (new)
+└── src/__mocks__/notification.service.spec.ts
+
+frontend/src/app/
+├── shared/src/models/notification.model.ts  (shared types)
+├── features/notifications/
+│   ├── notification-bell/
+│   │   ├── notification-bell.component.ts
+│   │   ├── notification-bell.component.html
+│   │   └── notification-bell.component.scss
+│   ├── notification-panel/
+│   │   ├── notification-panel.component.ts
+│   │   ├── notification-panel.component.html
+│   │   └── notification-panel.component.scss
+│   └── notifications.routes.ts
+├── services/
+│   └── notification.service.ts             (new)
+└── i18n/
+    ├── sq.json                             (update)
+    └── en.json                             (update)
+
+e2e/
+└── notifications.spec.ts                   (new)
+```
+
+---
+
+## 11. Dependencies
+
+| Package                          | Version  | Note                        |
+|----------------------------------|----------|-----------------------------|
+| `@nestjs/schedule`               | `^4.x`   | ✅ Already installed        |
+| `@nestjs/core` + `@nestjs/common`| `^10.x`  |                             |
+| `prisma` + `@prisma/client`      | `^5.x`   |                             |
+| `@angular/localize`              | `^17.x`  |                             |
+| `date-fns`                       | `^3.x`   | For date manipulation in cron |
+
+---
+
+*Author: kiddok-architect | Sprint: 7 | Status: PLANNED*

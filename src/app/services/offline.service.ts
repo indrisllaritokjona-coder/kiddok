@@ -411,7 +411,7 @@ export class OfflineService {
         for (const entry of entries) {
           // Don't delete: failed entries (will retry) or conflict entries (need manual resolution)
           const bodyId = entry.body?.id;
-          if (entry.id !== undefined && !conflictEntityIds.has(bodyId) && result.failedCount === 0) {
+          if (entry.id !== undefined && !conflictEntityIds.has(bodyId)) {
             deleteStore.delete(entry.id);
           }
         }

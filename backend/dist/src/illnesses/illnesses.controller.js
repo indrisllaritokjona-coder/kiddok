@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const passport_1 = require("@nestjs/passport");
 const illnesses_service_1 = require("./illnesses.service");
 const create_illness_dto_1 = require("./dto/create-illness.dto");
+const update_illness_dto_1 = require("./dto/update-illness.dto");
 let IllnessesController = class IllnessesController {
     illnessesService;
     constructor(illnessesService) {
@@ -58,7 +59,7 @@ __decorate([
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:paramtypes", [Object, String, update_illness_dto_1.UpdateIllnessDto]),
     __metadata("design:returntype", void 0)
 ], IllnessesController.prototype, "update", null);
 __decorate([

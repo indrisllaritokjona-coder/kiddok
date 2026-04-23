@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+﻿import { Injectable, signal, computed } from '@angular/core';
 
 export type Locale = 'sq' | 'en';
 
@@ -710,10 +710,6 @@ const translations = {
   'error.generic': { sq: 'Ndodhi një gabim, provoni përsëri.', en: 'An error occurred, please try again.' },
   'error.exportFailed': { sq: 'Eksportimi dështoi. Provoni përsëri.', en: 'Export failed. Please try again.' },
   'diary.addFirst': { sq: 'Shto Shënimin', en: 'Add Entry' },
-  'childForm.gender.male': { sq: 'Mashkull', en: 'Male' },
-  'childForm.gender.female': { sq: 'Fëmër', en: 'Female' },
-  'sidebar.footer.settings': { sq: 'Konfigurime', en: 'Settings' },
-  'sidebar.footer.logout': { sq: 'Dil nga Sistemi', en: 'Sign Out' },
 } as const;
 
 type TranslationKey = keyof RawTranslations;

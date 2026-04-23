@@ -2,7 +2,7 @@ import {
   Component,
   inject,
   signal,
-  OnInit,
+  effect,
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -21,7 +21,7 @@ import { I18nService } from '../core/i18n/i18n.service';
            class="fixed top-0 left-0 right-0 z-[100] flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-50 border-b border-amber-200 shadow-sm animate-slide-down">
         <lucide-icon name="wifi-off" class="text-amber-500 shrink-0" [size]="16" aria-hidden="true"></lucide-icon>
         <span class="text-sm font-bold text-amber-700">
-          {{ offlineService.hasPendingSync() ? offlineText.pendingSync : offlineText.offline }}
+          {{ offlineService.hasPendingSync() ? t()['offline.bannerPending'] : t()['offline.banner'] }}
         </span>
         @if (offlineService.hasPendingSync()) {
           <span class="text-xs text-amber-600 font-medium">({{ pendingCount() }})</span>
@@ -39,28 +39,20 @@ import { I18nService } from '../core/i18n/i18n.service';
     }
   `]
 })
-export class OfflineIndicatorComponent implements OnInit {
+export class OfflineIndicatorComponent {
   offlineService = inject(OfflineService);
   i18n = inject(I18nService);
 
+  readonly t = this.i18n.t;
   pendingCount = signal(0);
 
-  offlineText = {
-    offline: '',
-    pendingSync: '',
-  };
-
-  ngOnInit(): void {
-    this.updateLabels();
-    this.loadPendingCount();
-  }
-
-  private updateLabels(): void {
-    const isSq = this.i18n.isSq();
-    this.offlineText = {
-      offline: isSq ? 'Jeni offline' : 'You are offline',
-      pendingSync: isSq ? 'Duke pritur sinkronizim' : 'Pending sync',
-    };
+  constructor() {
+    // Reactive: re-check pending count whenever hasPendingSync changes
+    effect(() => {
+      if (this.offlineService.hasPendingSync()) {
+        this.loadPendingCount();
+      }
+    });
   }
 
   private async loadPendingCount(): Promise<void> {

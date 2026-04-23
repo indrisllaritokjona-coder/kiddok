@@ -1,5 +1,5 @@
 ﻿import {
-  Component, Input, Output, EventEmitter, signal, computed, inject, OnInit, OnChanges, OnDestroy, SimpleChanges
+  Component, Input, Output, EventEmitter, signal, computed, inject, OnInit, OnChanges, OnDestroy, SimpleChanges, HostListener
 } from '@angular/core'
 import { LucideAngularModule } from 'lucide-angular';
 
@@ -366,6 +366,11 @@ export class AddEditChildModalComponent implements OnInit, OnChanges, OnDestroy 
 
   ngOnInit(): void {
     this.buildGenderOptions();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    this.cancelled.emit();
   }
 
   ngOnDestroy(): void {

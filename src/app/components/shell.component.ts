@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, OnDestroy, OnInit, ChangeDetectionStrategy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
 import { DataService, ChildProfile } from '../services/data.service';
@@ -615,7 +615,14 @@ export class ShellComponent implements OnDestroy, OnInit {
   router = inject(Router);
   private route = inject(ActivatedRoute);
 
-  ngOnInit() {}
+  ngOnInit() {
+    // Dismiss childrenLoading skeleton once children signal populates
+    effect(() => {
+      if (this.dataService.children().length > 0) {
+        this.childrenLoading.set(false);
+      }
+    });
+  }
 
   private navigateHandler = (e: Event) => {
     const route = (e as CustomEvent<string>).detail;

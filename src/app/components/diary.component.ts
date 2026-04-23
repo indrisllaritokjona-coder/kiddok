@@ -1,4 +1,4 @@
-﻿import { Component, inject, signal, computed } from '@angular/core'
+﻿import { Component, inject, signal, computed, OnInit } from '@angular/core'
 import { LucideAngularModule } from 'lucide-angular';
 
 import { CommonModule } from '@angular/common';
@@ -374,12 +374,18 @@ interface QuickAdd {
     }
   `
 })
-export class DiaryComponent {
+export class DiaryComponent implements OnInit {
   dataService = inject(DataService);
   i18n = inject(I18nService);
 
   // Sprint 8: Loading state
   loading = signal(false);
+
+  ngOnInit(): void {
+    // Brief skeleton display while reactive signals populate
+    this.loading.set(true);
+    setTimeout(() => this.loading.set(false), 500);
+  }
 
   // ── Calendar state ────────────────────────────────────────────────
   viewDate = signal(new Date());

@@ -334,10 +334,15 @@ export class TemperatureDiaryComponent implements OnInit, AfterViewInit, OnDestr
       .sort((a, b) => new Date(a.measuredAt).getTime() - new Date(b.measuredAt).getTime());
   });
 
-  ngOnInit() {
+  async ngOnInit() {
     const childId = this.dataService.activeChildId();
     if (childId) {
-      this.dataService.loadTemperatureEntries(childId);
+      this.loading.set(true);
+      try {
+        await this.dataService.loadTemperatureEntries(childId);
+      } finally {
+        this.loading.set(false);
+      }
     }
   }
 

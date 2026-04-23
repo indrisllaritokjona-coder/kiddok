@@ -352,10 +352,15 @@ export class GrowthTrackingComponent implements OnInit, AfterViewInit, OnDestroy
     return parseFloat((latest.weight - prev.weight).toFixed(1));
   });
 
-  ngOnInit() {
+  async ngOnInit() {
     const childId = this.dataService.activeChildId();
     if (childId) {
-      this.dataService.loadGrowthEntries(childId);
+      this.loading.set(true);
+      try {
+        await this.dataService.loadGrowthEntries(childId);
+      } finally {
+        this.loading.set(false);
+      }
     }
   }
 

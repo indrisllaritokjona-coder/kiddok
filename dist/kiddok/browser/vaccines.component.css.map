@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["angular:styles/component:css;239657c732bfd36205d0b60d0c3c630c7c77adaaccb59693b759836aabe365d3;C:/Users/g_gus/Desktop/jona/kiddok/src/app/components/vaccines.component.ts"],
-  "sourcesContent": ["\n    :host { display: block; }\n  "],
-  "mappings": ";AACI;AAAQ,WAAS;AAAO;",
-  "names": []
-}

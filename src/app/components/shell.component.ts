@@ -20,11 +20,12 @@ import { FormsModule } from '@angular/forms';
 import { AddEditChildModalComponent } from '../features/child/add-edit-child-modal/add-edit-child-modal.component';
 import { SettingsPageComponent } from './settings/settings-page.component';
 import { AnalyticsComponent } from './analytics.component';
+import { OnboardingTourComponent } from './onboarding-tour.component';
 
 @Component({
     selector: 'app-shell',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, FormsModule, LucideAngularModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, MedicationsComponent, AppointmentsComponent, LabResultsComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent, AnalyticsComponent],
+    imports: [CommonModule, FormsModule, LucideAngularModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, MedicationsComponent, AppointmentsComponent, LabResultsComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent, AnalyticsComponent, OnboardingTourComponent],
     template: `
 
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
@@ -284,6 +285,9 @@ import { AnalyticsComponent } from './analytics.component';
           }
         </div>
       </main>
+
+      <!-- Onboarding Tour (Sprint 22) — shown once on first visit -->
+      <app-onboarding-tour />
 
       <!-- Bottom Nav (Mobile) -->
       <app-bottom-nav />

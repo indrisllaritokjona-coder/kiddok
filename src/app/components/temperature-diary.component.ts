@@ -5,11 +5,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService, TemperatureEntry } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
+import { TooltipDirective } from '../directives/tooltip.directive';
 import { NotificationService } from '../services/notification.service';
 
 @Component({
     selector: 'app-temperature-diary',
-    imports: [CommonModule, FormsModule, LucideAngularModule],
+    imports: [CommonModule, FormsModule, LucideAngularModule, TooltipDirective],
     template: `
     <div class="max-w-2xl mx-auto px-2">
 
@@ -54,6 +55,12 @@ import { NotificationService } from '../services/notification.service';
               @if (latestEntry()!.temperature >= 38.5) {
                 <span class="absolute -top-2 -right-2 w-5 h-5 bg-rose-500 rounded-full animate-pulse"></span>
               }
+              <!-- Sprint 22: Temperature severity tooltip -->
+              <button [appTooltip]="getTempSeverityKey(latestEntry()!.temperature)"
+                      tooltipPosition="top"
+                      class="absolute top-1 -right-2 w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 hover:bg-primary-100 text-slate-400 hover:text-primary-600 transition-all cursor-help">
+                <lucide-icon name="info" class="text-inherit" style="width:12px;height:12px"></lucide-icon>
+              </button>
             </div>
             <p class="text-slate-400 text-sm font-medium">
               {{ formatTime(latestEntry()!.measuredAt) }} &bull; {{ locationLabel(latestEntry()?.location) }}
@@ -428,6 +435,13 @@ export class TemperatureDiaryComponent implements OnInit, AfterViewInit, OnDestr
     if (temp >= 38.5) return 'bg-rose-500';
     if (temp >= 37.5) return 'bg-orange-400';
     return 'bg-teal-400';
+  }
+
+  /** Sprint 22: Returns the i18n tooltip key for a given temperature value */
+  getTempSeverityKey(temp: number): string {
+    if (temp >= 38.5) return 'tooltip.tempHigh';
+    if (temp >= 37.5) return 'tooltip.tempFever';
+    return 'tooltip.tempNormal';
   }
 
   // ── Chart ──────────────────────────────────────────────────────

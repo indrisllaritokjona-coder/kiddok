@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["angular:styles/component:css;4385ef1dc8cc12ed1686615b213fad8c83346fce382019d6497d1e32ac7c1cc9;C:/Users/g_gus/Desktop/jona/kiddok/src/app/components/home/recent-activity-feed.component.ts"],
-  "sourcesContent": ["\n    :host { display: block; }\n    @keyframes slideUp {\n      from { opacity: 0; transform: translateY(12px); }\n      to { opacity: 1; transform: translateY(0); }\n    }\n    .rotate-90 { transform: rotate(180deg); }\n  "],
-  "mappings": ";AACI;AAAQ,WAAS;AAAO;AACxB,WAAW;AACT;AAAO,aAAS;AAAG,eAAW,WAAW;AAAO;AAChD;AAAK,aAAS;AAAG,eAAW,WAAW;AAAI;AAC7C;AACA,CAAC;AAAY,aAAW,OAAO;AAAS;",
-  "names": []
-}

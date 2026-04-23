@@ -5,14 +5,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService, GrowthEntry } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
+import { TooltipDirective } from '../directives/tooltip.directive';
 
 @Component({
     selector: 'app-growth-tracking',
-    imports: [CommonModule, FormsModule, LucideAngularModule],
+    imports: [CommonModule, FormsModule, LucideAngularModule, TooltipDirective],
     template: `
     <div class="max-w-2xl mx-auto px-2">
 
-      <!-- Header -->
+      <!-- Header with percentile info tooltip (Sprint 22) -->
       <div class="flex items-center justify-between mb-6">
         <div>
           <h1 class="text-3xl font-extrabold text-gray-800">{{ i18n.t()['growth.title'] }}</h1>
@@ -22,6 +23,12 @@ import { I18nService } from '../core/i18n/i18n.service';
             </p>
           }
         </div>
+        <!-- Percentile info tooltip -->
+        <button [appTooltip]="'tooltip.percentile'"
+                tooltipPosition="bottom"
+                class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-primary-100 flex items-center justify-center text-slate-400 hover:text-primary-600 transition-all cursor-help flex-shrink-0">
+          <lucide-icon name="info" class="text-inherit"></lucide-icon>
+        </button>
       </div>
 
       <!-- Latest Stats Cards -->

@@ -517,6 +517,30 @@ const translations = {
   'settings.theme.size.small': { sq: 'I vogël', en: 'Small' },
   'settings.theme.size.medium': { sq: 'Mesatar', en: 'Medium' },
   'settings.theme.size.large': { sq: 'I madh', en: 'Large' },
+  // Onboarding Tour (Sprint 22)
+  'tour.welcome.title': { sq: 'Mirësevini në KidDok!', en: 'Welcome to KidDok!' },
+  'tour.welcome.body': { sq: 'KidDok është companioni juaj digjital për shëndetin e fëmijëve. Monitoroni temperatura, rritjen, vaksinat dhe më shumë — gjithçka në një vend.', en: 'KidDok is your digital health companion for your children. Track temperatures, growth, vaccines and more — all in one place.' },
+  'tour.child.title': { sq: 'Shtoni Profilet e Fëmijëve', en: 'Add Your Children' },
+  'tour.child.body': { sq: 'Shtoni profilet e fëmijëve tuaj për të filluar. Për çdo fëmijë mund të regjistroni temperatura, matje rritjeje dhe vaksina.', en: 'Add profiles for your children to get started. For each child you can track temperatures, growth measurements, and vaccines.' },
+  'tour.temperature.title': { sq: 'Ditari i Temperaturës', en: 'Temperature Diary' },
+  'tour.temperature.body': { sq: 'Regjistroni temperatura me lexim automatik kohe. Kur temperatura arrin ≥38.5°C, do të merrni njoftim të menjëhershëm.', en: 'Log temperatures with automatic time tracking. When temperature reaches ≥38.5°C you will receive an immediate notification.' },
+  'tour.growth.title': { sq: 'Ndjekja e Rritjes', en: 'Growth Tracking' },
+  'tour.growth.body': { sq: 'Regjistroni gjatësinë dhe peshën e fëmijës tuaj me grafikë interaktive që tregon tendencat e rritjes me kalimin e kohës.', en: 'Log your child\'s height and weight with interactive charts that show growth trends over time.' },
+  'tour.vaccines.title': { sq: 'Planet e Vaksinave', en: 'Vaccine Schedules' },
+  'tour.vaccines.body': { sq: 'Ndjekni kalendarin zyrtar të vaksinave të Shqipërisë. Merrni njoftime kur vaksina është e vonuar ose e ardhshme.', en: 'Track Albania\'s official vaccination schedule. Get alerts when a vaccine is overdue or coming up soon.' },
+  'tour.settings.title': { sq: 'Konfigurimet', en: 'Settings' },
+  'tour.settings.body': { sq: 'Menaxhoni profilet e fëmijëve, ndryshoni gjuhën, eksportoni të dhëna dhe personalizoni aplikacionin sipas nevojave tuaja.', en: 'Manage child profiles, switch languages, export data, and customize the app to your needs.' },
+  'tour.next': { sq: 'Vazhdo', en: 'Next' },
+  'tour.finish': { sq: 'Filloje !', en: 'Get Started!' },
+  'tour.skip': { sq: 'Mos e trego më', en: "Don't show again" },
+  // Tooltips (Sprint 22)
+  'tooltip.tempNormal': { sq: 'Temperatura normale (< 37.5°C)', en: 'Normal temperature (< 37.5°C)' },
+  'tooltip.tempFever': { sq: 'Temperatura e lartë (≥ 37.5°C) — kontaktoni mjekun nëse vazhdon', en: 'Fever (≥ 37.5°C) — contact doctor if persistent' },
+  'tooltip.tempHigh': { sq: 'Temperatura shumë e lartë (≥ 38.5°C) — kërkoni ndihmë mjekësore', en: 'High fever (≥ 38.5°C) — seek medical attention' },
+  'tooltip.vaccineCompleted': { sq: 'Vaksina është bërë me sukses', en: 'Vaccine completed successfully' },
+  'tooltip.vaccineOverdue': { sq: 'Vaksina është e vonuar — contactoni mjekun', en: 'Vaccine is overdue — contact your doctor' },
+  'tooltip.vaccineUpcoming': { sq: 'Vaksina është planifikuar së shpejti', en: 'Vaccine is scheduled coming up' },
+  'tooltip.percentile': { sq: 'Përqindja në grafikun e rritjes së OMS — tregon krahasimin me fëmijët e tjerë të moshës së njëjtë', en: 'Percentile on WHO growth chart — shows comparison with other children the same age' },
 } as const;
 
 type TranslationKey = keyof RawTranslations;

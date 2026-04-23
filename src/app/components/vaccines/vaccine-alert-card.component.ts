@@ -1,8 +1,9 @@
-﻿import { Component, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core'
+import { Component, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core'
 import { LucideAngularModule } from 'lucide-angular';
 
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { TooltipDirective } from '../../directives/tooltip.directive';
 
 export interface VaccineAlert {
   id: string;
@@ -15,7 +16,7 @@ export interface VaccineAlert {
 
 @Component({
   selector: 'app-vaccine-alert-card',
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, TooltipDirective],
   template: `
     <div class="relative overflow-hidden rounded-2xl border transition-all duration-200"
       [ngClass]="cardClasses()"
@@ -43,10 +44,15 @@ export interface VaccineAlert {
           </div>
         </div>
 
-        <!-- Icon -->
-        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+        <!-- Icon with vaccine status tooltip (Sprint 22) -->
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 relative"
           [ngClass]="iconBgClass()">
           <lucide-icon name="syringe" [ngClass]="iconColorClass()"></lucide-icon>
+          <button [appTooltip]="vaccineTooltipKey()"
+                  tooltipPosition="top"
+                  class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-primary-600 cursor-help">
+            <lucide-icon name="info" class="text-inherit" style="width:8px;height:8px"></lucide-icon>
+          </button>
         </div>
 
         <!-- Text -->
@@ -169,6 +175,15 @@ export class VaccineAlertCardComponent {
       return this.t()['vaccines.alertCard.dueSoon'] || 'due today';
     }
     return this.t()['vaccines.alertCard.upcoming'] || 'upcoming';
+  });
+
+  /** Sprint 22: Returns the i18n tooltip key for vaccine status */
+  vaccineTooltipKey = computed(() => {
+    switch (this.alert.status) {
+      case 'overdue': return 'tooltip.vaccineOverdue';
+      case 'due':     return 'tooltip.vaccineOverdue';
+      case 'upcoming': return 'tooltip.vaccineUpcoming';
+    }
   });
 
   // Touch handlers for swipe-to-dismiss

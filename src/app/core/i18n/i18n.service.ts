@@ -695,6 +695,25 @@ const translations = {
   'success.saved': { sq: 'U ruajt me sukses!', en: 'Saved successfully!' },
   'success.deleted': { sq: 'U fshi me sukses!', en: 'Deleted successfully!' },
   'success.exported': { sq: 'Eksportimi u përfundua!', en: 'Export complete!' },
+  // Sprint 8: New i18n keys for UI polish + accessibility
+  'child.saveSuccess': { sq: 'Ndryshimet u ruajtën!', en: 'Changes saved!' },
+  'child.saving': { sq: 'Duke ruajtur...', en: 'Saving...' },
+  'child.deleteConfirmTitle': { sq: 'Fshi profilin e fëmijës?', en: 'Delete child profile?' },
+  'child.deleteConfirmBody': { sq: 'Ky veprim nuk mund të kthehet. Të gjitha të dhënat do të fshihen përgjithmonë.', en: 'This action cannot be undone. All data will be permanently deleted.' },
+  'child.delete': { sq: 'Fshi', en: 'Delete' },
+  'child.activeBadge': { sq: 'Aktiv', en: 'Active' },
+  'validation.nameLettersOnly': { sq: 'Emri mund të përmbajë vetëm shkronja.', en: 'Name can only contain letters.' },
+  'nav.menu': { sq: 'Meny', en: 'Menu' },
+  'sync.pending': { sq: 'Duke pritur sinkronizim', en: 'Pending sync' },
+  'offline.onlineSyncing': { sq: 'Jeni online! Duke sinkronizuar të dhënat...', en: 'You\'re online! Syncing data...' },
+  'offline.offline': { sq: 'Jeni offline. Të dhënat do të ruhen lokalisht.', en: 'You\'re offline. Data will be saved locally.' },
+  'error.generic': { sq: 'Ndodhi një gabim, provoni përsëri.', en: 'An error occurred, please try again.' },
+  'error.exportFailed': { sq: 'Eksportimi dështoi. Provoni përsëri.', en: 'Export failed. Please try again.' },
+  'diary.addFirst': { sq: 'Shto Shënimin', en: 'Add Entry' },
+  'childForm.gender.male': { sq: 'Mashkull', en: 'Male' },
+  'childForm.gender.female': { sq: 'Fëmër', en: 'Female' },
+  'sidebar.footer.settings': { sq: 'Konfigurime', en: 'Settings' },
+  'sidebar.footer.logout': { sq: 'Dil nga Sistemi', en: 'Sign Out' },
 } as const;
 
 type TranslationKey = keyof RawTranslations;

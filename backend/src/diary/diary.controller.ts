@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request }
 import { AuthGuard } from '@nestjs/passport';
 import { DiaryService } from './diary.service';
 import { CreateDiaryEntryDto } from './dto/create-diary-entry.dto';
+import { UpdateDiaryEntryDto } from './dto/update-diary-entry.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('diary')
@@ -19,7 +20,7 @@ export class DiaryController {
   }
 
   @Patch(':id')
-  update(@Request() req, @Param('id') id: string, @Body() dto: any) {
+  update(@Request() req, @Param('id') id: string, @Body() dto: UpdateDiaryEntryDto) {
     return this.diaryService.update(id, req.user.userId, dto);
   }
 

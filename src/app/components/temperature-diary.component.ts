@@ -26,6 +26,37 @@ import { NotificationService } from '../services/notification.service';
         </div>
       </div>
 
+      <!-- Sprint 8: Loading Skeleton -->
+      @if (loading()) {
+        <div class="px-4 space-y-4">
+          <!-- Chart card skeleton -->
+          <div class="bg-white rounded-[2rem] shadow-md border border-slate-100 p-8 animate-pulse">
+            <div class="flex flex-col items-center">
+              <div class="w-32 h-16 bg-gray-200 rounded mb-4"></div>
+              <div class="w-24 h-6 bg-gray-200 rounded mb-2"></div>
+            </div>
+          </div>
+          <!-- Week grid skeleton -->
+          <div class="bg-white rounded-[2rem] shadow-md border border-slate-100 p-6 animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
+            <div class="grid grid-cols-5 gap-2">
+              @for (i of [1,2,3,4,5]; track i) {
+                <div class="h-10 bg-gray-200 rounded-2xl"></div>
+              }
+            </div>
+          </div>
+          <!-- List skeleton -->
+          <div class="bg-white rounded-[2rem] shadow-md border border-slate-100 p-6 animate-pulse">
+            @for (i of [1,2,3]; track i) {
+              <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                <div class="w-20 h-4 bg-gray-200 rounded"></div>
+                <div class="w-16 h-4 bg-gray-200 rounded"></div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
       <!-- High Temperature Alert Banner -->
       @if (latestEntry() && latestEntry()!.temperature > 38.5) {
         <div class="mb-6 p-5 bg-rose-50 border-2 border-rose-200 rounded-3xl flex items-center gap-4 animate-slide-up shadow-sm">
@@ -201,7 +232,11 @@ import { NotificationService } from '../services/notification.service';
               <lucide-icon name="thermometer" class="text-inherit"></lucide-icon>
             </div>
             <p class="text-slate-400 font-medium mb-3">{{ i18n.t()['temperature.noReadings'] }}</p>
-            <p class="text-primary-600 font-bold text-sm">{{ i18n.t()['temperature.addFirst'] }}</p>
+            <button (click)="formTemp.set(null)"
+              class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-sm transition-all text-sm inline-flex items-center gap-2">
+              <lucide-icon name="plus" class="text-inherit"></lucide-icon>
+              {{ i18n.t()['temperature.addFirst'] }}
+            </button>
           </div>
         } @else {
           <div class="px-6 pb-6 space-y-3">
@@ -260,6 +295,9 @@ export class TemperatureDiaryComponent implements OnInit, AfterViewInit, OnDestr
     { value: 'axillary', label: () => this.i18n.t()['temperature.location.axillary'] },
     { value: 'rectal', label: () => this.i18n.t()['temperature.location.rectal'] },
   ];
+
+  // Sprint 8: Loading state
+  loading = signal(false);
 
   // Form state
   formTemp = signal<number | null>(null);

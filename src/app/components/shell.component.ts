@@ -47,7 +47,7 @@ import { ExportModalComponent } from './export-modal/export-modal.component';
         <!-- Live region for dynamic announcements -->
         <div aria-live="polite" aria-atomic="true" class="sr-only">
           @if (saveSuccess()) {
-            <span>{{ i18n.isSq() ? 'Ndryshimet u ruajtën!' : 'Changes saved!' }}</span>
+            <span>{{ i18n.t()['child.saveSuccess'] }}</span>
           }
         </div>
 
@@ -195,8 +195,8 @@ import { ExportModalComponent } from './export-modal/export-modal.component';
                     <select [(ngModel)]="newChildGender"
                             class="w-full px-5 py-4.5 rounded-2xl bg-white border-2 border-slate-200 transition-all text-lg shadow-sm appearance-none focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500">
                       <option value="">--</option>
-                      <option value="M">{{ i18n.isSq() ? 'Mashkull' : 'Male' }}</option>
-                      <option value="F">{{ i18n.isSq() ? 'Femer' : 'Female' }}</option>
+                      <option value="M">{{ i18n.t()['childForm.gender.male'] }}</option>
+                      <option value="F">{{ i18n.t()['childForm.gender.female'] }}</option>
                     </select>
                     <lucide-icon name="chevron-down" class="text-inherit"></lucide-icon>
                   </div>
@@ -410,8 +410,8 @@ import { ExportModalComponent } from './export-modal/export-modal.component';
                     <select [(ngModel)]="editGender"
                             class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-200 transition-all text-lg shadow-sm appearance-none focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500">
                       <option value="">--</option>
-                      <option value="M">{{ i18n.isSq() ? 'Mashkull' : 'Male' }}</option>
-                      <option value="F">{{ i18n.isSq() ? 'Femer' : 'Female' }}</option>
+                      <option value="M">{{ i18n.t()['childForm.gender.male'] }}</option>
+                      <option value="F">{{ i18n.t()['childForm.gender.female'] }}</option>
                     </select>
                     <lucide-icon name="chevron-down" class="text-inherit"></lucide-icon>
                   </div>
@@ -482,7 +482,7 @@ import { ExportModalComponent } from './export-modal/export-modal.component';
                   @if (saveSuccess()) {
                     <div class="flex items-center gap-2 p-3 bg-teal-50 border border-teal-200 rounded-xl text-teal-700 text-sm font-medium animate-fade-in">
                       <lucide-icon name="check-circle" class="text-inherit"></lucide-icon>
-                      {{ i18n.isSq() ? 'Ndryshimet u ruajtën!' : 'Changes saved!' }}
+                      {{ i18n.t()['child.saveSuccess'] }}
                     </div>
                   }
                   <button type="button" (click)="saveEditChild()"
@@ -490,7 +490,7 @@ import { ExportModalComponent } from './export-modal/export-modal.component';
                           [disabled]="editNameInvalid() || saving()">
                     @if (saving()) {
                       <lucide-icon name="loader" class="text-inherit" aria-hidden="true"></lucide-icon>
-                      <span>{{ i18n.isSq() ? 'Duke ruajtur...' : 'Saving...' }}</span>
+                      <span>{{ i18n.t()['child.saving'] }}</span>
                     } @else {
                       <lucide-icon name="save" class="text-inherit" aria-hidden="true"></lucide-icon>
                       {{ i18n.t()['sidebar.saveChanges'] }}
@@ -510,20 +510,20 @@ import { ExportModalComponent } from './export-modal/export-modal.component';
                         <lucide-icon name="alert-triangle" class="text-inherit"></lucide-icon>
                       </div>
                       <div>
-                        <p class="font-bold text-gray-800 text-base">{{ i18n.isSq() ? 'Fshi profilin e fëmijës?' : 'Delete child profile?' }}</p>
+                        <p class="font-bold text-gray-800 text-base">{{ i18n.t()['child.deleteConfirmTitle'] }}</p>
                         <p class="text-sm text-gray-500">{{ editingChild()?.name }}</p>
                       </div>
                     </div>
-                    <p class="text-sm text-gray-600 mb-5">{{ i18n.isSq() ? 'Ky veprim nuk mund të kthehet. Të gjitha të dhënat do të fshihen përgjithmonë.' : 'This action cannot be undone. All data will be permanently deleted.' }}</p>
+                    <p class="text-sm text-gray-600 mb-5">{{ i18n.t()['child.deleteConfirmBody'] }}</p>
                     <div class="flex gap-3">
                       <button type="button" (click)="showDeleteConfirm.set(false)"
                               class="flex-1 py-3 rounded-xl border-2 border-slate-200 text-gray-600 font-bold hover:bg-slate-100 transition-all text-sm">
-                        {{ i18n.isSq() ? 'Anulo' : 'Cancel' }}
+                        {{ i18n.t()['child.cancel'] }}
                       </button>
                       <button type="button" (click)="confirmDeleteChild()"
                               class="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-500 to-red-400 text-white font-bold hover:from-red-400 hover:to-red-300 transition-all text-sm shadow-sm flex items-center justify-center gap-2">
                         <lucide-icon name="trash" class="text-inherit" aria-hidden="true"></lucide-icon>
-                        {{ i18n.isSq() ? 'Fshi' : 'Delete' }}
+                        {{ i18n.t()['child.delete'] }}
                       </button>
                     </div>
                   </div>

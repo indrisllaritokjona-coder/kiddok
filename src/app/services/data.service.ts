@@ -177,19 +177,43 @@ export class DataService {
 
   /** POST /diary-entries → merge response into signal */
   async addDiaryEntry(entry: Omit<DiaryEntry, 'id'>): Promise<DiaryEntry | null> {
+    if (!navigator.onLine) {
+      await this.offline.addToSyncQueue({
+        action: 'create',
+        entity: 'diary',
+        endpoint: '/diary-entries',
+        method: 'POST',
+        body: entry,
+      });
+      const localEntry: DiaryEntry = { ...entry, id: 'local_' + Date.now() };
+      this.diaryEntries.update(current => [localEntry, ...current]);
+      this.saveDiaryLocally(entry.childId, this.diaryEntries());
+      this.toast.showKey('offline.queued');
+      return localEntry;
+    }
+
     try {
       const created = await firstValueFrom(
         this.http.post<DiaryEntry>(`${this.API_URL}/diary-entries`, entry, this.getHeaders())
       );
       const updated = [created, ...this.diaryEntries()];
       this.diaryEntries.set(updated);
-      // Also persist to localStorage for offline
       this.saveDiaryLocally(entry.childId, updated);
       return created;
     } catch (err: any) {
       console.error('[DataService] addDiaryEntry failed:', err);
-      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
-      return null;
+      await this.offline.addToSyncQueue({
+        action: 'create',
+        entity: 'diary',
+        endpoint: '/diary-entries',
+        method: 'POST',
+        body: entry,
+      });
+      const localEntry: DiaryEntry = { ...entry, id: 'local_' + Date.now() };
+      this.diaryEntries.update(current => [localEntry, ...current]);
+      this.saveDiaryLocally(entry.childId, this.diaryEntries());
+      this.toast.showKey('offline.queued');
+      return localEntry;
     }
   }
 
@@ -212,31 +236,83 @@ export class DataService {
 
   /** PATCH /diary-entries/:id */
   async updateDiaryEntry(id: string, data: Partial<DiaryEntry>): Promise<DiaryEntry | null> {
+    // Optimistic update
+    const current = this.diaryEntries();
+    const existing = current.find(e => e.id === id);
+    const updatedEntry: DiaryEntry = existing ? { ...existing, ...data } : null as any;
+    if (updatedEntry) {
+      this.diaryEntries.set(current.map(e => e.id === id ? updatedEntry : e));
+    }
+
+    if (!navigator.onLine) {
+      await this.offline.addToSyncQueue({
+        action: 'update',
+        entity: 'diary',
+        endpoint: `/diary-entries/${id}`,
+        method: 'PATCH',
+        body: data,
+      });
+      if (existing) this.saveDiaryLocally(existing.childId, this.diaryEntries());
+      this.toast.showKey('offline.queued');
+      return updatedEntry;
+    }
+
     try {
       const updated = await firstValueFrom(
         this.http.patch<DiaryEntry>(`${this.API_URL}/diary-entries/${id}`, data, this.getHeaders())
       );
       const list = this.diaryEntries().map(e => e.id === id ? updated : e);
       this.diaryEntries.set(list);
+      if (existing) this.saveDiaryLocally(existing.childId, list);
       return updated;
     } catch (err: any) {
       console.error('[DataService] updateDiaryEntry failed:', err);
-      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
-      return null;
+      this.toast.showKey('error.api.generic');
+      await this.offline.addToSyncQueue({
+        action: 'update',
+        entity: 'diary',
+        endpoint: `/diary-entries/${id}`,
+        method: 'PATCH',
+        body: data,
+      });
+      if (existing) this.saveDiaryLocally(existing.childId, this.diaryEntries());
+      return updatedEntry;
     }
   }
 
   /** DELETE /diary-entries/:id */
   async deleteDiaryEntry(id: string): Promise<void> {
+    const existing = this.diaryEntries().find(e => e.id === id);
+    const list = this.diaryEntries().filter(e => e.id !== id);
+    this.diaryEntries.set(list);
+    if (existing) this.saveDiaryLocally(existing.childId, list);
+
+    if (!navigator.onLine) {
+      await this.offline.addToSyncQueue({
+        action: 'delete',
+        entity: 'diary',
+        endpoint: `/diary-entries/${id}`,
+        method: 'DELETE',
+        body: { id },
+      });
+      this.toast.showKey('offline.queued');
+      return;
+    }
+
     try {
       await firstValueFrom(
         this.http.delete<void>(`${this.API_URL}/diary-entries/${id}`, this.getHeaders())
       );
-      const list = this.diaryEntries().filter(e => e.id !== id);
-      this.diaryEntries.set(list);
     } catch (err: any) {
       console.error('[DataService] deleteDiaryEntry failed:', err);
-      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+      this.toast.showKey('error.api.generic');
+      await this.offline.addToSyncQueue({
+        action: 'delete',
+        entity: 'diary',
+        endpoint: `/diary-entries/${id}`,
+        method: 'DELETE',
+        body: { id },
+      });
     }
   }
 
@@ -346,6 +422,35 @@ export class DataService {
       medicalNotes: data.medicalNotes ?? null,
     };
 
+    const localProfile: ChildProfile = {
+      id: 'local_' + Date.now(),
+      userId: 'local',
+      name: data.name ?? '',
+      dateOfBirth: data.dateOfBirth ?? '',
+      avatarSeed,
+      gender: data.gender ?? undefined,
+      bloodType: data.bloodType ?? undefined,
+      birthWeight: data.birthWeight ?? undefined,
+      deliveryDoctor: data.deliveryDoctor ?? undefined,
+      criticalAllergies: data.criticalAllergies ?? undefined,
+      avatarUrl: this.getAvatarUrl({ name: data.name ?? '', avatarSeed } as ChildProfile),
+    };
+
+    if (!navigator.onLine) {
+      await this.offline.addToSyncQueue({
+        action: 'create',
+        entity: 'diary', // children use a different entity, but SyncQueueEntry expects one of the 4 types
+        endpoint: '/children',
+        method: 'POST',
+        body: payload,
+      });
+      const updated = [...this.children(), localProfile];
+      this.children.set(updated);
+      this.saveToStorage(this.CHILDREN_KEY, updated);
+      this.toast.showKey('offline.queued');
+      return localProfile;
+    }
+
     try {
       const created = await firstValueFrom(
         this.http.post<any>(`${this.API_URL}/children`, payload, this.getHeaders())
@@ -371,8 +476,12 @@ export class DataService {
       return profile;
     } catch (err: any) {
       console.error('[DataService] createChild failed:', err);
-      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
-      throw err;
+      this.toast.showKey('error.api.createChild');
+      // Fallback: save locally with local ID
+      const updated = [...this.children(), localProfile];
+      this.children.set(updated);
+      this.saveToStorage(this.CHILDREN_KEY, updated);
+      return localProfile;
     }
   }
 
@@ -395,6 +504,26 @@ export class DataService {
     }
     if (data.documentIssueDate !== undefined) {
       payload.documentIssueDate = data.documentIssueDate ? new Date(data.documentIssueDate) : null;
+    }
+
+    // Optimistic local update
+    const existing = this.children().find(c => c.id === id);
+    const optimistic: ChildProfile = existing ? { ...existing, ...data } : null as any;
+    if (optimistic) {
+      this.children.set(this.children().map(c => c.id === id ? optimistic : c));
+      this.saveToStorage(this.CHILDREN_KEY, this.children());
+    }
+
+    if (!navigator.onLine) {
+      await this.offline.addToSyncQueue({
+        action: 'update',
+        entity: 'diary',
+        endpoint: `/children/${id}`,
+        method: 'PATCH',
+        body: payload,
+      });
+      this.toast.showKey('offline.queued');
+      return optimistic;
     }
 
     try {
@@ -426,25 +555,51 @@ export class DataService {
       return profile;
     } catch (err: any) {
       console.error('[DataService] updateChildApi failed:', err);
-      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
-      throw err;
+      this.toast.showKey('error.api.updateChild');
+      await this.offline.addToSyncQueue({
+        action: 'update',
+        entity: 'diary',
+        endpoint: `/children/${id}`,
+        method: 'PATCH',
+        body: payload,
+      });
+      return optimistic;
     }
   }
 
   /** Delete a child via DELETE /children/:id */
   async deleteChildApi(id: string): Promise<void> {
+    const updated = this.children().filter(c => c.id !== id);
+    this.children.set(updated);
+    this.saveToStorage(this.CHILDREN_KEY, updated);
+
+    if (!navigator.onLine) {
+      await this.offline.addToSyncQueue({
+        action: 'delete',
+        entity: 'diary',
+        endpoint: `/children/${id}`,
+        method: 'DELETE',
+        body: { id },
+      });
+      this.toast.showKey('offline.queued');
+      return;
+    }
+
     try {
       await firstValueFrom(
         this.http.delete<void>(`${this.API_URL}/children/${id}`, this.getHeaders())
       );
     } catch (err: any) {
       console.error('[DataService] deleteChildApi failed:', err);
-      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
-      throw err;
+      this.toast.showKey('error.api.deleteChild');
+      await this.offline.addToSyncQueue({
+        action: 'delete',
+        entity: 'diary',
+        endpoint: `/children/${id}`,
+        method: 'DELETE',
+        body: { id },
+      });
     }
-    const updated = this.children().filter(c => c.id !== id);
-    this.children.set(updated);
-    this.saveToStorage(this.CHILDREN_KEY, updated);
   }
 
   async loadTemperatureEntries(childId: string): Promise<TemperatureEntry[]> {
@@ -670,6 +825,105 @@ export class DataService {
     } catch { return []; }
   }
 
+  async createVaccineRecord(data: Omit<VaccineRecord, 'id'>): Promise<VaccineRecord | null> {
+    if (!navigator.onLine) {
+      await this.offline.addToSyncQueue({
+        action: 'create',
+        entity: 'vaccine',
+        endpoint: '/vaccines',
+        method: 'POST',
+        body: data,
+      });
+      const localEntry: VaccineRecord = { ...data, id: 'local_' + Date.now() };
+      this.vaccineRecords.update(current => [localEntry, ...current]);
+      this.toast.showKey('offline.queued');
+      return localEntry;
+    }
+    try {
+      const created = await firstValueFrom(
+        this.http.post<VaccineRecord>(`${this.API_URL}/vaccines`, data, this.getHeaders())
+      );
+      this.vaccineRecords.update(current => [created, ...current]);
+      return created;
+    } catch (err: any) {
+      console.error('[DataService] createVaccineRecord failed:', err);
+      this.toast.showKey('error.api.createVaccine');
+      throw err;
+    }
+  }
+
+  async updateVaccineRecord(id: string, data: Partial<VaccineRecord>): Promise<VaccineRecord | null> {
+    const existing = this.vaccineRecords().find(v => v.id === id);
+    const optimistic: VaccineRecord = existing ? { ...existing, ...data } : null as any;
+    if (optimistic) {
+      this.vaccineRecords.set(this.vaccineRecords().map(v => v.id === id ? optimistic : v));
+    }
+
+    if (!navigator.onLine) {
+      await this.offline.addToSyncQueue({
+        action: 'update',
+        entity: 'vaccine',
+        endpoint: `/vaccines/${id}`,
+        method: 'PATCH',
+        body: data,
+      });
+      this.toast.showKey('offline.queued');
+      return optimistic;
+    }
+
+    try {
+      const updated = await firstValueFrom(
+        this.http.patch<VaccineRecord>(`${this.API_URL}/vaccines/${id}`, data, this.getHeaders())
+      );
+      this.vaccineRecords.set(this.vaccineRecords().map(v => v.id === id ? updated : v));
+      return updated;
+    } catch (err: any) {
+      console.error('[DataService] updateVaccineRecord failed:', err);
+      this.toast.showKey('error.api.generic');
+      await this.offline.addToSyncQueue({
+        action: 'update',
+        entity: 'vaccine',
+        endpoint: `/vaccines/${id}`,
+        method: 'PATCH',
+        body: data,
+      });
+      return optimistic;
+    }
+  }
+
+  async deleteVaccineRecord(id: string): Promise<void> {
+    const updated = this.vaccineRecords().filter(v => v.id !== id);
+    this.vaccineRecords.set(updated);
+
+    if (!navigator.onLine) {
+      await this.offline.addToSyncQueue({
+        action: 'delete',
+        entity: 'vaccine',
+        endpoint: `/vaccines/${id}`,
+        method: 'DELETE',
+        body: { id },
+      });
+      this.toast.showKey('offline.queued');
+      return;
+    }
+
+    try {
+      await firstValueFrom(
+        this.http.delete<void>(`${this.API_URL}/vaccines/${id}`, this.getHeaders())
+      );
+    } catch (err: any) {
+      console.error('[DataService] deleteVaccineRecord failed:', err);
+      this.toast.showKey('error.api.deleteVaccine');
+      await this.offline.addToSyncQueue({
+        action: 'delete',
+        entity: 'vaccine',
+        endpoint: `/vaccines/${id}`,
+        method: 'DELETE',
+        body: { id },
+      });
+    }
+  }
+
   async exportChildCsv(childId: string): Promise<void> {
     try {
       const response = await firstValueFrom(
@@ -726,6 +980,19 @@ export class DataService {
   }
 
   async createGrowthEntry(data: { childId: string; height?: number | null; weight?: number | null; measuredAt: string; notes?: string }): Promise<GrowthEntry | null> {
+    if (!navigator.onLine) {
+      await this.offline.addToSyncQueue({
+        action: 'create',
+        entity: 'growth',
+        endpoint: '/growth-entries',
+        method: 'POST',
+        body: data,
+      });
+      const localEntry: GrowthEntry = { ...data, id: 'local_' + Date.now(), createdAt: new Date().toISOString() };
+      this.growthEntries.update(current => [localEntry, ...current]);
+      this.toast.showKey('offline.queued');
+      return localEntry;
+    }
     try {
       const created = await firstValueFrom(
         this.http.post<GrowthEntry>(`${this.API_URL}/growth-entries`, data, this.getHeaders())
@@ -735,21 +1002,50 @@ export class DataService {
       return created;
     } catch (err: any) {
       console.error('[DataService] createGrowthEntry failed:', err);
-      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
-      return null;
+      await this.offline.addToSyncQueue({
+        action: 'create',
+        entity: 'growth',
+        endpoint: '/growth-entries',
+        method: 'POST',
+        body: data,
+      });
+      const localEntry: GrowthEntry = { ...data, id: 'local_' + Date.now(), createdAt: new Date().toISOString() };
+      this.growthEntries.update(current => [localEntry, ...current]);
+      this.toast.showKey('offline.queued');
+      return localEntry;
     }
   }
 
   async deleteGrowthEntry(id: string): Promise<void> {
+    const updated = this.growthEntries().filter(e => e.id !== id);
+    this.growthEntries.set(updated);
+
+    if (!navigator.onLine) {
+      await this.offline.addToSyncQueue({
+        action: 'delete',
+        entity: 'growth',
+        endpoint: `/growth-entries/${id}`,
+        method: 'DELETE',
+        body: { id },
+      });
+      this.toast.showKey('offline.queued');
+      return;
+    }
+
     try {
       await firstValueFrom(
         this.http.delete<void>(`${this.API_URL}/growth-entries/${id}`, this.getHeaders())
       );
-      const updated = this.growthEntries().filter(e => e.id !== id);
-      this.growthEntries.set(updated);
     } catch (err: any) {
       console.error('[DataService] deleteGrowthEntry failed:', err);
-      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+      this.toast.showKey('error.api.deleteGrowth');
+      await this.offline.addToSyncQueue({
+        action: 'delete',
+        entity: 'growth',
+        endpoint: `/growth-entries/${id}`,
+        method: 'DELETE',
+        body: { id },
+      });
     }
   }
 
@@ -974,6 +1270,21 @@ export class DataService {
 
   async updateParentProfile(data: Partial<ParentProfile>): Promise<ParentProfile> {
     const updated = { ...this.parentProfile(), ...data };
+    this.parentProfile.set(updated);
+    this.saveToStorage(this.PARENT_KEY, updated);
+
+    if (!navigator.onLine) {
+      await this.offline.addToSyncQueue({
+        action: 'update',
+        entity: 'diary',
+        endpoint: '/parent',
+        method: 'PATCH',
+        body: data,
+      });
+      this.toast.showKey('offline.queued');
+      return updated;
+    }
+
     try {
       const result = await firstValueFrom(
         this.http.patch<ParentProfile>(`${this.API_URL}/parent`, data, this.getHeaders())
@@ -983,10 +1294,14 @@ export class DataService {
       return result;
     } catch (err: any) {
       console.error('[DataService] updateParentProfile failed:', err);
-      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
-      // Offline fallback — still persist locally
-      this.parentProfile.set(updated);
-      this.saveToStorage(this.PARENT_KEY, updated);
+      this.toast.showKey('error.api.updateParent');
+      await this.offline.addToSyncQueue({
+        action: 'update',
+        entity: 'diary',
+        endpoint: '/parent',
+        method: 'PATCH',
+        body: data,
+      });
       return updated;
     }
   }

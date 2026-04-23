@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request }
 import { AuthGuard } from '@nestjs/passport';
 import { IllnessesService } from './illnesses.service';
 import { CreateIllnessDto } from './dto/create-illness.dto';
+import { UpdateIllnessDto } from './dto/update-illness.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('illnesses')
@@ -19,7 +20,7 @@ export class IllnessesController {
   }
 
   @Patch(':id')
-  update(@Request() req, @Param('id') id: string, @Body() dto: any) {
+  update(@Request() req, @Param('id') id: string, @Body() dto: UpdateIllnessDto) {
     return this.illnessesService.update(id, req.user.userId, dto);
   }
 

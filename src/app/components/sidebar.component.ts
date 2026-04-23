@@ -60,11 +60,11 @@ interface NavItem {
 
       <!-- Footer -->
       <div class="sidebar__footer">
-        <button type="button" class="sidebar__footer-item" (click)="navigateTo('settings')">
+        <button type="button" class="sidebar__footer-item" (click)="navigateTo('settings')" [attr.aria-label]="t()['sidebar.footer.settings']">
           <lucide-icon name="settings" class="sidebar__nav-icon" aria-hidden="true"></lucide-icon>
           <span>{{ t()['sidebar.footer.settings'] }}</span>
         </button>
-        <button type="button" class="sidebar__footer-item sidebar__footer-item--logout" (click)="logout()">
+        <button type="button" class="sidebar__footer-item sidebar__footer-item--logout" (click)="logout()" [attr.aria-label]="t()['sidebar.footer.logout']">
           <lucide-icon name="LogOut" class="sidebar__nav-icon" aria-hidden="true"></lucide-icon>
           <span>{{ t()['sidebar.footer.logout'] }}</span>
         </button>

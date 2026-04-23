@@ -403,18 +403,20 @@ export class OfflineService {
       const result = await (await this.getSyncServiceAsync()).triggerFullSync(syncEntries);
 
       if (result.success || result.conflicts.length > 0) {
-        // Clear processed entries from queue
+        const conflictEntityIds = new Set(result.conflicts.map(c => c.entityId));
+
+        // Only delete successfully synced entries from queue — keep conflicts for manual review
         const deleteTx = db.transaction(STORE_SYNC_QUEUE, 'readwrite');
         const deleteStore = deleteTx.objectStore(STORE_SYNC_QUEUE);
         for (const entry of entries) {
-          if (entry.id !== undefined) deleteStore.delete(entry.id);
+          // Don't delete: failed entries (will retry) or conflict entries (need manual resolution)
+          const bodyId = entry.body?.id;
+          if (entry.id !== undefined && !conflictEntityIds.has(bodyId) && result.failedCount === 0) {
+            deleteStore.delete(entry.id);
+          }
         }
 
         if (result.conflicts.length > 0) {
-          // Re-queue failed entries for later resolution
-          // (medical data conflicts are returned, not auto-resolved)
-          const conflictIds = new Set(result.conflicts.map(c => c.entityId));
-          // Re-add non-conflicting failed entries back to queue
           this.toast.show(
             this.isSq()
               ? `${result.conflicts.length} konflikt u.detektua — rishikoni manualisht`
@@ -423,8 +425,8 @@ export class OfflineService {
           );
         }
 
-        const remaining = result.failedCount;
-        this.hasPendingSync.set(remaining > 0);
+        const hasRemaining = result.failedCount > 0 || result.conflicts.length > 0;
+        this.hasPendingSync.set(hasRemaining);
 
         const successCount = result.syncedCount;
         if (successCount > 0) {

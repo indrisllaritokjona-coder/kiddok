@@ -31,7 +31,7 @@ import { I18nService } from '../core/i18n/i18n.service';
             <span class="text-sm font-bold hidden sm:block">{{ i18n.t()['nav.back'] }}</span>
           </button>
         }
-        <button type="button" class="lg:hidden p-2 rounded-xl bg-white shadow-soft border border-gray-100" aria-label="Open menu">
+        <button type="button" class="lg:hidden p-2 rounded-xl bg-white shadow-soft border border-gray-100" [attr.aria-label]="i18n.t()['nav.menu']">
           <lucide-icon name="menu" class="text-inherit" aria-hidden="true"></lucide-icon>
         </button>
         <!-- Page title -->
@@ -236,7 +236,7 @@ import { I18nService } from '../core/i18n/i18n.service';
                 <!-- Active badge -->
                 @if (child.id === activeChildId()) {
                   <span class="text-xs font-bold text-primary-600 bg-primary-100 px-2 py-1 rounded-full shrink-0">
-                    {{ i18n.isSq() ? 'Aktiv' : 'Active' }}
+                    {{ i18n.t()['child.activeBadge'] }}
                   </span>
                 }
               </button>

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateIllnessDto } from './dto/create-illness.dto';
+import { UpdateIllnessDto } from './dto/update-illness.dto';
 
 @Injectable()
 export class IllnessesService {
@@ -30,7 +31,7 @@ export class IllnessesService {
     });
   }
 
-  async update(id: string, userId: string, data: any) {
+  async update(id: string, userId: string, data: UpdateIllnessDto) {
     const illness = await this.prisma.illnessEpisode.findUnique({
       where: { id },
       include: { child: true },

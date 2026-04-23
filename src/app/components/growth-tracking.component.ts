@@ -13,6 +13,36 @@ import { TooltipDirective } from '../directives/tooltip.directive';
     template: `
     <div class="max-w-2xl mx-auto px-2">
 
+      <!-- Sprint 8: Loading Skeleton -->
+      @if (loading()) {
+        <div class="space-y-4">
+          <!-- Stats cards skeleton -->
+          <div class="grid grid-cols-2 gap-4 mb-6">
+            @for (i of [1,2]; track i) {
+              <div class="bg-white rounded-[2rem] shadow-md border border-slate-100 p-6 animate-pulse">
+                <div class="w-10 h-10 bg-gray-200 rounded-full mx-auto mb-3"></div>
+                <div class="w-24 h-4 bg-gray-200 rounded mx-auto mb-2"></div>
+                <div class="w-16 h-8 bg-gray-200 rounded mx-auto"></div>
+              </div>
+            }
+          </div>
+          <!-- Chart skeleton -->
+          <div class="bg-white rounded-[2rem] shadow-md border border-slate-100 p-6 animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div class="h-48 bg-gray-200 rounded-2xl"></div>
+          </div>
+          <!-- List skeleton -->
+          <div class="bg-white rounded-[2rem] shadow-md border border-slate-100 p-6 animate-pulse">
+            @for (i of [1,2,3]; track i) {
+              <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                <div class="w-24 h-4 bg-gray-200 rounded"></div>
+                <div class="w-16 h-4 bg-gray-200 rounded"></div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
       <!-- Header with percentile info tooltip (Sprint 22) -->
       <div class="flex items-center justify-between mb-6">
         <div>
@@ -211,7 +241,11 @@ import { TooltipDirective } from '../directives/tooltip.directive';
               <lucide-icon name="trending-up" class="text-inherit"></lucide-icon>
             </div>
             <p class="text-slate-400 font-medium mb-3">{{ i18n.t()['growth.noData'] }}</p>
-            <p class="text-primary-600 font-bold text-sm">{{ i18n.t()['growth.addFirst'] }}</p>
+            <button (click)="openAddForm()"
+              class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-sm transition-all text-sm inline-flex items-center gap-2">
+              <lucide-icon name="plus" class="text-inherit"></lucide-icon>
+              {{ i18n.t()['growth.addFirst'] }}
+            </button>
           </div>
         } @else {
           <div class="px-6 pb-6 space-y-3">
@@ -258,6 +292,9 @@ export class GrowthTrackingComponent implements OnInit, AfterViewInit, OnDestroy
   i18n = inject(I18nService);
 
   @ViewChild('chartCanvas') chartCanvas!: ElementRef<HTMLCanvasElement>;
+
+  // Sprint 8: Loading state
+  loading = signal(false);
 
   // Form state
   formDate = this.defaultDate();
@@ -350,6 +387,15 @@ export class GrowthTrackingComponent implements OnInit, AfterViewInit, OnDestroy
   private defaultDate(): string {
     const now = new Date();
     return now.toISOString().split('T')[0];
+  }
+
+  /** Sprint 8: Open add form and scroll to it */
+  openAddForm(): void {
+    // Scroll to the add measurement form section
+    const formEl = document.querySelector('.bg-white.rounded-\\[2rem\\].shadow-md.border.border-slate-100.overflow-hidden.mb-6');
+    if (formEl) {
+      (formEl as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   canSave(): boolean {

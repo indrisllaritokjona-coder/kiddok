@@ -25,11 +25,13 @@ exports.CreateMedicationDto = CreateMedicationDto;
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MaxLength)(200),
     __metadata("design:type", String)
 ], CreateMedicationDto.prototype, "name", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], CreateMedicationDto.prototype, "dosage", void 0);
 __decorate([
@@ -119,7 +121,7 @@ class CreateDoseLogDto {
 }
 exports.CreateDoseLogDto = CreateDoseLogDto;
 __decorate([
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsUUID)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreateDoseLogDto.prototype, "medicationId", void 0);
@@ -130,6 +132,7 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(500),
     __metadata("design:type", String)
 ], CreateDoseLogDto.prototype, "notes", void 0);
 //# sourceMappingURL=medication.dto.js.map

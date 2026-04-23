@@ -84,6 +84,13 @@ let MedicationsService = class MedicationsService {
             where: { id }
         });
     }
+    sanitizeNotes(notes) {
+        if (!notes)
+            return null;
+        const stripped = notes.replace(/<[^>]*>/g, '').trim();
+        const sanitized = stripped.replace(/javascript:/gi, '').replace(/on\w+=/gi, '');
+        return sanitized.length > 0 ? sanitized.slice(0, 500) : null;
+    }
     async logDose(userId, childId, dto) {
         const medication = await this.prisma.medication.findUnique({
             where: { id: dto.medicationId },
@@ -109,7 +116,7 @@ let MedicationsService = class MedicationsService {
             data: {
                 medicationId: dto.medicationId,
                 takenAt,
-                notes: dto.notes || null
+                notes: this.sanitizeNotes(dto.notes),
             }
         });
     }

@@ -89,6 +89,14 @@ export class MedicationsService {
 
   // ─── Dose Log Methods ──────────────────────────────────────────
 
+  /** Strip HTML tags, script-like attributes, and enforce max length */
+  private sanitizeNotes(notes: string | null | undefined): string | null {
+    if (!notes) return null;
+    const stripped = notes.replace(/<[^>]*>/g, '').trim();
+    const sanitized = stripped.replace(/javascript:/gi, '').replace(/on\w+=/gi, '');
+    return sanitized.length > 0 ? sanitized.slice(0, 500) : null;
+  }
+
   async logDose(userId: string, childId: string, dto: CreateDoseLogDto) {
     // Validate medication belongs to child and user owns the child
     const medication = await this.prisma.medication.findUnique({
@@ -121,7 +129,7 @@ export class MedicationsService {
       data: {
         medicationId: dto.medicationId,
         takenAt,
-        notes: dto.notes || null
+        notes: this.sanitizeNotes(dto.notes),
       }
     });
   }

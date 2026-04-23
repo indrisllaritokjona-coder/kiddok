@@ -1,12 +1,14 @@
-import { IsString, IsNotEmpty, IsOptional, IsDateString, IsBoolean } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsDateString, IsBoolean, MaxLength, IsUUID } from 'class-validator';
 
 export class CreateMedicationDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   name: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   dosage: string;
 
   @IsString()
@@ -68,7 +70,7 @@ export class UpdateMedicationDto {
 }
 
 export class CreateDoseLogDto {
-  @IsString()
+  @IsUUID()
   @IsNotEmpty()
   medicationId: string;
 
@@ -77,5 +79,6 @@ export class CreateDoseLogDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(500)
   notes?: string;
 }

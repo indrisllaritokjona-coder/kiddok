@@ -122,6 +122,7 @@ export class DataService {
   readonly API_URL = environment.apiUrl;
 
   private readonly toast = inject(ToastService);
+  private readonly offline = inject(OfflineService);
 
   // Auth state
   isAuthenticated = signal<boolean>(!!localStorage.getItem(this.AUTH_KEY));
@@ -456,6 +457,7 @@ export class DataService {
       return entries;
     } catch (err: any) {
       console.error('[DataService] loadTemperatureEntries failed:', err);
+      this.toast.showKey('error.api.loadTemperature');
       const offlineEntries = await this.getOfflineTemperatures(childId);
       if (offlineEntries.length > 0) this.temperatureEntries.set(offlineEntries);
       return this.temperatureEntries();
@@ -464,17 +466,13 @@ export class DataService {
 
   private async cacheTemperaturesToOffline(entries: TemperatureEntry[]): Promise<void> {
     try {
-      const { OfflineService } = await import('./offline.service');
-      const svc = new OfflineService();
-      await svc.saveTemperaturesToOffline(entries);
+      await this.offline.saveTemperaturesToOffline(entries);
     } catch {}
   }
 
   private async getOfflineTemperatures(childId: string): Promise<TemperatureEntry[]> {
     try {
-      const { OfflineService } = await import('./offline.service');
-      const svc = new OfflineService();
-      return await svc.getTemperaturesFromOffline(childId);
+      return await this.offline.getTemperaturesFromOffline(childId);
     } catch { return []; }
   }
 
@@ -515,34 +513,53 @@ export class DataService {
       return records;
     } catch (err: any) {
       console.error('[DataService] loadLabResults failed:', err);
+      this.toast.showKey('error.api.generic');
       return this.labResults();
     }
   }
 
   async addLabResult(childId: string, data: any): Promise<LabResultRecord> {
-    const record = await firstValueFrom(
-      this.http.post<LabResultRecord>(`${this.API_URL}/lab-results/${childId}`, data, this.getHeaders())
-    );
-    const updated = [record, ...this.labResults()];
-    this.labResults.set(updated);
-    return record;
+    try {
+      const record = await firstValueFrom(
+        this.http.post<LabResultRecord>(`${this.API_URL}/lab-results/${childId}`, data, this.getHeaders())
+      );
+      const updated = [record, ...this.labResults()];
+      this.labResults.set(updated);
+      return record;
+    } catch (err: any) {
+      console.error('[DataService] addLabResult failed:', err);
+      this.toast.showKey('error.api.generic');
+      throw err;
+    }
   }
 
   async updateLabResult(id: string, data: any): Promise<LabResultRecord> {
-    const record = await firstValueFrom(
-      this.http.patch<LabResultRecord>(`${this.API_URL}/lab-results/${id}`, data, this.getHeaders())
-    );
-    const updated = this.labResults().map(r => r.id === id ? record : r);
-    this.labResults.set(updated);
-    return record;
+    try {
+      const record = await firstValueFrom(
+        this.http.patch<LabResultRecord>(`${this.API_URL}/lab-results/${id}`, data, this.getHeaders())
+      );
+      const updated = this.labResults().map(r => r.id === id ? record : r);
+      this.labResults.set(updated);
+      return record;
+    } catch (err: any) {
+      console.error('[DataService] updateLabResult failed:', err);
+      this.toast.showKey('error.api.generic');
+      throw err;
+    }
   }
 
   async deleteLabResult(id: string): Promise<void> {
-    await firstValueFrom(
-      this.http.delete<void>(`${this.API_URL}/lab-results/${id}`, this.getHeaders())
-    );
-    const updated = this.labResults().filter(r => r.id !== id);
-    this.labResults.set(updated);
+    try {
+      await firstValueFrom(
+        this.http.delete<void>(`${this.API_URL}/lab-results/${id}`, this.getHeaders())
+      );
+      const updated = this.labResults().filter(r => r.id !== id);
+      this.labResults.set(updated);
+    } catch (err: any) {
+      console.error('[DataService] deleteLabResult failed:', err);
+      this.toast.showKey('error.api.generic');
+      throw err;
+    }
   }
 
   async getLabResult(id: string): Promise<LabResultRecord> {
@@ -561,6 +578,7 @@ export class DataService {
       return entries;
     } catch (err: any) {
       console.error('[DataService] loadGrowthEntries failed:', err);
+      this.toast.showKey('error.api.loadGrowth');
       const offlineEntries = await this.getOfflineGrowth(childId);
       if (offlineEntries.length > 0) this.growthEntries.set(offlineEntries);
       return this.growthEntries();
@@ -569,17 +587,13 @@ export class DataService {
 
   private async cacheGrowthToOffline(entries: GrowthEntry[]): Promise<void> {
     try {
-      const { OfflineService } = await import('./offline.service');
-      const svc = new OfflineService();
-      await svc.saveGrowthToOffline(entries);
+      await this.offline.saveGrowthToOffline(entries);
     } catch {}
   }
 
   private async getOfflineGrowth(childId: string): Promise<GrowthEntry[]> {
     try {
-      const { OfflineService } = await import('./offline.service');
-      const svc = new OfflineService();
-      return await svc.getGrowthFromOffline(childId);
+      return await this.offline.getGrowthFromOffline(childId);
     } catch { return []; }
   }
 
@@ -593,6 +607,7 @@ export class DataService {
       return records;
     } catch (err: any) {
       console.error('[DataService] loadVaccineRecords failed:', err);
+      this.toast.showKey('error.api.loadVaccines');
       const offlineRecords = await this.getOfflineVaccines(childId);
       if (offlineRecords.length > 0) this.vaccineRecords.set(offlineRecords);
       return this.vaccineRecords();
@@ -601,17 +616,13 @@ export class DataService {
 
   private async cacheVaccinesToOffline(records: VaccineRecord[]): Promise<void> {
     try {
-      const { OfflineService } = await import('./offline.service');
-      const svc = new OfflineService();
-      await svc.saveVaccinesToOffline(records);
+      await this.offline.saveVaccinesToOffline(records);
     } catch {}
   }
 
   private async getOfflineVaccines(childId: string): Promise<VaccineRecord[]> {
     try {
-      const { OfflineService } = await import('./offline.service');
-      const svc = new OfflineService();
-      return await svc.getVaccinesFromOffline(childId);
+      return await this.offline.getVaccinesFromOffline(childId);
     } catch { return []; }
   }
 
@@ -1029,30 +1040,27 @@ export class DataService {
 
   private async cacheToOffline(): Promise<void> {
     try {
-      const offlineService = new (await import('./offline.service')).OfflineService();
-      await offlineService.saveChildrenToOffline(this.children());
+      await this.offline.saveChildrenToOffline(this.children());
       const activeId = this.activeChildId();
       if (activeId) {
-        await offlineService.saveTemperaturesToOffline(this.temperatureEntries());
-        await offlineService.saveGrowthToOffline(this.growthEntries());
-        await offlineService.saveVaccinesToOffline(this.vaccineRecords());
-        await offlineService.saveDiaryToOffline(this.diaryEntries());
+        await this.offline.saveTemperaturesToOffline(this.temperatureEntries());
+        await this.offline.saveGrowthToOffline(this.growthEntries());
+        await this.offline.saveVaccinesToOffline(this.vaccineRecords());
+        await this.offline.saveDiaryToOffline(this.diaryEntries());
       }
     } catch { /* best-effort */ }
   }
 
   private async loadFromOffline(): Promise<void> {
     try {
-      const { OfflineService } = await import('./offline.service');
-      const offlineService = new OfflineService();
-      const cachedChildren = await offlineService.getChildrenFromOffline();
+      const cachedChildren = await this.offline.getChildrenFromOffline();
       if (cachedChildren.length > 0) {
         this.children.set(cachedChildren);
         this.saveToStorage(this.CHILDREN_KEY, cachedChildren);
         const firstChild = cachedChildren[0];
         this.activeChildId.set(firstChild.id);
         localStorage.setItem(this.ACTIVE_CHILD_KEY, firstChild.id);
-        await offlineService.loadCachedChildData(firstChild.id);
+        await this.offline.loadCachedChildData(firstChild.id);
       }
     } catch { /* best-effort */ }
   }

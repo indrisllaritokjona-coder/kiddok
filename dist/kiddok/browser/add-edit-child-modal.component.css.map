@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["angular:styles/component:css;58225b4fd4362b36f2ac38e1c7ef2771c6915f6664b41cc91982e3a9fa8478a1;C:/Users/g_gus/Desktop/jona/kiddok/src/app/features/child/add-edit-child-modal/add-edit-child-modal.component.ts"],
-  "sourcesContent": ["\n    .animate-slide-up {\n      animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);\n    }\n    @keyframes slideUp {\n      from { opacity: 0; transform: translateY(24px); }\n      to { opacity: 1; transform: translateY(0); }\n    }\n    .animate-fade-in {\n      animation: fadeIn 0.2s ease-out;\n    }\n    @keyframes fadeIn {\n      from { opacity: 0; }\n      to { opacity: 1; }\n    }\n    button:not(:disabled):active {\n      transform: scale(0.98);\n    }\n  "],
-  "mappings": ";AACI,CAAC;AACC,aAAW,QAAQ,MAAM,aAAa,IAAI,EAAE,CAAC,EAAE,GAAG,EAAE;AACtD;AACA,WAFa;AAGX;AAAO,aAAS;AAAG,eAAW,WAAW;AAAO;AAChD;AAAK,aAAS;AAAG,eAAW,WAAW;AAAI;AAC7C;AACA,CAAC;AACC,aAAW,OAAO,KAAK;AACzB;AACA,WAFa;AAGX;AAAO,aAAS;AAAG;AACnB;AAAK,aAAS;AAAG;AACnB;AACA,MAAM,KAAK,UAAU;AACnB,aAAW,MAAM;AACnB;",
-  "names": []
-}

@@ -1,7 +1,7 @@
 import { Injectable, signal, inject, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { DataService, ChildProfile, TemperatureEntry, GrowthEntry, VaccineRecord, DiaryEntry } from './data.service';
+import { DataService, ChildProfile, TemperatureEntry, GrowthEntry, VaccineRecord, DiaryEntry, ParentProfile } from './data.service';
 import { ToastService } from './toast.service';
 import { SyncService, SyncEntry } from './sync.service';
 
@@ -292,6 +292,54 @@ export class OfflineService {
       const request = index.getAll(childId);
       request.onsuccess = () => resolve(request.result as DiaryEntry[]);
       request.onerror = () => reject(request.error);
+    });
+  }
+
+  // ─── Parent Profile ───────────────────────────────────────────
+
+  async getParentFromOffline(): Promise<ParentProfile | null> {
+    const db = await this.getDb();
+    const tx = db.transaction(STORE_PARENT, 'readonly');
+    const store = tx.objectStore(STORE_PARENT);
+    return new Promise((resolve, reject) => {
+      const request = store.get('profile');
+      request.onsuccess = () => resolve((request.result as ParentProfile) || null);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async saveParentToOffline(profile: ParentProfile): Promise<void> {
+    const db = await this.getDb();
+    const tx = db.transaction(STORE_PARENT, 'readwrite');
+    const store = tx.objectStore(STORE_PARENT);
+    store.put({ ...profile, key: 'profile' });
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  // ─── Update Operations ────────────────────────────────────────
+
+  async updateTemperatureToOffline(entry: TemperatureEntry): Promise<void> {
+    const db = await this.getDb();
+    const tx = db.transaction(STORE_TEMPERATURES, 'readwrite');
+    const store = tx.objectStore(STORE_TEMPERATURES);
+    store.put(entry);
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async updateGrowthToOffline(entry: GrowthEntry): Promise<void> {
+    const db = await this.getDb();
+    const tx = db.transaction(STORE_GROWTH, 'readwrite');
+    const store = tx.objectStore(STORE_GROWTH);
+    store.put(entry);
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
     });
   }
 

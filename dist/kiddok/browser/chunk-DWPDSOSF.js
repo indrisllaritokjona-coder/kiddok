@@ -1,0 +1,13 @@
+import{b as d}from"./chunk-V2GWI2G7.js";import{P as r,Ra as u,ka as a,pb as c}from"./chunk-6BO64XOE.js";var b=(()=>{class n{constructor(){this.tooltipPosition="top",this.tooltipDelay=300,this.el=r(a),this.i18n=r(d),this._timeoutId=null,this._visible=!1,this._tooltipEl=null}get key(){return this.tooltipKey??this.appTooltip??""}ngOnInit(){let s=this.el.nativeElement.style;(!s.position||s.position==="static")&&(s.position="relative")}ngOnDestroy(){this._clearTimeout(),this._hideTooltip()}onMouseEnter(){this._timeoutId=setTimeout(()=>this._showTooltip(),this.tooltipDelay)}onMouseLeave(){this._clearTimeout(),this._hideTooltip()}onFocus(){this._timeoutId=setTimeout(()=>this._showTooltip(),this.tooltipDelay)}onBlur(){this._clearTimeout(),this._hideTooltip()}_clearTimeout(){this._timeoutId!==null&&(clearTimeout(this._timeoutId),this._timeoutId=null)}_showTooltip(){if(this._visible||!this.key)return;this._visible=!0;let s=this.i18n.t()[this.key]??this.key,i=document.createElement("div");i.setAttribute("role","tooltip"),i.textContent=s,i.className="app-tooltip",i.style.cssText=`
+      position: fixed;
+      z-index: 9999;
+      padding: 6px 10px;
+      background: #1e293b;
+      color: #f8fafc;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 8px;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;let t=this.el.nativeElement.getBoundingClientRect(),o=0,e=0;switch(this.tooltipPosition){case"top":o=t.top,e=t.left+t.width/2;break;case"bottom":o=t.bottom,e=t.left+t.width/2;break;case"left":o=t.top+t.height/2,e=t.left;break;case"right":o=t.top+t.height/2,e=t.right;break}document.body.appendChild(i);let l=i.getBoundingClientRect();this.tooltipPosition==="top"?(o=t.top-l.height-8,e=Math.max(8,e-l.width/2)):this.tooltipPosition==="bottom"?(o=t.bottom+8,e=Math.max(8,e-l.width/2)):this.tooltipPosition==="left"?(o=Math.max(8,o-l.height/2),e=t.left-l.width-8):(o=Math.max(8,o-l.height/2),e=t.right+8),i.style.top=`${o}px`,i.style.left=`${e}px`,this._tooltipEl=i}_hideTooltip(){this._visible&&(this._visible=!1,this._tooltipEl&&(this._tooltipEl.remove(),this._tooltipEl=null))}static{this.\u0275fac=function(s){return new(s||n)}}static{this.\u0275dir=u({type:n,selectors:[["","appTooltip",""]],hostBindings:function(s,i){s&1&&c("mouseenter",function(){return i.onMouseEnter()})("mouseleave",function(){return i.onMouseLeave()})("focus",function(){return i.onFocus()})("blur",function(){return i.onBlur()})},inputs:{appTooltip:"appTooltip",tooltipKey:"tooltipKey",tooltipPosition:"tooltipPosition",tooltipDelay:"tooltipDelay"}})}}return n})();export{b as a};

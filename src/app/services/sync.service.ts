@@ -105,6 +105,14 @@ export class SyncService implements SyncQueueReader {
     }
   }
 
+  async resolveConflict(
+    entityType: string,
+    entityId: string,
+    resolution: 'local_wins' | 'server_wins'
+  ): Promise<boolean> {
+    return this.submitResolution(entityType, entityId, resolution);
+  }
+
   async submitResolution(
     entityType: string,
     entityId: string,

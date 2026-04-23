@@ -9,6 +9,7 @@ export declare class MailService implements OnModuleInit {
     private transporter;
     private readonly logger;
     onModuleInit(): void;
+    private escapeHtml;
     send(options: EmailOptions): Promise<void>;
     private wrapHtml;
     sendVaccineReminder(toEmail: string, parentName: string, childName: string, vaccineName: string, dueDate: Date): Promise<void>;

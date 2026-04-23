@@ -38,6 +38,9 @@ let ExportService = class ExportService {
             }
         });
     }
+    async getChildHealthData(childId, userId) {
+        return this.fetchChildHealthData(childId, userId);
+    }
     async fetchChildHealthData(childId, userId) {
         const child = await this.prisma.child.findFirst({
             where: {

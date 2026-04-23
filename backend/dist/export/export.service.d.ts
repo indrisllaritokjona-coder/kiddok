@@ -15,6 +15,7 @@ export declare class ExportService {
     private prisma;
     constructor(prisma: PrismaService);
     generatePdf(childId: string, userId: string): Promise<Buffer>;
+    getChildHealthData(childId: string, userId: string): Promise<ChildHealthData>;
     private fetchChildHealthData;
     private buildPdf;
     private sectionTitle;

@@ -68,6 +68,14 @@ let MailService = MailService_1 = class MailService {
         });
         this.logger.log(`MailService initialized (host: ${host}:${port})`);
     }
+    escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
     async send(options) {
         try {
             const result = await this.transporter.sendMail({
@@ -119,11 +127,11 @@ let MailService = MailService_1 = class MailService {
         const dueDateStr = dueDate.toLocaleDateString('sq-AL', { day: '2-digit', month: 'long', year: 'numeric' });
         const html = `
       <div class="title">🔔 Rimbursim Vaksine</div>
-      <p>Pershendetje ${parentName},</p>
-      <p>Fëmija <strong>${childName}</strong> ka një vaksine të ardhshme që duhet të monitoroni:</p>
+      <p>Pershendetje ${this.escapeHtml(parentName)},</p>
+      <p>Fëmija <strong>${this.escapeHtml(childName)}</strong> ka një vaksine të ardhshme që duhet të monitoroni:</p>
       <div class="highlight">
         <div class="highlight-label">Vaksina</div>
-        <div class="highlight-value">${vaccineName}</div>
+        <div class="highlight-value">${this.escapeHtml(vaccineName)}</div>
         <div class="highlight-label" style="margin-top:8px">Data e pritshme</div>
         <div class="highlight-value">${dueDateStr}</div>
       </div>
@@ -140,14 +148,14 @@ let MailService = MailService_1 = class MailService {
         const dtStr = dateTime.toLocaleString('sq-AL', {
             day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
         });
-        const meta = [doctorName && `Mjeku: ${doctorName}`, location && `Vendndodhja: ${location}`].filter(Boolean).join(' • ');
+        const meta = [doctorName && `Mjeku: ${this.escapeHtml(doctorName)}`, location && `Vendndodhja: ${this.escapeHtml(location)}`].filter(Boolean).join(' • ');
         const html = `
       <div class="title">📅 Rimbursim Takimi</div>
-      <p>Pershendetje ${parentName},</p>
-      <p>Fëmija <strong>${childName}</strong> ka një takim të ardhshëm:</p>
+      <p>Pershendetje ${this.escapeHtml(parentName)},</p>
+      <p>Fëmija <strong>${this.escapeHtml(childName)}</strong> ka një takim të ardhshëm:</p>
       <div class="highlight">
         <div class="highlight-label">Takimi</div>
-        <div class="highlight-value">${appointmentTitle}</div>
+        <div class="highlight-value">${this.escapeHtml(appointmentTitle)}</div>
         <div class="highlight-label" style="margin-top:8px">Data dhe ora</div>
         <div class="highlight-value">${dtStr}</div>
         ${meta ? `<div class="highlight-label" style="margin-top:8px">Detajet</div><div class="highlight-value">${meta}</div>` : ''}
@@ -162,15 +170,15 @@ let MailService = MailService_1 = class MailService {
     async sendMedicationReminder(toEmail, parentName, childName, medicationName, dosage, frequency) {
         const html = `
       <div class="title">💊 Rimbursim Medikamenti</div>
-      <p>Pershendetje ${parentName},</p>
-      <p>Fëmija <strong>${childName}</strong> ka një medikament që duhet të marrë:</p>
+      <p>Pershendetje ${this.escapeHtml(parentName)},</p>
+      <p>Fëmija <strong>${this.escapeHtml(childName)}</strong> ka një medikament që duhet të marrë:</p>
       <div class="highlight">
         <div class="highlight-label">Medikamenti</div>
-        <div class="highlight-value">${medicationName}</div>
+        <div class="highlight-value">${this.escapeHtml(medicationName)}</div>
         <div class="highlight-label" style="margin-top:8px">Doza</div>
-        <div class="highlight-value">${dosage}</div>
+        <div class="highlight-value">${this.escapeHtml(dosage)}</div>
         <div class="highlight-label" style="margin-top:8px">Frekuenca</div>
-        <div class="highlight-value">${frequency}</div>
+        <div class="highlight-value">${this.escapeHtml(frequency)}</div>
       </div>
     `;
         await this.send({

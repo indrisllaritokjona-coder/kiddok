@@ -4,12 +4,14 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ToastService } from './toast.service';
 import { NotificationService } from './notification.service';
+import { OfflineService } from './offline.service';
 
 export interface ChildProfile {
   id: string;
   userId: string;
   name: string;
   dateOfBirth: string;
+  avatarSeed?: string;
   birthWeight?: number;
   deliveryDoctor?: string;
   bloodType?: string;
@@ -199,6 +201,17 @@ export class DataService {
     }
   }
 
+  /** Build a consistent DiceBear avatar URL from a child profile */
+  getAvatarUrl(child: Pick<ChildProfile, 'name' | 'avatarSeed'>): string {
+    const seed = child.avatarSeed || child.name;
+    return `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(seed)}`;
+  }
+
+  /** Generate a random avatar seed for a new child */
+  generateAvatarSeed(): string {
+    return 'child_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+  }
+
   /** Load all children from PostgreSQL via REST */
   async loadChildrenFromApi(): Promise<void> {
     const token = localStorage.getItem(this.AUTH_KEY);
@@ -214,6 +227,7 @@ export class DataService {
         userId: c.userId,
         name: c.name,
         dateOfBirth: c.dateOfBirth,
+        avatarSeed: c.avatarSeed ?? undefined,
         gender: c.gender ?? undefined,
         bloodType: c.bloodType ?? undefined,
         birthWeight: c.birthWeight ?? undefined,
@@ -223,24 +237,28 @@ export class DataService {
         medicalDocument: c.medicalDocument ?? undefined,
         documentIssueDate: c.documentIssueDate ?? undefined,
         medicalNotes: c.medicalNotes ?? undefined,
-        avatarUrl: c.avatarUrl && this.isValidUrl(c.avatarUrl)
-          ? c.avatarUrl
-          : `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(c.name)}`,
+        avatarUrl: this.getAvatarUrl({ name: c.name, avatarSeed: c.avatarSeed ?? undefined } as ChildProfile),
       }));
 
       this.children.set(profiles);
       this.saveToStorage(this.CHILDREN_KEY, profiles);
+      // Cache to IndexedDB for offline access
+      this.cacheToOffline();
     } catch (err: any) {
       console.error('[DataService] loadChildrenFromApi failed:', err);
       this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+      // Fallback to offline cached data
+      await this.loadFromOffline();
     }
   }
 
   /** Create a new child via POST /children */
   async createChild(data: Partial<ChildProfile>): Promise<ChildProfile> {
+    const avatarSeed = this.generateAvatarSeed();
     const payload = {
       name: data.name,
       dateOfBirth: data.dateOfBirth,
+      avatarSeed,
       gender: data.gender ?? null,
       bloodType: data.bloodType ?? null,
       birthWeight: data.birthWeight ?? null,
@@ -262,14 +280,13 @@ export class DataService {
         userId: created.userId,
         name: created.name,
         dateOfBirth: created.dateOfBirth,
+        avatarSeed: created.avatarSeed ?? avatarSeed,
         gender: created.gender ?? undefined,
         bloodType: created.bloodType ?? undefined,
         birthWeight: created.birthWeight ?? undefined,
         deliveryDoctor: created.deliveryDoctor ?? undefined,
         criticalAllergies: created.criticalAllergies ?? undefined,
-        avatarUrl: created.avatarUrl && this.isValidUrl(created.avatarUrl)
-          ? created.avatarUrl
-          : `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(created.name)}`,
+        avatarUrl: this.getAvatarUrl({ name: created.name, avatarSeed: created.avatarSeed ?? avatarSeed } as ChildProfile),
       };
 
       const updated = [...this.children(), profile];
@@ -314,6 +331,7 @@ export class DataService {
         userId: updated.userId,
         name: updated.name,
         dateOfBirth: updated.dateOfBirth,
+        avatarSeed: updated.avatarSeed ?? undefined,
         gender: updated.gender ?? undefined,
         bloodType: updated.bloodType ?? undefined,
         birthWeight: updated.birthWeight ?? undefined,
@@ -323,9 +341,7 @@ export class DataService {
         medicalDocument: updated.medicalDocument ?? undefined,
         documentIssueDate: updated.documentIssueDate ?? undefined,
         medicalNotes: updated.medicalNotes ?? undefined,
-        avatarUrl: updated.avatarUrl && this.isValidUrl(updated.avatarUrl)
-          ? updated.avatarUrl
-          : `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(updated.name)}`,
+        avatarUrl: this.getAvatarUrl({ name: updated.name, avatarSeed: updated.avatarSeed ?? undefined } as ChildProfile),
       };
 
       const current = this.children().map(c => c.id === id ? profile : c);
@@ -361,12 +377,30 @@ export class DataService {
         this.http.get<TemperatureEntry[]>(`${this.API_URL}/temperature-entries/child/${childId}`, this.getHeaders())
       );
       this.temperatureEntries.set(entries);
+      this.cacheTemperaturesToOffline(entries);
       return entries;
     } catch (err: any) {
       console.error('[DataService] loadTemperatureEntries failed:', err);
-      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
-      return [];
+      const offlineEntries = await this.getOfflineTemperatures(childId);
+      if (offlineEntries.length > 0) this.temperatureEntries.set(offlineEntries);
+      return this.temperatureEntries();
     }
+  }
+
+  private async cacheTemperaturesToOffline(entries: TemperatureEntry[]): Promise<void> {
+    try {
+      const { OfflineService } = await import('./offline.service');
+      const svc = new OfflineService();
+      await svc.saveTemperaturesToOffline(entries);
+    } catch {}
+  }
+
+  private async getOfflineTemperatures(childId: string): Promise<TemperatureEntry[]> {
+    try {
+      const { OfflineService } = await import('./offline.service');
+      const svc = new OfflineService();
+      return await svc.getTemperaturesFromOffline(childId);
+    } catch { return []; }
   }
 
   async createTemperatureEntry(data: { childId: string; temperature: number; measuredAt: string; location?: string; notes?: string }): Promise<TemperatureEntry | null> {
@@ -403,12 +437,30 @@ export class DataService {
         this.http.get<GrowthEntry[]>(`${this.API_URL}/growth-entries/child/${childId}`, this.getHeaders())
       );
       this.growthEntries.set(entries);
+      this.cacheGrowthToOffline(entries);
       return entries;
     } catch (err: any) {
       console.error('[DataService] loadGrowthEntries failed:', err);
-      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
-      return [];
+      const offlineEntries = await this.getOfflineGrowth(childId);
+      if (offlineEntries.length > 0) this.growthEntries.set(offlineEntries);
+      return this.growthEntries();
     }
+  }
+
+  private async cacheGrowthToOffline(entries: GrowthEntry[]): Promise<void> {
+    try {
+      const { OfflineService } = await import('./offline.service');
+      const svc = new OfflineService();
+      await svc.saveGrowthToOffline(entries);
+    } catch {}
+  }
+
+  private async getOfflineGrowth(childId: string): Promise<GrowthEntry[]> {
+    try {
+      const { OfflineService } = await import('./offline.service');
+      const svc = new OfflineService();
+      return await svc.getGrowthFromOffline(childId);
+    } catch { return []; }
   }
 
   async loadVaccineRecords(childId: string): Promise<VaccineRecord[]> {
@@ -417,12 +469,30 @@ export class DataService {
         this.http.get<VaccineRecord[]>(`${this.API_URL}/vaccines/child/${childId}`, this.getHeaders())
       );
       this.vaccineRecords.set(records);
+      this.cacheVaccinesToOffline(records);
       return records;
     } catch (err: any) {
       console.error('[DataService] loadVaccineRecords failed:', err);
-      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
-      return [];
+      const offlineRecords = await this.getOfflineVaccines(childId);
+      if (offlineRecords.length > 0) this.vaccineRecords.set(offlineRecords);
+      return this.vaccineRecords();
     }
+  }
+
+  private async cacheVaccinesToOffline(records: VaccineRecord[]): Promise<void> {
+    try {
+      const { OfflineService } = await import('./offline.service');
+      const svc = new OfflineService();
+      await svc.saveVaccinesToOffline(records);
+    } catch {}
+  }
+
+  private async getOfflineVaccines(childId: string): Promise<VaccineRecord[]> {
+    try {
+      const { OfflineService } = await import('./offline.service');
+      const svc = new OfflineService();
+      return await svc.getVaccinesFromOffline(childId);
+    } catch { return []; }
   }
 
   async exportChildCsv(childId: string): Promise<void> {
@@ -523,16 +593,17 @@ export class DataService {
     deliveryDoctor?: string,
     bloodType?: string,
   ) {
-    const avatarUrl = `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(name)}`;
+    const avatarSeed = this.generateAvatarSeed();
     const newChild: ChildProfile = {
       id: 'child_' + Date.now(),
       userId: 'parent_1',
       name,
       dateOfBirth,
+      avatarSeed,
       birthWeight,
       deliveryDoctor,
       bloodType,
-      avatarUrl,
+      avatarUrl: this.getAvatarUrl({ name, avatarSeed } as ChildProfile),
     };
 
     const updated = [...this.children(), newChild];
@@ -742,5 +813,37 @@ export class DataService {
     } catch {
       return null;
     }
+  }
+
+  // ─── Offline / IndexedDB helpers ───────────────────────────
+
+  private async cacheToOffline(): Promise<void> {
+    try {
+      const offlineService = new (await import('./offline.service')).OfflineService();
+      await offlineService.saveChildrenToOffline(this.children());
+      const activeId = this.activeChildId();
+      if (activeId) {
+        await offlineService.saveTemperaturesToOffline(this.temperatureEntries());
+        await offlineService.saveGrowthToOffline(this.growthEntries());
+        await offlineService.saveVaccinesToOffline(this.vaccineRecords());
+        await offlineService.saveDiaryToOffline(this.diaryEntries());
+      }
+    } catch { /* best-effort */ }
+  }
+
+  private async loadFromOffline(): Promise<void> {
+    try {
+      const { OfflineService } = await import('./offline.service');
+      const offlineService = new OfflineService();
+      const cachedChildren = await offlineService.getChildrenFromOffline();
+      if (cachedChildren.length > 0) {
+        this.children.set(cachedChildren);
+        this.saveToStorage(this.CHILDREN_KEY, cachedChildren);
+        const firstChild = cachedChildren[0];
+        this.activeChildId.set(firstChild.id);
+        localStorage.setItem(this.ACTIVE_CHILD_KEY, firstChild.id);
+        await offlineService.loadCachedChildData(firstChild.id);
+      }
+    } catch { /* best-effort */ }
   }
 }

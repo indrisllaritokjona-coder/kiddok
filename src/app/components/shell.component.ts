@@ -21,11 +21,12 @@ import { AddEditChildModalComponent } from '../features/child/add-edit-child-mod
 import { SettingsPageComponent } from './settings/settings-page.component';
 import { AnalyticsComponent } from './analytics.component';
 import { OnboardingTourComponent } from './onboarding-tour.component';
+import { OfflineIndicatorComponent } from './offline-indicator.component';
 
 @Component({
     selector: 'app-shell',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, FormsModule, LucideAngularModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, MedicationsComponent, AppointmentsComponent, LabResultsComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent, AnalyticsComponent, OnboardingTourComponent],
+    imports: [CommonModule, FormsModule, LucideAngularModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, MedicationsComponent, AppointmentsComponent, LabResultsComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent, AnalyticsComponent, OnboardingTourComponent, OfflineIndicatorComponent],
     template: `
 
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
@@ -56,6 +57,9 @@ import { OnboardingTourComponent } from './onboarding-tour.component';
             <span>{{ i18n.isSq() ? 'Ndryshimet u ruajtën!' : 'Changes saved!' }}</span>
           }
         </div>
+
+        <!-- Offline Indicator Banner -->
+        <app-offline-indicator />
 
         <!-- Main Workspace -->
         <div class="flex-1 overflow-y-auto w-full px-4 pt-6 pb-24 lg:px-12 lg:py-10 bg-slate-50/50 relative">

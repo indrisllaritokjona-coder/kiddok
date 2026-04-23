@@ -1,251 +1,421 @@
-# KidDok — PDF/CSV Export Module: Technical Specification
-**Architect:** The Architect  
-**Date:** 2026-04-23  
-**Status:** Draft → For Executor
+# SPEC — Sprint 5: PDF/CSV Export Module
+
+**Project:** KidDok (Angular 19 + NestJS)
+**Author:** kiddok-architect
+**Status:** Draft → Ready for Executor
 
 ---
 
-## 1. Module Architecture
+## 1. Architecture
 
 ```
-HeaderComponent (header.component.ts)
-  └── Export Dropdown Button (inline in header right section)
-        ├── ExportMenuDropdownComponent
-        │     ├── Date Range Picker (from/to)
-        │     ├── Format Selector (PDF | CSV radio)
-        │     ├── Export button → triggers download
-        │     └── Loading spinner overlay
+┌─────────────────────────────────────────────────────────┐
+│                    ShellComponent                         │
+│  (hosts header + page content, manages viewState)        │
+│                                                          │
+│  ┌─────────────────────────────────────────────────────┐│
+│  │  HeaderComponent                                    ││
+│  │  [Export btn]  [Child pill + dropdown] [Lang] [⚙]  ││
+│  └─────────────────────────────────────────────────────┘│
+│                                                          │
+│  ── Export button → emits → openExportModal() signal ──  │
+│                        ↓                                  │
+│               ShellComponent opens                       │
+│               <app-export-modal>                          │
+└─────────────────────────────────────────────────────────┘
 
-DataService (data.service.ts)
-  └── exportChildData(childId, format, from, to) → GET /export/:childId/pdf?from=&to=
-                                               or GET /export/:childId/csv?from=&to=
+   ExportModalComponent (Angular dialog/modal)
+   ├── DateFromInput    (type="date")
+   ├── DateToInput      (type="date")
+   ├── FormatSelector   (radio: PDF | CSV)
+   └── ExportBtn → ExportService.export() → HTTP GET blob
+                           ↓
+                  Backend ExportController
+                  GET /export/:childId/pdf?from=&to=
+                  GET /export/:childId/csv?from=&to=
+                           ↓
+                  response: blob → browser auto-download
+```
 
-AuthInterceptor (auth.interceptor.ts)
-  └── Bearer token attached automatically
+### Angular Module Structure
+
+```
+src/app/
+├── components/
+│   ├── export-modal/                ← NEW (modal component)
+│   │   ├── export-modal.component.ts
+│   │   └── export-modal.component.css
+│   └── header/
+│       └── header.component.ts      ← MODIFIED (add Export button)
+├── services/
+│   └── export.service.ts            ← NEW (HTTP + blob download)
+└── core/i18n/i18n.service.ts        ← MODIFIED (add export labels)
+```
+
+### Backend (already exists — no changes)
+
+```
+backend/src/export/
+├── export.controller.ts    (GET /export/:childId/pdf, GET /export/:childId/csv)
+├── export.service.ts
+└── export.module.ts
 ```
 
 ---
 
-## 2. UI Placement
+## 2. Component Breakdown
 
-The **Export** button lives in the `header.component.ts`, in the right section of the header bar. It appears as a pill/button next to the existing child switcher pill.
+### 2.1 ExportModalComponent
 
-### Button States
-| State | Visual |
-|-------|--------|
-| Default | Icon + text "Export" |
-| Hover | Elevated shadow, primary color tint |
-| Loading | Spinner replaces icon, text "Duke eksportuar..." / "Exporting..." |
-| Disabled | Opacity 50%, no pointer events |
+**Selector:** `app-export-modal`
+**Standalone:** yes
+**Inputs:**
+- `childId: string` — which child to export for
+- `isOpen: boolean` — controls visibility
+**Outputs:**
+- `closed: EventEmitter<void>` — emitted on backdrop-click or X
 
-### Dropdown Panel
-- Appears below the export button (dropdown)
-- White card, rounded-2xl, shadow, border
-- Contains: Date range inputs + format selector + CTA button
-
----
-
-## 3. Component: ExportMenuDropdown
-
-### Template Structure
-
+**Template:**
 ```html
-<!-- Export Button in header -->
-<button type="button" (click)="toggleExportMenu()"
-        class="flex items-center gap-2 px-4 py-2 rounded-xl bg-white shadow-soft border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all"
-        [disabled]="isExporting()">
-  @if (isExporting()) {
-    <span class="animate-spin">⟳</span>
-    <span>{{ i18n.t()['export.exporting'] }}</span>
-  } @else {
-    <lucide-icon name="download"></lucide-icon>
-    <span class="font-bold text-sm">{{ i18n.t()['export.button'] }}</span>
-  }
-</button>
+<!-- Backdrop -->
+<div class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+     (click)="onBackdropClick($event)">
 
-<!-- Dropdown Panel -->
-@if (showExportMenu()) {
-  <div class="absolute right-0 top-full mt-2 w-80 bg-white rounded-3xl shadow-[...] border border-gray-100 p-5 z-50">
+  <!-- Card -->
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 animate-slide-up"
+       (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-xl font-extrabold text-gray-800">{{ t()['export.title'] }}</h2>
+      <button (click)="close()" [attr.aria-label]="t()['common.close']">
+        <lucide-icon name="x"></lucide-icon>
+      </button>
+    </div>
 
     <!-- Date Range -->
-    <div class="mb-4">
-      <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-        {{ i18n.t()['export.dateRange'] }}
-      </label>
-      <div class="flex gap-3">
-        <div class="flex-1">
-          <input type="date" [(ngModel)]="dateFrom" [max]="today"
-                 class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary-400 focus:ring-2 focus:ring-primary-100" />
+    <div class="mb-5">
+      <label class="block text-sm font-bold text-gray-600 mb-2">{{ t()['export.dateRange'] }}</label>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-gray-500 mb-1 block">{{ t()['export.from'] }}</label>
+          <input type="date" [(ngModel)]="dateFrom" class="input-base" />
         </div>
-        <div class="flex-1">
-          <input type="date" [(ngModel)]="dateTo" [max]="today"
-                 class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary-400 focus:ring-2 focus:ring-primary-100" />
+        <div>
+          <label class="text-xs text-gray-500 mb-1 block">{{ t()['export.to'] }}</label>
+          <input type="date" [(ngModel)]="dateTo" class="input-base" />
         </div>
       </div>
-      @if (dateRangeError()) {
-        <p class="text-xs text-red-500 mt-1">{{ dateRangeError() }}</p>
-      }
     </div>
 
     <!-- Format Selector -->
     <div class="mb-5">
-      <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-        {{ i18n.t()['export.format'] }}
-      </label>
-      <div class="flex gap-3">
-        <label class="flex-1 flex items-center gap-2 px-4 py-3 rounded-xl border cursor-pointer transition-all"
-               [class.border-primary-400]="selectedFormat === 'pdf'"
-               [class.bg-primary-50]="selectedFormat === 'pdf'">
-          <input type="radio" name="format" value="pdf" [(ngModel)]="selectedFormat" />
-          <span class="font-bold text-sm">{{ i18n.t()['export.pdf'] }}</span>
+      <label class="block text-sm font-bold text-gray-600 mb-2">{{ t()['export.format'] }}</label>
+      <div class="flex gap-4">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="radio" value="pdf" [(ngModel)]="format" />
+          <lucide-icon name="file-text" class="text-inherit"></lucide-icon>
+          <span class="text-sm font-medium">{{ t()['export.pdf'] }}</span>
         </label>
-        <label class="flex-1 flex items-center gap-2 px-4 py-3 rounded-xl border cursor-pointer transition-all"
-               [class.border-primary-400]="selectedFormat === 'csv'"
-               [class.bg-primary-50]="selectedFormat === 'csv'">
-          <input type="radio" name="format" value="csv" [(ngModel)]="selectedFormat" />
-          <span class="font-bold text-sm">{{ i18n.t()['export.csv'] }}</span>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="radio" value="csv" [(ngModel)]="format" />
+          <lucide-icon name="table" class="text-inherit"></lucide-icon>
+          <span class="text-sm font-medium">{{ t()['export.csv'] }}</span>
         </label>
       </div>
     </div>
 
-    <!-- CTA -->
-    <button type="button" (click)="executeExport()"
-            [disabled]="isExporting() || !dateFrom || !dateTo"
-            class="w-full py-3 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
-      @if (isExporting()) {
-        <span>{{ i18n.t()['export.exporting'] }}</span>
+    <!-- Large Range Warning -->
+    @if (showLargeRangeWarning()) {
+      <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700 flex gap-2">
+        <lucide-icon name="alert-triangle" class="text-inherit shrink-0"></lucide-icon>
+        {{ t()['export.largeRangeWarning'] }}
+      </div>
+    }
+
+    <!-- No Data Info -->
+    @if (noDataInRange) {
+      <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700 flex gap-2">
+        <lucide-icon name="info" class="text-inherit shrink-0"></lucide-icon>
+        {{ t()['export.noDataInRange'] }}
+      </div>
+    }
+
+    <!-- Export Button -->
+    <button type="button"
+            (click)="onExport()"
+            [disabled]="loading"
+            class="btn-primary w-full flex items-center justify-center gap-2">
+      @if (loading) {
+        <span class="animate-spin">
+          <lucide-icon name="loader-2"></lucide-icon>
+        </span>
+        <span>{{ t()['export.generating'] }}</span>
       } @else {
-        <span>{{ i18n.t()['export.download'] }}</span>
+        <lucide-icon name="download" class="text-inherit"></lucide-icon>
+        <span>{{ t()['export.exportBtn'] }}</span>
       }
     </button>
   </div>
+</div>
+```
+
+**State (signals):**
+```typescript
+dateFrom  = signal<string>('');   // ISO date string YYYY-MM-DD
+dateTo    = signal<string>('');   // ISO date string YYYY-MM-DD
+format    = signal<'pdf'|'csv'>('pdf');
+loading   = signal<boolean>(false);
+noDataInRange = signal<boolean>(false);
+error     = signal<string>('');
+```
+
+**Large range threshold:** > 365 days → warning shown.
+
+---
+
+### 2.2 ExportService
+
+```typescript
+@Injectable({ providedIn: 'root' })
+export class ExportService {
+  private http = inject(HttpClient);
+  private api  = inject(API_URL); // e.g. environment.apiUrl
+
+  async exportPdf(childId: string, dateFrom: string, dateTo: string): Promise<void>;
+  async exportCsv(childId: string, dateFrom: string, dateTo: string): Promise<void>;
+}
+```
+
+Both methods:
+1. GET `/export/{childId}/{pdf|csv}?from={dateFrom}&to={dateTo}` with `Authorization: Bearer <token>`
+2. Response type: `arraybuffer`
+3. Extract filename from `Content-Disposition` header (fallback: `kiddok-export.{pdf|csv}`)
+4. Trigger browser download via `Blob` + `URL.createObjectURL`
+5. Throw on non-2xx response (catches backend errors)
+
+---
+
+### 2.3 HeaderComponent Modification
+
+Add Export button in the right section of the header, before or after the child switcher pill.
+
+**Template addition:**
+```html
+<!-- Export button (app view only, when a child is active) -->
+@if (viewState === 'app' && activeChild()) {
+  <button type="button"
+          (click)="exportRequested.emit()"
+          class="flex items-center gap-2 px-3 py-2 rounded-xl bg-white shadow-soft border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all text-gray-600 hover:text-primary-600"
+          [attr.aria-label]="i18n.t()['export.trigger']">
+    <lucide-icon name="download" class="text-inherit" aria-hidden="true"></lucide-icon>
+    <span class="text-sm font-bold hidden sm:block">{{ i18n.t()['export.trigger'] }}</span>
+  </button>
+}
+```
+
+**Output added:**
+```typescript
+@Output() exportRequested = new EventEmitter<void>();
+```
+
+**ShellComponent wiring:**
+```html
+<app-header
+  [viewState]="viewState()"
+  (exportRequested)="openExportModal()"
+  ... />
+```
+
+And add `<app-export-modal>` to ShellComponent template:
+```html
+@if (showExportModal()) {
+  <app-export-modal
+    [childId]="dataService.activeChildId()!"
+    [isOpen]="showExportModal()"
+    (closed)="showExportModal.set(false)" />
 }
 ```
 
 ---
 
-## 4. DataService Changes
+## 3. API Contract
 
-### 4.1 New Method
+### GET `/export/:childId/pdf`
 
-```typescript
-async exportChildData(
-  childId: string,
-  format: 'pdf' | 'csv',
-  from?: string,
-  to?: string
-): Promise<void> {
-  const token = localStorage.getItem('kiddok_access_token');
-  const params = new HttpParams()
-    .set('from', from ?? '')
-    .set('to', to ?? '');
+**Query params:**
+| Param  | Type   | Required | Notes |
+|--------|--------|----------|-------|
+| `from` | string | No       | ISO date `YYYY-MM-DD`; defaults to beginning of child's record history |
+| `to`   | string | No       | ISO date `YYYY-MM-DD`; defaults to today |
 
-  const url = `${environment.apiUrl}/export/${childId}/${format}?${params.toString()}`;
+**Headers:**
+```
+Authorization: Bearer <jwt>
+```
 
-  // Use window.open or anchor click to trigger download
-  // Since backend returns a file blob, we use fetch + blob download
-  const response = await fetch(url, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
+**Response (200):**
+```
+Content-Type: application/pdf
+Content-Disposition: attachment; filename="kiddok-health-report-<childId>.pdf"
+X-Generated-At: <iso timestamp>
+<binary pdf buffer>
+```
 
-  if (!response.ok) throw new Error('Export failed');
+**Error responses (throw NotFoundException / ForbiddenException / 500):**
+```json
+{ "statusCode": 404, "message": "Child not found." }
+{ "statusCode": 403, "message": "Forbidden." }
+```
 
-  const blob = await response.blob();
-  const contentDisposition = response.headers.get('content-disposition') ?? '';
-  const filename = contentDisposition.match(/filename="(.+)"/)?.[1] ?? `kiddok-export.${format}`;
+### GET `/export/:childId/csv`
 
-  const urlBlob = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = urlBlob;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(urlBlob);
-}
+**Query params:** same as PDF.
+
+**Response (200):**
+```
+Content-Type: text/csv; charset=utf-8
+Content-Disposition: attachment; filename="<childName>_health_export_<date>.csv"
+X-Generated-At: <iso timestamp>
+X-Child-Id: <childId>
+<csv text>
 ```
 
 ---
 
-## 5. API Contract
+## 4. Data Flow
 
-### GET /export/:childId/pdf?from=&to=
-- **Auth:** Bearer JWT
-- **Query params:** `from` (ISO date), `to` (ISO date) — optional
-- **Response:** `application/pdf` binary stream
-
-### GET /export/:childId/csv?from=&to=
-- **Auth:** Bearer JWT
-- **Query params:** `from` (ISO date), `to` (ISO date) — optional
-- **Response:** `text/csv; charset=utf-8` file download
-
----
-
-## 6. Execution Roadmap
-
-| Step | File | Action |
-|------|------|--------|
-| 1 | `src/app/core/i18n/i18n.service.ts` | Add all export i18n keys (see Section 7) |
-| 2 | `src/app/services/data.service.ts` | Add `exportChildData(childId, format, from, to)` method |
-| 3 | `src/app/components/header.component.ts` | Add export button + dropdown template to header template |
-| 4 | `src/app/components/header.component.ts` | Add `showExportMenu`, `isExporting`, `dateFrom`, `dateTo`, `selectedFormat` signals |
-| 5 | `src/app/components/header.component.ts` | Add `toggleExportMenu()`, `executeExport()` methods |
-| 6 | `src/app/components/header.component.ts` | Add date range validation (from <= to, not future) |
-| 7 | `src/app/components/header.component.ts` | Handle no-data-in-range response gracefully |
-
----
-
-## 7. i18n Keys
-
-```typescript
-// Export
-'export.button':           { sq: 'Eksporto',        en: 'Export' },
-'export.dateRange':        { sq: 'Periudha',         en: 'Date Range' },
-'export.from':             { sq: 'Nga',              en: 'From' },
-'export.to':               { sq: 'Deri',             en: 'To' },
-'export.format':           { sq: 'Formati',          en: 'Format' },
-'export.pdf':              { sq: 'PDF',              en: 'PDF' },
-'export.csv':              { sq: 'CSV',              en: 'CSV' },
-'export.download':         { sq: 'Shkarko',          en: 'Download' },
-'export.exporting':        { sq: 'Duke eksportuar…', en: 'Exporting…' },
-'export.success':          { sq: 'Eksportimi u kry.', en: 'Export complete.' },
-'export.error':            { sq: 'Eksportimi dështoi.', en: 'Export failed.' },
-'export.noData':           { sq: 'Nuk ka të dhëna në këtë periudhë.', en: 'No data in this date range.' },
-'export.invalidRange':     { sq: 'Data e fillimit duhet të jetë para asaj të mbarimit.', en: 'Start date must be before end date.' },
+```
+User clicks "Export" button in header
+    ↓
+ShellComponent.openExportModal()
+    ↓
+showExportModal signal = true
+    ↓
+ExportModal opens (childId from activeChildId)
+    ↓
+User selects dates + format → clicks "Export"
+    ↓
+ExportService.exportPdf() OR .exportCsv()
+    ↓
+HttpClient GET with Authorization header, responseType: 'arraybuffer'
+    ↓
+Backend validates JWT + child ownership
+    ↓
+Backend queries data within [from, to] range
+    ↓
+Backend streams PDF/CSV with Content-Disposition: attachment
+    ↓
+Angular receives arraybuffer
+    ↓
+Blob created → Object URL → <a download> click → browser downloads
+    ↓
+URL.revokeObjectURL() cleanup
+    ↓
+Modal closes (or error toast shown)
 ```
 
 ---
 
-## 8. Edge Cases
+## 5. Edge Cases
 
-| Scenario | Handling |
-|----------|----------|
-| No dates selected | Default to "all time" (no from/to params sent) |
-| from > to | Show `invalidRange` error, block export |
-| Future dates selected | Cap at today's date (`max` attribute on date inputs) |
-| Backend returns empty PDF/CSV | Show toast `noData` — not an error, just no data |
-| Export fails (network error, 500) | Show toast `error` with retry option |
-| Export in progress, user clicks again | Block second click — `isExporting()` guard |
-| Very large date range (years) | Backend handles pagination — no frontend limit |
-| User closes dropdown mid-export | Export continues, result downloads when ready |
-| Child switcher changes active child during export | Current export completes for original childId |
-| JWT expires during export | 401 → redirect to login (auth interceptor handles this) |
-
----
-
-## 9. Loading State
-
-- While `isExporting()` is true:
-  - Button text changes to i18n `export.exporting`
-  - Spinner icon replaces download icon
-  - Dropdown CTA button disabled
-  - Clicking export button again is no-op (guard in `executeExport()`)
-- On `executeExport()` completion (success or error), `isExporting.set(false)`
+| Edge Case | Handling |
+|-----------|----------|
+| No data in selected range | Backend returns empty PDF/CSV with a "No records found" note. Modal shows info message via `X-Has-Data: false` header check OR by pre-fetching a lightweight count endpoint. Simpler: show info toast after download if file is empty (0 bytes). |
+| Large date range (>365 days) | Modal shows amber warning banner before export. Backend still processes. |
+| Backend not responding (network error) | HttpClient error → `catchError` → toast error: `i18n.t()['export.errorServer']` |
+| Backend returns 4xx/5xx | `catchError` → parse error body → toast: `error.message ?? i18n.t()['export.errorServer']` |
+| No active child (shouldn't happen — button hidden) | Guard: button only shown when `activeChild()` is truthy. |
+| Token expired mid-export | HttpInterceptor catches 401 → triggers re-auth flow. |
+| Date "from" > date "to" | Inline validation: disable Export button, show red error text. |
+| Downloaded file wrong extension | Backend guarantees correct `Content-Type`. Client trusts it. |
+| Offline | `OfflineService.isOnline()` check before XHR; if offline, show toast `i18n.t()['common.offline']`. |
 
 ---
 
-## 10. Design Notes
+## 6. i18n Labels (SQ + EN) — 12 keys
 
-- **Export button** matches existing header button style (pill, white bg, shadow-soft, border-gray-100)
-- **Dropdown** uses same shadow/rounded/border system as child switcher dropdown
-- **Date inputs** styled with focus ring in primary color (`focus:border-primary-400 focus:ring-2 focus:ring-primary-100`)
-- **Format selector** uses custom radio styling — selected option gets `border-primary-400 bg-primary-50`
-- No third-party date picker dependency — native `<input type="date">` with browser-native picker
+| Key | SQ (Albanian) | EN (English) |
+|-----|---------------|-------------|
+| `export.title` | Eksportim | Export |
+| `export.trigger` | Eksporto | Export |
+| `export.dateRange` | Periudha | Date Range |
+| `export.from` | Nga | From |
+| `export.to` | Deri | To |
+| `export.format` | Formati | Format |
+| `export.pdf` | PDF | PDF |
+| `export.csv` | CSV | CSV |
+| `export.exportBtn` | Shkarko | Download |
+| `export.generating` | Duke gjeneruar... | Generating... |
+| `export.noDataInRange` | Nuk ka të dhëna në periudhën e zgjedhur. | No data in the selected range. |
+| `export.largeRangeWarning` | Periudha e zgjedhur është e gjerë — eksportimi mund të zgjasë. | Selected range is large — export may take longer. |
+| `export.errorServer` | Diqka shkoi keq. Riprovoni. | Something went wrong. Please try again. |
+| `common.close` | Mbylle | Close |
+
+**Total: 14 keys** (12 requirements + 2 shared)
+
+---
+
+## 7. Execution Roadmap
+
+### Step 1: ExportService
+- Create `export.service.ts`
+- Implement `exportPdf()` and `exportCsv()` with `HttpClient` blob download pattern
+- Inject `AuthService` (or use `HttpInterceptor`) for Bearer token
+
+### Step 2: I18n labels
+- Add all 14 keys to `I18nService` translation map (both SQ and EN)
+
+### Step 3: ExportModalComponent
+- Create `components/export-modal/` directory
+- Build component with date inputs, radio selector, loading state, warning/info banners
+- Add `largeRangeWarning()` computed signal (>365 days)
+- Wire `onExport()` → `ExportService` → handle success/error
+
+### Step 4: ShellComponent integration
+- Add `showExportModal = signal(false)` and `openExportModal()` method
+- Add `<app-export-modal>` to template with `[childId]` and `(closed)` binding
+
+### Step 5: HeaderComponent
+- Add `exportRequested` @Output EventEmitter
+- Add Export button in template (hidden unless `viewState === 'app'` and `activeChild()`)
+- Pass `(exportRequested)` to ShellComponent
+
+### Step 6: Styles
+- Modal uses existing design tokens (rounded-3xl, shadow-2xl, bg-white, etc.)
+- Ensure responsive: full-screen on mobile, centered card on desktop
+
+### Step 7: Edge case testing
+- Test with no data in range
+- Test with range > 365 days
+- Test with from > to
+- Test with network failure
+- Test with 401 from backend
+
+---
+
+## 8. Pending Fixes (from Prior Reviews)
+
+> These should be tracked separately and do NOT block Sprint 5:
+> 1. **Temperature Diary**: Chart effect memory leak, silent save failure
+> 2. **Growth Tracking**: OnDestroy missing, no typed DTO, effect flicker
+
+Sprint 5 does not touch those modules. If similar patterns are found during export work, fix them and note in commit.
+
+---
+
+## 9. Acceptance Criteria
+
+- [ ] Export button visible in header when a child is active
+- [ ] Export modal opens on button click
+- [ ] Date range picker works (from/to, validates from ≤ to)
+- [ ] PDF and CSV radio buttons work
+- [ ] PDF export downloads a valid `.pdf` file
+- [ ] CSV export downloads a valid `.csv` file
+- [ ] Loading spinner + "Duke gjeneruar..." text shown during request
+- [ ] Error toast shown if backend fails
+- [ ] Info message shown if no data in range (after download)
+- [ ] Warning banner shown for range > 365 days
+- [ ] All 14 i18n labels available in both SQ and EN
+- [ ] No console errors in normal flow
+- [ ] Module compiles and runs without errors

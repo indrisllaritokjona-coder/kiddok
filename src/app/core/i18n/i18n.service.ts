@@ -710,6 +710,7 @@ const translations = {
   'error.generic': { sq: 'Ndodhi një gabim, provoni përsëri.', en: 'An error occurred, please try again.' },
   'error.exportFailed': { sq: 'Eksportimi dështoi. Provoni përsëri.', en: 'Export failed. Please try again.' },
   'diary.addFirst': { sq: 'Shto Shënimin', en: 'Add Entry' },
+  'toast.dismiss': { sq: 'Mbylle', en: 'Dismiss' },
 } as const;
 
 type TranslationKey = keyof RawTranslations;

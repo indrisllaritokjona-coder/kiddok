@@ -31,7 +31,7 @@ import { I18nService } from '../core/i18n/i18n.service';
             <span class="text-sm font-bold hidden sm:block">{{ i18n.t()['nav.back'] }}</span>
           </button>
         }
-        <button type="button" class="lg:hidden p-2 rounded-xl bg-white shadow-soft border border-gray-100" [attr.aria-label]="i18n.t()['nav.menu']">
+        <button type="button" class="lg:hidden p-2 rounded-xl bg-white shadow-soft border border-gray-100" [attr.aria-label]="i18n.t()['nav.menu']" (click)="menuToggleRequested.emit()">
           <lucide-icon name="menu" class="text-inherit" aria-hidden="true"></lucide-icon>
         </button>
         <!-- Page title -->
@@ -282,6 +282,8 @@ export class HeaderComponent implements OnDestroy {
   @Output() backRequested = new EventEmitter<void>();
   @Output() localeToggleRequested = new EventEmitter<void>();
   @Output() exportRequested = new EventEmitter<void>();
+  // Sprint 8: Mobile sidebar toggle
+  @Output() menuToggleRequested = new EventEmitter<void>();
 
   dataService = inject(DataService);
   i18n = inject(I18nService);

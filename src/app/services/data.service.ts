@@ -398,7 +398,7 @@ export class DataService {
         window.location.href = '/login';
         return;
       }
-      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+      this.toast.showKey('error.api.loadChildren');
       // Fallback to offline cached data
       await this.loadFromOffline();
     }
@@ -944,7 +944,7 @@ export class DataService {
       URL.revokeObjectURL(url);
     } catch (err: any) {
       console.error('[DataService] exportChildCsv failed:', err);
-      this.toast.show('Eksportimi dështoi. Provoni përsëri.', 'error');
+      this.toast.showKey('error.api.export');
     }
   }
 
@@ -974,7 +974,7 @@ export class DataService {
       document.body.removeChild(a);
     } catch (err: any) {
       console.error('[DataService] exportChildData failed:', err);
-      this.toast.show('Eksportimi dështoi. Provoni përsëri.', 'error');
+      this.toast.showKey('error.api.export');
       throw err;
     }
   }
@@ -988,7 +988,7 @@ export class DataService {
         method: 'POST',
         body: data,
       });
-      const localEntry: GrowthEntry = { ...data, id: 'local_' + Date.now(), createdAt: new Date().toISOString() };
+      const localEntry: GrowthEntry = { ...data, id: 'local_' + Date.now(), createdAt: new Date().toISOString(), height: data.height ?? null, weight: data.weight ?? null, notes: data.notes ?? null };
       this.growthEntries.update(current => [localEntry, ...current]);
       this.toast.showKey('offline.queued');
       return localEntry;
@@ -1009,7 +1009,7 @@ export class DataService {
         method: 'POST',
         body: data,
       });
-      const localEntry: GrowthEntry = { ...data, id: 'local_' + Date.now(), createdAt: new Date().toISOString() };
+      const localEntry: GrowthEntry = { ...data, id: 'local_' + Date.now(), createdAt: new Date().toISOString(), height: data.height ?? null, weight: data.weight ?? null, notes: data.notes ?? null };
       this.growthEntries.update(current => [localEntry, ...current]);
       this.toast.showKey('offline.queued');
       return localEntry;
@@ -1066,7 +1066,7 @@ export class DataService {
         return true;
       } catch (err: any) {
         console.error('[DataService] dev-login failed:', err);
-        this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+        this.toast.showKey('error.api.login');
         // fallback to dev token for offline dev
         localStorage.setItem(this.AUTH_KEY, 'dev-token-' + Date.now());
         this.isAuthenticated.set(true);
@@ -1188,7 +1188,7 @@ export class DataService {
       return episode;
     } catch (err: any) {
       console.error('[DataService] addIllness failed:', err);
-      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+      this.toast.showKey('error.api.generic');
       return null;
     }
   }
@@ -1206,7 +1206,7 @@ export class DataService {
       return updated;
     } catch (err: any) {
       console.error('[DataService] updateIllness failed:', err);
-      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+      this.toast.showKey('error.api.generic');
       return null;
     }
   }
@@ -1223,7 +1223,7 @@ export class DataService {
       if (cid) this.saveIllnessesLocally(cid, list);
     } catch (err: any) {
       console.error('[DataService] deleteIllness failed:', err);
-      this.toast.show('Ndodhi një gabim, provoni përsëri', 'error');
+      this.toast.showKey('error.api.generic');
     }
   }
 
@@ -1263,7 +1263,7 @@ export class DataService {
       return profile;
     } catch (err: any) {
       console.error('[DataService] fetchParentProfile failed:', err);
-      this.toast.show('Ndodhi një gabim gjatë ngarkimit të profilit', 'error');
+      this.toast.showKey('error.api.fetchParent');
       return { name: '', surname: '', phone: '' };
     }
   }

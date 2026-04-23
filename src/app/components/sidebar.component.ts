@@ -5,6 +5,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { CommonModule } from '@angular/common';
 import { DataService, ChildProfile } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
+import { SyncStatusComponent } from './sync-status.component';
 
 interface NavItem {
   id: string;
@@ -15,7 +16,7 @@ interface NavItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, SyncStatusComponent],
   template: `
     <aside class="sidebar" aria-label="Sidebar navigation">
       <!-- Brand row -->
@@ -60,6 +61,7 @@ interface NavItem {
 
       <!-- Footer -->
       <div class="sidebar__footer">
+        <app-sync-status />
         <button type="button" class="sidebar__footer-item" (click)="navigateTo('settings')" [attr.aria-label]="t()['sidebar.footer.settings']">
           <lucide-icon name="settings" class="sidebar__nav-icon" aria-hidden="true"></lucide-icon>
           <span>{{ t()['sidebar.footer.settings'] }}</span>

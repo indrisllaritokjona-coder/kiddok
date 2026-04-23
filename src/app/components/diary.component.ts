@@ -69,6 +69,42 @@ interface QuickAdd {
         }
       </div>
 
+      <!-- Sprint 8: Loading Skeleton -->
+      @if (loading()) {
+        <div class="space-y-4">
+          <!-- Calendar skeleton -->
+          <div class="bg-white rounded-[2rem] shadow-md border border-slate-100 p-6 animate-pulse">
+            <div class="flex justify-between items-center mb-4">
+              <div class="w-32 h-6 bg-gray-200 rounded"></div>
+              <div class="flex gap-2">
+                <div class="w-10 h-10 bg-gray-200 rounded-xl"></div>
+                <div class="w-10 h-10 bg-gray-200 rounded-xl"></div>
+              </div>
+            </div>
+            <div class="grid grid-cols-7 gap-2">
+              @for (i of [1,2,3,4,5,6,7]; track i) {
+                <div class="h-10 bg-gray-200 rounded-lg"></div>
+              }
+              @for (i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14]; track i) {
+                <div class="h-10 bg-gray-100 rounded-lg"></div>
+              }
+            </div>
+          </div>
+          <!-- Entries skeleton -->
+          <div class="bg-white rounded-[2rem] shadow-md border border-slate-100 p-6 animate-pulse">
+            @for (i of [1,2,3]; track i) {
+              <div class="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0">
+                <div class="w-8 h-8 bg-gray-200 rounded-full"></div>
+                <div class="flex-1">
+                  <div class="w-32 h-4 bg-gray-200 rounded mb-2"></div>
+                  <div class="w-48 h-3 bg-gray-100 rounded"></div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
       <!-- Filter Pills -->
       <div class="flex items-center gap-2 mb-6 flex-wrap">
         @for (f of filterPills(); track f.value) {
@@ -143,7 +179,12 @@ interface QuickAdd {
             @if (filteredEntriesForDate().length === 0) {
               <div class="text-center py-10">
                 <lucide-icon name="inbox" class="text-inherit"></lucide-icon>
-                <p class="text-slate-400 text-sm font-medium">{{ i18n.t()['diary.emptyState'] }}</p>
+                <p class="text-slate-400 text-sm font-medium mb-4">{{ i18n.t()['diary.emptyState'] }}</p>
+                <button (click)="openAddEntry()"
+                  class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-sm transition-all text-sm inline-flex items-center gap-2">
+                  <lucide-icon name="plus" class="text-inherit"></lucide-icon>
+                  {{ i18n.t()['diary.addFirst'] }}
+                </button>
               </div>
             }
             @for (entry of filteredEntriesForDate(); track entry.id) {
@@ -195,7 +236,12 @@ interface QuickAdd {
           @if (recentEntries().length === 0) {
             <div class="text-center py-8">
               <lucide-icon name="inbox" class="text-inherit"></lucide-icon>
-              <p class="text-slate-400 text-sm font-medium">{{ i18n.t()['diary.emptyState'] }}</p>
+              <p class="text-slate-400 text-sm font-medium mb-4">{{ i18n.t()['diary.emptyState'] }}</p>
+              <button (click)="openAddEntry()"
+                class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-sm transition-all text-sm inline-flex items-center gap-2">
+                <lucide-icon name="plus" class="text-inherit"></lucide-icon>
+                {{ i18n.t()['diary.addFirst'] }}
+              </button>
             </div>
           }
           <div class="space-y-3">
@@ -331,6 +377,9 @@ interface QuickAdd {
 export class DiaryComponent {
   dataService = inject(DataService);
   i18n = inject(I18nService);
+
+  // Sprint 8: Loading state
+  loading = signal(false);
 
   // ── Calendar state ────────────────────────────────────────────────
   viewDate = signal(new Date());

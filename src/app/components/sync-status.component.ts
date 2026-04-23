@@ -1,4 +1,4 @@
-import {
+﻿import {
   Component,
   inject,
   signal,
@@ -8,9 +8,9 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
-import { OfflineService } from '../../services/offline.service';
-import { I18nService } from '../../core/i18n/i18n.service';
-import { SyncService } from '../../services/sync.service';
+import { OfflineService } from '../services/offline.service';
+import { I18nService } from '../core/i18n/i18n.service';
+import { SyncService } from '../services/sync.service';
 
 export type SyncState = 'idle' | 'syncing' | 'synced' | 'error' | 'conflict';
 
@@ -20,7 +20,7 @@ export type SyncState = 'idle' | 'syncing' | 'synced' | 'error' | 'conflict';
   imports: [CommonModule, LucideAngularModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <!-- Sync status pill — shown in header or toolbar -->
+    <!-- Sync status pill â€” shown in header or toolbar -->
     <div class="flex items-center gap-2" role="status" [attr.aria-label]="statusLabel()">
       <!-- Animated sync icon when syncing -->
       @if (state() === 'syncing') {
@@ -43,6 +43,11 @@ export type SyncState = 'idle' | 'syncing' | 'synced' | 'error' | 'conflict';
       <span class="text-xs font-semibold" [class]="stateClass()">
         {{ statusLabel() }}
       </span>
+
+      <!-- Pending count badge -->
+      @if (pendingCount() > 0) {
+        <span class="text-xs text-gray-400">({{ t()['sync.queue.count'].replace('{n}', '' + pendingCount()) }})</span>
+      }
 
       <!-- Last synced timestamp -->
       @if (lastSyncedAt() && state() === 'synced') {
@@ -192,12 +197,15 @@ export class SyncStatusComponent implements OnInit, OnDestroy {
   syncService = inject(SyncService);
   i18n = inject(I18nService);
 
+  readonly t = this.i18n.t;
+
   // Sync state
   state = signal<SyncState>('idle');
   lastSyncedAt = signal<Date | null>(null);
   conflictCount = signal(0);
   pendingConflicts = signal<PendingConflict[]>([]);
   showConflictPanel = signal(false);
+  pendingCount = signal(0);
 
   private retryTimeout: any = null;
   private retryAttempts = 0;
@@ -222,24 +230,27 @@ export class SyncStatusComponent implements OnInit, OnDestroy {
     this.updateLabels();
     this.loadLastSyncedTime();
     this.setupAutoSync();
+    this.loadPendingCount();
   }
+
 
   ngOnDestroy(): void {
     if (this.retryTimeout) clearTimeout(this.retryTimeout);
   }
 
   private updateLabels(): void {
-    const isSq = this.i18n.isSq();
     const t = this.i18n.t();
 
-    this.conflictPanelTitle.set(t['sync.conflictPanelTitle'] || (isSq ? 'Konflikt i Pixelimit' : 'Data Conflict'));
-    this.conflictPanelSubtitle.set(t['sync.conflictPanelSubtitle'] || (isSq ? 'Të dhëna që kërkojnë rishikim manual' : 'Data requiring manual review'));
-    this.medicalReviewLabel.set(t['sync.medicalReview'] || (isSq ? 'Rishikim Mjekësor' : 'Medical Review'));
-    this.thisLocalLabel.set(t['sync.thisLocal'] || (isSq ? 'Lokalisht' : 'Local'));
-    this.thisServerLabel.set(t['sync.server'] || (isSq ? 'Serveri' : 'Server'));
-    this.useLocalLabel.set(t['sync.useLocal'] || (isSq ? 'Përdor Lokalen' : 'Use Local'));
-    this.useServerLabel.set(t['sync.useServer'] || (isSq ? 'Përdor Serverin' : 'Use Server'));
-    this.conflictFooterNote.set(t['sync.conflictFooterNote'] || (isSq ? 'Konfliktet zgjidhen automatikisht për të dhëna jo-mjekësore.' : 'Non-medical data conflicts are resolved automatically.'));
+    this.conflictPanelTitle.set(t['sync.conflictPanelTitle']);
+    this.conflictPanelSubtitle.set(t['sync.conflictPanelSubtitle']);
+    this.medicalReviewLabel.set(t['sync.medicalReview']);
+    this.thisLocalLabel.set(t['sync.conflict.local']);
+    this.thisServerLabel.set(t['sync.conflict.server']);
+    this.useLocalLabel.set(t['sync.conflict.resolveLocal']);
+    this.useServerLabel.set(t['sync.conflict.resolveServer']);
+    this.conflictFooterNote.set(t['sync.conflict.footer']);
+    this.retryLabel.set(t['offline.retry']);
+    this.conflictLabel.set(t['offline.conflict']);
   }
 
   private loadLastSyncedTime(): void {
@@ -265,30 +276,35 @@ export class SyncStatusComponent implements OnInit, OnDestroy {
 
   private updateStatusFromState(state: SyncState): void {
     this.state.set(state);
-    const isSq = this.i18n.isSq();
+    const t = this.i18n.t();
     switch (state) {
       case 'syncing':
-        this.statusLabel.set(isSq ? 'Duke sinkronizuar...' : 'Syncing...');
+        this.statusLabel.set(t['sync.status.syncing']);
         this.stateClass.set('text-primary-500');
         break;
       case 'synced':
-        this.statusLabel.set(isSq ? 'Sinkronizuar' : 'Synced');
+        this.statusLabel.set(t['sync.status.synced']);
         this.stateClass.set('text-teal-600');
         this.saveLastSyncedTime();
         break;
       case 'error':
-        this.statusLabel.set(isSq ? 'Gabim' : 'Error');
+        this.statusLabel.set(t['sync.status.error']);
         this.stateClass.set('text-red-500');
         this.scheduleRetry();
         break;
       case 'conflict':
-        this.statusLabel.set(isSq ? 'Konflikt' : 'Conflict');
+        this.statusLabel.set(t['sync.status.conflict']);
         this.stateClass.set('text-amber-600');
         break;
       default:
-        this.statusLabel.set('');
+        this.statusLabel.set(t['sync.status.idle']);
         this.stateClass.set('text-gray-400');
     }
+  }
+
+  private async loadPendingCount(): Promise<void> {
+    const count = await this.offlineService.getSyncQueueCount();
+    this.pendingCount.set(count);
   }
 
   async triggerSync(): Promise<void> {
@@ -333,7 +349,7 @@ export class SyncStatusComponent implements OnInit, OnDestroy {
   }
 
   async resolveConflict(conflict: PendingConflict, resolution: 'local_wins' | 'server_wins'): Promise<void> {
-    await this.syncService.resolveConflict(
+    await this.syncService.submitResolution(
       conflict.entityType,
       conflict.entityId,
       resolution
@@ -362,9 +378,9 @@ export class SyncStatusComponent implements OnInit, OnDestroy {
     if (mins < 1) {
       this.lastSyncedLabel.set(isSq ? 'tani' : 'just now');
     } else if (mins < 60) {
-      this.lastSyncedLabel.set(isSq ? `${mins} min më parë` : `${mins}m ago`);
+      this.lastSyncedLabel.set(isSq ? `${mins} min mÃ« parÃ«` : `${mins}m ago`);
     } else if (hours < 24) {
-      this.lastSyncedLabel.set(isSq ? `${hours} orë më parë` : `${hours}h ago`);
+      this.lastSyncedLabel.set(isSq ? `${hours} orÃ« mÃ« parÃ«` : `${hours}h ago`);
     } else {
       this.lastSyncedLabel.set(ts.toLocaleDateString(isSq ? 'sq-AL' : 'en-US'));
     }

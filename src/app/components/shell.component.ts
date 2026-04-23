@@ -22,6 +22,16 @@ import { ExportModalComponent } from './export-modal/export-modal.component';
 
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
 
+      <!-- Sprint 8: Mobile Sidebar Overlay (lg:hidden) -->
+      @if (mobileSidebarOpen()) {
+        <!-- Backdrop -->
+        <div class="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+             (click)="mobileSidebarOpen.set(false)"
+             aria-hidden="true"></div>
+        <!-- Sidebar panel -->
+        <app-sidebar class="fixed inset-y-0 left-0 z-50 w-72 shadow-2xl lg:hidden" />
+      }
+
       <!-- Desktop Sidebar -->
       <app-sidebar class="hidden lg:block" />
 
@@ -41,6 +51,7 @@ import { ExportModalComponent } from './export-modal/export-modal.component';
           (backRequested)="goToSelector()"
           (localeToggleRequested)="i18n.toggleLocale()"
           (exportRequested)="openExportModal()"
+          (menuToggleRequested)="mobileSidebarOpen.set(!mobileSidebarOpen())"
           [switching]="switching()"
         />
 
@@ -61,6 +72,23 @@ import { ExportModalComponent } from './export-modal/export-modal.component';
 
           <!-- ===== CHILD SELECTOR SCREEN ===== -->
           @if (viewState() === 'selector') {
+            <!-- Sprint 8: Children Loading Skeleton -->
+            @if (childrenLoading()) {
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                @for (i of [1,2]; track i) {
+                  <div class="bg-white rounded-[2rem] p-8 shadow-md border border-slate-100 animate-pulse">
+                    <div class="flex items-center gap-5 mb-5">
+                      <div class="w-16 h-16 rounded-full bg-gray-200"></div>
+                      <div class="space-y-2">
+                        <div class="w-32 h-5 bg-gray-200 rounded"></div>
+                        <div class="w-20 h-4 bg-gray-100 rounded"></div>
+                      </div>
+                    </div>
+                    <div class="h-10 bg-gray-100 rounded-2xl"></div>
+                  </div>
+                }
+              </div>
+            }
             @if (dataService.children().length === 0 && !isAddingChild()) {
               <div class="h-full flex flex-col items-center justify-center text-center animate-slide-up max-w-lg mx-auto">
                 <div class="w-40 h-40 bg-gradient-to-tr from-primary-100 to-teal-50 text-primary-500 rounded-full flex items-center justify-center mb-10 shadow-glass border border-white">
@@ -626,6 +654,10 @@ export class ShellComponent implements OnDestroy, OnInit {
   isAddingChild = signal(false);
   showChildModal = signal(false);
   showExportModal = signal(false);
+  // Sprint 8: Children loading skeleton
+  childrenLoading = signal(false);
+  // Sprint 8: Mobile sidebar overlay visibility
+  mobileSidebarOpen = signal(false);
   settingsSaved = signal(false);
   viewState = signal<'selector' | 'app'>(
     localStorage.getItem('kiddok_active_child') ? 'app' : 'selector'

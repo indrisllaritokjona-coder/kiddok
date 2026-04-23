@@ -1,4 +1,4 @@
-import { Injectable, signal, inject, NgZone } from '@angular/core';
+import { Injectable, signal, inject, NgZone, Injector } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { DataService, ChildProfile, TemperatureEntry, GrowthEntry, VaccineRecord, DiaryEntry, ParentProfile } from './data.service';
@@ -28,9 +28,9 @@ export interface SyncQueueEntry {
 @Injectable({ providedIn: 'root' })
 export class OfflineService {
   private http = inject(HttpClient);
-  private dataService = inject(DataService);
   private toast = inject(ToastService);
   private ngZone = inject(NgZone);
+  private injector = inject(Injector);
   private _syncService: import('./sync.service').SyncService | null = null;
 
   private async getSyncServiceAsync(): Promise<import('./sync.service').SyncService> {
@@ -467,14 +467,15 @@ export class OfflineService {
 
   async cacheAllData(): Promise<void> {
     try {
-      await this.saveChildrenToOffline(this.dataService.children());
+      const dataService = this.injector.get(DataService);
+      await this.saveChildrenToOffline(dataService.children());
 
-      const activeChildId = this.dataService.activeChildId();
+      const activeChildId = dataService.activeChildId();
       if (activeChildId) {
-        await this.saveTemperaturesToOffline(this.dataService.temperatureEntries());
-        await this.saveGrowthToOffline(this.dataService.growthEntries());
-        await this.saveVaccinesToOffline(this.dataService.vaccineRecords());
-        await this.saveDiaryToOffline(this.dataService.diaryEntries());
+        await this.saveTemperaturesToOffline(dataService.temperatureEntries());
+        await this.saveGrowthToOffline(dataService.growthEntries());
+        await this.saveVaccinesToOffline(dataService.vaccineRecords());
+        await this.saveDiaryToOffline(dataService.diaryEntries());
       }
     } catch (err) {
       console.error('[OfflineService] cacheAllData failed:', err);
@@ -491,10 +492,12 @@ export class OfflineService {
       this.getDiaryFromOffline(childId),
     ]);
 
-    if (temps.length > 0) this.dataService.temperatureEntries.set(temps);
-    if (growth.length > 0) this.dataService.growthEntries.set(growth);
-    if (vaccines.length > 0) this.dataService.vaccineRecords.set(vaccines);
-    if (diary.length > 0) this.dataService.diaryEntries.set(diary);
+    const dataService = this.injector.get(DataService);
+
+    if (temps.length > 0) dataService.temperatureEntries.set(temps);
+    if (growth.length > 0) dataService.growthEntries.set(growth);
+    if (vaccines.length > 0) dataService.vaccineRecords.set(vaccines);
+    if (diary.length > 0) dataService.diaryEntries.set(diary);
   }
 
   async loadCachedChildren(): Promise<ChildProfile[]> {

@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnDestroy, OnInit, ChangeDetectionStrategy, effect } from '@angular/core';
+import { Component, inject, signal, computed, OnDestroy, OnInit, ChangeDetectionStrategy, effect, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
 import { DataService, ChildProfile } from '../services/data.service';
@@ -616,12 +616,6 @@ export class ShellComponent implements OnDestroy, OnInit {
   private route = inject(ActivatedRoute);
 
   ngOnInit() {
-    // Dismiss childrenLoading skeleton once children signal populates
-    effect(() => {
-      if (this.dataService.children().length > 0) {
-        this.childrenLoading.set(false);
-      }
-    });
   }
 
   private navigateHandler = (e: Event) => {
@@ -637,6 +631,13 @@ export class ShellComponent implements OnDestroy, OnInit {
   }
 
   constructor() {
+    // Dismiss childrenLoading skeleton once children signal populates
+    effect(() => {
+      if (this.dataService.children().length > 0) {
+        this.childrenLoading.set(false);
+      }
+    });
+
     // Listen for cross-component navigation events from home sub-components
     window.addEventListener('kiddok:navigate', this.navigateHandler);
     
@@ -665,6 +666,13 @@ export class ShellComponent implements OnDestroy, OnInit {
   childrenLoading = signal(false);
   // Sprint 8: Mobile sidebar overlay visibility
   mobileSidebarOpen = signal(false);
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.mobileSidebarOpen()) {
+      this.mobileSidebarOpen.set(false);
+    }
+  }
   settingsSaved = signal(false);
   viewState = signal<'selector' | 'app'>(
     localStorage.getItem('kiddok_active_child') ? 'app' : 'selector'

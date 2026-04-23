@@ -51,6 +51,17 @@ import { I18nService } from '../core/i18n/i18n.service';
           {{ i18n.locale() === 'sq' ? i18n.t()['header.sq'] : i18n.t()['header.en'] }}
         </button>
 
+        <!-- Export button (app view only, when a child is active) -->
+        @if (viewState === 'app' && activeChild()) {
+          <button type="button"
+                  (click)="exportRequested.emit()"
+                  class="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl bg-white shadow-soft border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all text-gray-600 hover:text-primary-600"
+                  [attr.aria-label]="i18n.t()['export.trigger']">
+            <lucide-icon name="download" class="text-inherit" aria-hidden="true"></lucide-icon>
+            <span class="text-sm font-bold hidden xl:block">{{ i18n.t()['export.trigger'] }}</span>
+          </button>
+        }
+
         <!-- Quick Switcher button (desktop only, app view) -->
         @if (viewState === 'app' && hasChildren()) {
           <button type="button" (click)="openQuickSwitcher()"
@@ -270,6 +281,7 @@ export class HeaderComponent implements OnDestroy {
   @Output() switchProfileRequested = new EventEmitter<void>();
   @Output() backRequested = new EventEmitter<void>();
   @Output() localeToggleRequested = new EventEmitter<void>();
+  @Output() exportRequested = new EventEmitter<void>();
 
   dataService = inject(DataService);
   i18n = inject(I18nService);

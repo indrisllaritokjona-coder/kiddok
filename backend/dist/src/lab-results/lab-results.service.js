@@ -13,6 +13,31 @@ exports.LabResultsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const children_service_1 = require("../children/children.service");
+const atob_1 = require("atob");
+const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
+const MAX_ATTACHMENTS = 5;
+const ALLOWED_BASE64_HEADERS = ['/9j/', 'iVBOR', 'UEs', 'JVBER', 'dGV4dC'];
+function isValidBase64(str) {
+    try {
+        if (!/^[A-Za-z0-9+/]*={0,2}$/.test(str))
+            return false;
+        const decoded = (0, atob_1.decode)(str);
+        if (decoded.includes('\0'))
+            return false;
+        return true;
+    }
+    catch {
+        return false;
+    }
+}
+function getDecodedSize(base64) {
+    try {
+        return (0, atob_1.decode)(base64).length;
+    }
+    catch {
+        return 0;
+    }
+}
 let LabResultsService = class LabResultsService {
     prisma;
     childrenService;
@@ -20,8 +45,28 @@ let LabResultsService = class LabResultsService {
         this.prisma = prisma;
         this.childrenService = childrenService;
     }
+    validateAttachments(attachments) {
+        if (!attachments || attachments.length === 0)
+            return;
+        if (attachments.length > MAX_ATTACHMENTS) {
+            throw new common_1.BadRequestException(`Maximum ${MAX_ATTACHMENTS} attachments allowed per result`);
+        }
+        for (const att of attachments) {
+            if (!isValidBase64(att)) {
+                throw new common_1.BadRequestException('Invalid attachment encoding');
+            }
+            const decodedSize = getDecodedSize(att);
+            if (decodedSize > MAX_ATTACHMENT_SIZE) {
+                throw new common_1.BadRequestException(`Attachment exceeds maximum size of 10MB`);
+            }
+            if (att.includes('data:') || att.includes(';base64,')) {
+                throw new common_1.BadRequestException('Invalid attachment format: contains data URI prefix');
+            }
+        }
+    }
     async create(userId, childId, data) {
         await this.childrenService.findOne(childId, userId);
+        this.validateAttachments(data.attachments);
         return this.prisma.labResult.create({
             data: {
                 testName: data.testName,
@@ -56,6 +101,7 @@ let LabResultsService = class LabResultsService {
     }
     async update(userId, id, data) {
         await this.findOne(userId, id);
+        this.validateAttachments(data.attachments);
         return this.prisma.labResult.update({
             where: { id },
             data: {

@@ -1,32 +1,24 @@
-﻿import { Component, inject, signal, computed, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
+﻿import { Component, inject, signal, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
 import { DataService, ChildProfile } from '../services/data.service';
 import { I18nService } from '../core/i18n/i18n.service';
-import { Router, ActivatedRoute } from '@angular/router';
-import { HomeComponent } from './home.component';
-import { DiaryComponent } from './diary.component';
-import { TemperatureDiaryComponent } from './temperature-diary.component';
-import { GrowthTrackingComponent } from './growth-tracking.component';
-import { RecordsComponent } from './records.component';
-import { VaccinesComponent } from './vaccines.component';
-import { MedicationsComponent } from './medications/medications.component';
-import { AppointmentsComponent } from './appointments/appointments.component';
-import { LabResultsComponent } from './lab-results/lab-results.component';
+import { Router, ActivatedRoute, RouterOutlet } from '@angular/router';
 import { SidebarComponent } from './sidebar.component';
 import { HeaderComponent } from './header.component';
 import { BottomNavComponent } from './bottom-nav.component';
 import { FormsModule } from '@angular/forms';
 import { AddEditChildModalComponent } from '../features/child/add-edit-child-modal/add-edit-child-modal.component';
 import { SettingsPageComponent } from './settings/settings-page.component';
-import { AnalyticsComponent } from './analytics.component';
 import { OnboardingTourComponent } from './onboarding-tour.component';
 import { OfflineIndicatorComponent } from './offline-indicator.component';
+import { ExportModalComponent } from './export-modal/export-modal.component';
+import { ModalService } from '../services/modal.service';
 
 @Component({
     selector: 'app-shell',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, FormsModule, LucideAngularModule, HomeComponent, DiaryComponent, TemperatureDiaryComponent, GrowthTrackingComponent, RecordsComponent, VaccinesComponent, MedicationsComponent, AppointmentsComponent, LabResultsComponent, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent, AnalyticsComponent, OnboardingTourComponent, OfflineIndicatorComponent],
+    imports: [CommonModule, FormsModule, RouterOutlet, LucideAngularModule, SidebarComponent, HeaderComponent, BottomNavComponent, AddEditChildModalComponent, SettingsPageComponent, OnboardingTourComponent, OfflineIndicatorComponent, ExportModalComponent],
     template: `
 
     <div class="h-screen flex bg-background overflow-hidden relative font-sans">
@@ -49,6 +41,7 @@ import { OfflineIndicatorComponent } from './offline-indicator.component';
           (switchProfileRequested)="goToSelector()"
           (backRequested)="goToSelector()"
           (localeToggleRequested)="i18n.toggleLocale()"
+          (exportRequested)="openExportModal()"
           [switching]="switching()"
         />
 
@@ -298,6 +291,15 @@ import { OfflineIndicatorComponent } from './offline-indicator.component';
 
       <!-- Bottom Nav (Mobile) -->
       <app-bottom-nav />
+
+      <!-- Export Modal (Sprint 5) -->
+      @if (showExportModal()) {
+        <app-export-modal
+          [childId]="dataService.activeChildId()!"
+          [isOpen]="showExportModal()"
+          (closed)="showExportModal.set(false)"
+        />
+      }
 
       <!-- ══════════════════════════════════════════
            ADD/EDIT CHILD MODAL (Sprint 7 — 3-step wizard)
@@ -630,6 +632,7 @@ export class ShellComponent implements OnDestroy, OnInit {
 
   isAddingChild = signal(false);
   showChildModal = signal(false);
+  showExportModal = signal(false);
   settingsSaved = signal(false);
   viewState = signal<'selector' | 'app'>('selector');
   switching = signal(false);
@@ -734,6 +737,10 @@ export class ShellComponent implements OnDestroy, OnInit {
   currentTab = signal('home');
 
   // ── Edit Modal ─────────────────────────────────────────────────
+
+  openExportModal() {
+    this.showExportModal.set(true);
+  }
 
   openEditModal(child: ChildProfile) {
     this.editingChild.set(child);

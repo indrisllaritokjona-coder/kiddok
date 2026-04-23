@@ -1,4 +1,5 @@
 import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { LucideAngularModule } from 'lucide-angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -212,11 +213,9 @@ interface PendingFile {
               <select [(ngModel)]="formType"
                 class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-gray-800 text-sm font-medium">
                 <option value="">--</option>
-                <option value="hemogram">{{ i18n.isSq() ? 'Hemogram' : 'Hemogram' }}</option>
-                <option value="urinalysis">{{ i18n.isSq() ? 'Analizë Urine' : 'Urinalysis' }}</option>
-                <option value="biochemistry">{{ i18n.isSq() ? 'Biokim i gjakut' : 'Blood Biochemistry' }}</option>
-                <option value="immunology">{{ i18n.isSq() ? 'Imunologji' : 'Immunology' }}</option>
-                <option value="other">{{ i18n.isSq() ? 'Tjetër' : 'Other' }}</option>
+                @for (opt of getTypeOptions(); track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
               </select>
             </div>
 
@@ -540,6 +539,7 @@ interface PendingFile {
 export class LabResultsComponent implements OnInit, OnDestroy {
   i18n = inject(I18nService);
   data = inject(DataService);
+  sanitizer = inject(DomSanitizer);
 
   // State
   loading = signal(false);
@@ -584,7 +584,9 @@ export class LabResultsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    // cleanup if needed
+    this.pendingFiles.set([]);
+    this.viewingAttachment.set(null);
+    this.viewingResult.set(null);
   }
 
   async loadLabResults() {
@@ -627,13 +629,16 @@ export class LabResultsComponent implements OnInit, OnDestroy {
     this.formDoctor.set(lr.doctor || '');
     this.formNotes.set(lr.notes || '');
     this.formType.set(lr.type || '');
-    // Load existing attachments as pending files
-    const existing = (lr.attachments || []).map((att, i) => ({
-      name: `${this.i18n.t()['labResults.attachments'] || 'Dokumenti'} ${i + 1}`,
-      size: Math.round((att.length * 3) / 4), // rough base64 estimate
-      base64: att,
-      mimeType: this.guessMimeType(att),
-    }));
+    // Load existing attachments, preserving original filenames where encoded
+    const existing = (lr.attachments || []).map((att, i) => {
+      const filename = this.getFilenameFromAtt(att, i);
+      return {
+        name: filename,
+        size: Math.round((att.length * 3) / 4), // rough base64 estimate
+        base64: att,
+        mimeType: this.guessMimeType(att),
+      };
+    });
     this.pendingFiles.set(existing);
     this.saveError.set(null);
     this.fileError.set(null);
@@ -775,10 +780,12 @@ export class LabResultsComponent implements OnInit, OnDestroy {
       const reader = new FileReader();
       reader.onload = (e) => {
         const base64 = (e.target?.result as string).split(',')[1];
+        // Encode filename into attachment so it's preserved on edit
+        const encodedAtt = this.encodeAttWithFilename(base64, file.name);
         const pending: PendingFile = {
           name: file.name,
           size: file.size,
-          base64,
+          base64: encodedAtt,
           mimeType: file.type,
         };
         this.pendingFiles.update(list => [...list, pending]);
@@ -825,10 +832,53 @@ export class LabResultsComponent implements OnInit, OnDestroy {
   downloadAttachment(base64: string, index: number) {
     const mime = this.guessMimeType(base64);
     const ext = mime.split('/')[1];
+    const filename = this.getFilenameFromAtt(base64, index);
     const dataUrl = `data:${mime};base64,${base64}`;
     const a = document.createElement('a');
     a.href = dataUrl;
-    a.download = `lab-result-attachment-${index + 1}.${ext}`;
+    a.download = filename;
     a.click();
+  }
+
+  // ─── Filename encoding (preserves original name through edit cycles) ──
+
+  private encodeAttWithFilename(base64: string, filename: string): string {
+    try {
+      // Base64-encode the filename to avoid corrupting the base64 data
+      const b64Name = btoa(encodeURIComponent(filename));
+      return `__KDOC__${b64Name}::__${base64}`;
+    } catch {
+      return base64;
+    }
+  }
+
+  private getFilenameFromAtt(base64: string, index: number): string {
+    const marker = '__KDOC__';
+    const sep = '::__';
+    const idx = base64.indexOf(marker);
+    if (idx === -1) {
+      // Legacy attachment without filename encoding — use generic name
+      return `${this.i18n.t()['labResults.attachments'] || 'Dokumenti'} ${index + 1}`;
+    }
+    try {
+      const endIdx = base64.indexOf(sep, idx);
+      if (endIdx === -1) return `${this.i18n.t()['labResults.attachments'] || 'Dokumenti'} ${index + 1}`;
+      const b64Name = base64.substring(idx + marker.length, endIdx);
+      return decodeURIComponent(atob(b64Name));
+    } catch {
+      return `${this.i18n.t()['labResults.attachments'] || 'Dokumenti'} ${index + 1}`;
+    }
+  }
+
+  // ─── Type dropdown options ────────────────────────────────────────
+
+  getTypeOptions() {
+    return [
+      { value: 'hemogram', label: this.i18n.t()['labResults.typeHemogram'] || 'Hemogram' },
+      { value: 'urinalysis', label: this.i18n.t()['labResults.typeUrinalysis'] || 'Urinalysis' },
+      { value: 'biochemistry', label: this.i18n.t()['labResults.typeBiochemistry'] || 'Blood Biochemistry' },
+      { value: 'immunology', label: this.i18n.t()['labResults.typeImmunology'] || 'Immunology' },
+      { value: 'other', label: this.i18n.t()['labResults.typeOther'] || 'Other' },
+    ];
   }
 }

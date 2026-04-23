@@ -1,7 +1,33 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChildrenService } from '../children/children.service';
 import { CreateLabResultDto, UpdateLabResultDto } from './lab-result.dto';
+import { decode as atob } from 'atob';
+
+const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10MB decoded
+const MAX_ATTACHMENTS = 5;
+const ALLOWED_BASE64_HEADERS = ['/9j/', 'iVBOR', 'UEs', 'JVBER', 'dGV4dC']; // jpg/png/pdf markers
+
+function isValidBase64(str: string): boolean {
+  try {
+    // Must match base64 charset
+    if (!/^[A-Za-z0-9+/]*={0,2}$/.test(str)) return false;
+    const decoded = atob(str);
+    // Check for null bytes that might indicate binary corruption
+    if (decoded.includes('\0')) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function getDecodedSize(base64: string): number {
+  try {
+    return atob(base64).length;
+  } catch {
+    return 0;
+  }
+}
 
 @Injectable()
 export class LabResultsService {
@@ -10,8 +36,31 @@ export class LabResultsService {
     private childrenService: ChildrenService,
   ) {}
 
+  private validateAttachments(attachments: string[] | undefined): void {
+    if (!attachments || attachments.length === 0) return;
+
+    if (attachments.length > MAX_ATTACHMENTS) {
+      throw new BadRequestException(`Maximum ${MAX_ATTACHMENTS} attachments allowed per result`);
+    }
+
+    for (const att of attachments) {
+      if (!isValidBase64(att)) {
+        throw new BadRequestException('Invalid attachment encoding');
+      }
+      const decodedSize = getDecodedSize(att);
+      if (decodedSize > MAX_ATTACHMENT_SIZE) {
+        throw new BadRequestException(`Attachment exceeds maximum size of 10MB`);
+      }
+      // Check for embedded filenames/data URI prefix (shouldn't have them in raw base64)
+      if (att.includes('data:') || att.includes(';base64,')) {
+        throw new BadRequestException('Invalid attachment format: contains data URI prefix');
+      }
+    }
+  }
+
   async create(userId: string, childId: string, data: CreateLabResultDto) {
     await this.childrenService.findOne(childId, userId);
+    this.validateAttachments(data.attachments);
 
     return this.prisma.labResult.create({
       data: {
@@ -52,6 +101,7 @@ export class LabResultsService {
 
   async update(userId: string, id: string, data: UpdateLabResultDto) {
     await this.findOne(userId, id);
+    this.validateAttachments(data.attachments);
 
     return this.prisma.labResult.update({
       where: { id },

@@ -5,6 +5,7 @@ export declare class LabResultsService {
     private prisma;
     private childrenService;
     constructor(prisma: PrismaService, childrenService: ChildrenService);
+    private validateAttachments;
     create(userId: string, childId: string, data: CreateLabResultDto): Promise<{
         id: string;
         testName: string;

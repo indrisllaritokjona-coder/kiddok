@@ -18,7 +18,8 @@ import {
   Activity, FileCheck, Bell, ThermometerSun, FilePlus,
   ClipboardList, LayoutList, Shield, Scale, HeartPulse, Stethoscope,
   Pill, Target, ChartBar, Waves, Palette, Info, CircleHelp, WifiOff,
-  Key, Eye, EyeOff, ArrowRight, Lock
+  Key, Eye, EyeOff, ArrowRight, Lock,
+  LogOut, Home, BookOpen, FlaskConical, BarChart2
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -49,7 +50,8 @@ export const appConfig: ApplicationConfig = {
         Activity, FileCheck, Bell, ThermometerSun, FilePlus,
         ClipboardList, LayoutList, Shield, Scale, HeartPulse, Stethoscope,
         Pill, Target, ChartBar, Waves, Palette, Info, CircleHelp, WifiOff,
-        Key, Eye, EyeOff, ArrowRight, Lock
+        Key, Eye, EyeOff, ArrowRight, Lock,
+        LogOut, Home, BookOpen, FlaskConical, BarChart2
       })
     ),
   ]

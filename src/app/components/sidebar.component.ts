@@ -65,7 +65,7 @@ interface NavItem {
           <span>{{ t()['sidebar.footer.settings'] }}</span>
         </button>
         <button type="button" class="sidebar__footer-item sidebar__footer-item--logout" (click)="logout()">
-          <lucide-icon name="log-out" class="sidebar__nav-icon" aria-hidden="true"></lucide-icon>
+          <lucide-icon name="LogOut" class="sidebar__nav-icon" aria-hidden="true"></lucide-icon>
           <span>{{ t()['sidebar.footer.logout'] }}</span>
         </button>
       </div>
@@ -357,15 +357,15 @@ export class SidebarComponent {
   readonly currentTab = this.dataService.currentTab;
 
   readonly navItems: NavItem[] = [
-    { id: 'home', icon: 'house', labelKey: 'sidebar.nav.home' },
-    { id: 'temperature', icon: 'thermometer', labelKey: 'sidebar.nav.temperature' },
-    { id: 'growth', icon: 'trending-up', labelKey: 'sidebar.nav.growth' },
-    { id: 'diary', icon: 'book-open', labelKey: 'sidebar.nav.diary' },
-    { id: 'vaccines', icon: 'syringe', labelKey: 'sidebar.nav.vaccines' },
-    { id: 'medications', icon: 'pill', labelKey: 'sidebar.nav.medications' },
-    { id: 'appointments', icon: 'calendar-check', labelKey: 'sidebar.nav.appointments' },
-    { id: 'lab-results', icon: 'flask-conical', labelKey: 'sidebar.nav.labResults' },
-    { id: 'analytics', icon: 'bar-chart-2', labelKey: 'sidebar.nav.analytics' },
+    { id: 'home', icon: 'Home', labelKey: 'sidebar.nav.home' },
+    { id: 'temperature', icon: 'Thermometer', labelKey: 'sidebar.nav.temperature' },
+    { id: 'growth', icon: 'TrendingUp', labelKey: 'sidebar.nav.growth' },
+    { id: 'diary', icon: 'BookOpen', labelKey: 'sidebar.nav.diary' },
+    { id: 'vaccines', icon: 'Syringe', labelKey: 'sidebar.nav.vaccines' },
+    { id: 'medications', icon: 'Pill', labelKey: 'sidebar.nav.medications' },
+    { id: 'appointments', icon: 'CalendarCheck', labelKey: 'sidebar.nav.appointments' },
+    { id: 'lab-results', icon: 'FlaskConical', labelKey: 'sidebar.nav.labResults' },
+    { id: 'analytics', icon: 'BarChart2', labelKey: 'sidebar.nav.analytics' },
   ];
 
   readonly activeChild = computed(() => {

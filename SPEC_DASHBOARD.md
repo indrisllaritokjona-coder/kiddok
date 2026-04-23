@@ -1,287 +1,289 @@
-# Sprint 9 — Dashboard Summary Module
+# SPEC — Sprint 9: Dashboard Summary Module
 
-## 1. Overview
+## 1. Overview & Goal
 
-**Goal**: Replace or enhance the current home tab with a quick-glance dashboard card visible whenever a child is selected. All data comes from existing `DataService` signals. No backend changes.
+A **quick-glance dashboard card** shown in the Home area whenever a child is selected. It surfaces the most meaningful health snapshots for the active child — last temperature, last measurement, next vaccine, next appointment, and the last diary entry — with a growth trend arrow and quick-action buttons. Fully i18n (SQ + EN). No backend changes.
 
 **File**: `SPEC_DASHBOARD.md`
-**Commit**: `git add SPEC_DASHBOARD.md && git commit -m "sprint9: architect plan for dashboard summary module"`
 
 ---
 
 ## 2. Architecture
 
-### 2.1 Component Structure
+### 2.1 Component Tree
 
 ```
-src/app/components/
-├── dashboard-summary/            ← new standalone component
-│   ├── dashboard-summary.component.ts
-│   ├── dashboard-summary.component.html
-│   ├── dashboard-summary.component.scss
-│   └── dashboard-child-card/     ← new sub-component
-│       ├── dashboard-child-card.component.ts
-│       ├── dashboard-child-card.component.html
-│       └── dashboard-child-card.component.scss
+HomeComponent (src/app/components/home/home.component.ts)
+  └── ChildDashboardComponent      ← new, replaces/showns alongside WelcomeHeroComponent
+       ├── DashboardSummaryCardComponent   ← new, per-child summary
+       └── DashboardQuickActionsComponent ← new, quick-add buttons
+
+DataService (existing, src/app/services/data.service.ts)
+  └── signals: children, activeChildId, temperatureEntries,
+              growthEntries, vaccineRecords, diaryEntries, records
 ```
 
-**Entry point**: `app.component.ts` already renders `currentTab` via `app.routes.ts`. The dashboard component will be mounted in the home tab slot alongside the existing `welcome-hero`, `quick-actions-grid`, `health-alert-card`, `recent-activity-feed`.
+### 2.2 New Files to Create
 
-Option A — replace home tab entirely with new dashboard
-Option B — prepend dashboard card to existing home tab (recommended, lower risk)
+| File | Purpose |
+|------|---------|
+| `src/app/components/home/child-dashboard.component.ts` | Container — reads active child from DataService |
+| `src/app/components/home/dashboard-summary-card.component.ts` | The actual card with all health data |
+| `src/app/components/home/dashboard-quick-actions.component.ts` | Quick-add buttons row |
+| `src/app/components/home/sprint9/dashboard-i18n.ts` | i18n labels SQ+EN |
 
-Decision: **Option B** — prepend `<app-dashboard-summary>` to the home tab template, replacing the welcome hero when a child is selected. The `dashboard-summary` component handles its own header (child name + avatar + age), then lists per-child cards for the quick-glance view.
-
-### 2.2 Data Flow (Read-only, all signals)
+### 2.3 Data Flow
 
 ```
 DataService (signals)
-├── activeChildId
-├── children[]
-├── temperatureEntries[]   → filter by childId, sort desc → last entry → fever check
-├── growthEntries[]        → filter by childId, sort desc → last 2 → trend arrow
-├── diaryEntries[]         → filter by childId, sort desc → last entry
-├── records[]              → filter by childId → next vaccine (dueDate ASC, !completed)
-└── appointments (new)     → filter by childId → next appointment (date ASC, !completed)
-                                                               ↑
-                                             stored in localStorage as kiddok_appointments_<childId>
+   │
+   ├── activeChildId()  → ChildDashboardComponent
+   ├── children()       → derives child profile
+   ├── temperatureEntries() → last temp (fever alert logic)
+   ├── growthEntries()  → last weight+height + growth trend
+   ├── vaccineRecords() → next due vaccine + days countdown
+   ├── records()        → next appointment (medical record) + days countdown
+   └── diaryEntries()   → last entry (icon + first 50 chars)
 ```
 
-**No HTTP calls** — all reads are from in-memory signals updated by existing `loadChildDetails()`.
+All reads are synchronous from signals. No new HTTP calls. No new service methods.
 
-### 2.3 New Interfaces
+---
+
+## 3. Component Breakdown
+
+### 3.1 `ChildDashboardComponent`
+
+**Selector**: `app-child-dashboard`
+**Type**: Standalone, imports `CommonModule`, `LucideAngularModule`
+
+**Responsibility**: Wrapper that guards on `activeChildId`. Shows nothing when no child is selected.
 
 ```typescript
-// src/app/models/dashboard.models.ts
+// Logic
+activeChild = computed(() => {
+  const id = this.dataService.activeChildId();
+  return this.dataService.children().find(c => c.id === id) ?? null;
+});
 
-export interface Appointment {
-  id: string;
-  childId: string;
-  title: string;
-  doctor?: string;
-  location?: string;
-  dateTime: string;        // ISO string
-  notes?: string;
-  completed: boolean;
-}
-
-export interface DashboardMetrics {
-  lastTemperature: TemperatureEntry | null;
-  lastGrowth: GrowthEntry | null;
-  previousGrowth: GrowthEntry | null;   // for trend comparison
-  nextVaccine: VaccineRecord | null;
-  nextAppointment: Appointment | null;
-  lastDiaryEntry: DiaryEntry | null;
-}
-
-export type GrowthTrend = 'up' | 'down' | 'stable';
-
-export type FeverStatus = 'normal' | 'elevated' | 'fever' | 'high_fever';
-```
-
----
-
-## 3. Per-Child Dashboard Card
-
-### 3.1 Layout
-
-```
-┌─────────────────────────────────────────────────┐
-│  [Avatar]  Name, Age                            │
-├─────────────────────────────────────────────────┤
-│  🌡️ Temperature: 38.2°C ⚠️   (red + warning icon) │
-│  📏 14.2 kg / 93 cm    ↑ (green trend arrow)    │
-│  💉 Varicella — in 8 days                       │
-│     OR: Varicella — Overdue! (red)              │
-│  📅 ENT Follow-up — in 5 days                   │
-│  📖 [icon] First 50 chars of last diary entry   │
-├─────────────────────────────────────────────────┤
-│  [+ Temperature] [+ Diary Entry] [+ Appointment]│
-└─────────────────────────────────────────────────┘
-```
-
-### 3.2 Fever Alert Logic
-
-| Condition | Display |
-|-----------|---------|
-| `< 37.5°C` | No alert, neutral text |
-| `37.5–38.0°C` | Elevated — amber text "37.8°C" + ⚠️ |
-| `> 38.0°C` | Fever — red bg card, red text, danger icon |
-
-### 3.3 Growth Trend Arrow
-
-Compare the **last two** `GrowthEntry` records (by `measuredAt` desc). Weight is primary; height as tiebreaker.
-
-| Comparison | Arrow | Color |
-|------------|-------|-------|
-| Latest weight > previous weight | `↑` | green |
-| Latest weight < previous weight | `↓` | orange |
-| Same (±0.05 kg tolerance) | `→` | gray |
-| Fewer than 2 entries | hidden | — |
-
-### 3.4 Vaccine Countdown
-
-Find the first non-completed `VaccineRecord` with the earliest `dueDate`.
-
-- If `dueDate < today` → "Overdue!" in red + overdue days
-- If `dueDate <= today + 30 days` → "Varicella — in N days"
-- Else → no card row (hide)
-
-### 3.5 Appointment Countdown
-
-New localStorage-backed `Appointment` list. Find the first non-completed appointment with the earliest `dateTime`.
-
-- If `dateTime < now` → "Overdue!" in red
-- If `dateTime <= now + 30 days` → "ENT Follow-up — in N days"
-- Else → no card row (hide)
-
-### 3.6 Diary Entry Row
-
-Icon map by type:
-```
-symptom → 🤒
-meal    → 🍽️
-sleep   → 😴
-mood    → 😊
-activity → 🏃
-```
-
-Truncate description to 50 characters + ellipsis if longer.
-
----
-
-## 4. Quick-Action Buttons
-
-Three buttons at the bottom of the card:
-
-| Button | Action | Icon |
-|--------|--------|------|
-| `+ Temperature` | Navigate to temperature tab with add-form open | thermometer |
-| `+ Diary Entry` | Navigate to diary tab with add-form open | book-open |
-| `+ Appointment` | Inline or navigate to appointments tab | calendar-plus |
-
-Clicking navigates via `window.dispatchEvent(new CustomEvent('kiddok:navigate', { detail: route }))`.
-
----
-
-## 5. New Appointment Service
-
-```typescript
-// src/app/services/appointments.service.ts
-
-@Injectable({ providedIn: 'root' })
-export class AppointmentsService {
-  appointments = signal<Appointment[]>([]);
-
-  loadAppointments(childId: string): void { /* from localStorage */ }
-  addAppointment(data: Omit<Appointment, 'id'>): Appointment { /* persist + signal */ }
-  deleteAppointment(id: string): void { /* remove + signal */ }
+// Template
+@if (activeChild()) {
+  <app-dashboard-summary-card [child]="activeChild()" />
+  <app-dashboard-quick-actions />
 }
 ```
 
-Storage key: `kiddok_appointments_<childId>` (same pattern as `records` and `illnesses`).
+### 3.2 `DashboardSummaryCardComponent`
 
----
+**Selector**: `app-dashboard-summary-card`
+**Inputs**: `child: ChildProfile`
 
-## 6. i18n Translations
+Renders a styled card with **6 data rows**:
 
-Add to `i18n.service.ts` translations object:
+#### Row 1 — Temperature
+- Read: `dataService.temperatureEntries().filter(e => e.childId === child.id)[0]`
+- Display: `"Temperature: 38.2°C"` — plain
+- Fever alert: if `temp > 38.0` → red text + Lucide `alert-triangle` icon + `⚠️` suffix
+- Missing: `"Temperature: —"` (dash)
+- i18n: `dashboard.temperature`, `dashboard.feverAlert`
+
+#### Row 2 — Weight + Height
+- Read: `dataService.growthEntries().filter(e => e.childId === child.id)[0]`
+- Display: `"14.2 kg / 93 cm"` (both required; one missing → show only the one available, or "—" for missing)
+- i18n: `dashboard.weight`, `dashboard.height`
+
+#### Row 3 — Growth Trend Arrow
+- Logic: take two most recent `growthEntries` for the child, sort by `measuredAt` desc → `[latest, previous]`
+- Compare `latest.weight` vs `previous.weight`:
+  - `> previous + 0.1` → `↑` green (`text-green-500`)
+  - `< previous - 0.1` → `↓` orange (`text-orange-500`)
+  - else → `→` gray (`text-gray-400`)
+- Same for height if weight unavailable
+- Show only if **at least 2 entries exist**
+- i18n: `dashboard.growthTrend`
+
+#### Row 4 — Next Vaccine Due
+- Read: `dataService.vaccineRecords().filter(r => r.childId === child.id && r.status !== 'completed').sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate))[0]`
+- Days countdown: `Math.ceil((new Date(dueDate) - now) / MS_PER_DAY)`
+- Display:
+  - `"Varicella — in 8 days"` (normal)
+  - `"Varicella — in 0 days"` (today → `dashboard.dueToday`)
+  - `"Varicella — Overdue!"` in red (days < 0) — `dashboard.overdue`
+- i18n: `dashboard.nextVaccine`, `dashboard.inDays`, `dashboard.dueToday`, `dashboard.overdue`
+
+#### Row 5 — Next Appointment
+- Read: `dataService.records().filter(r => r.childId === child.id && !r.completed).sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate))[0]`
+- Days countdown: same formula
+- Display: `"ENT Follow-up — in 5 days"` / `"ENT Follow-up — Overdue!"`
+- i18n: `dashboard.nextAppointment`, `dashboard.inDays`, `dashboard.overdue`
+
+#### Row 6 — Last Diary Entry
+- Read: `dataService.getDiaryEntriesByChild(child.id)[0]`
+- Icon mapping:
+
+| type | Lucide icon |
+|------|------------|
+| symptom | `thermometer` |
+| meal | `utensils` |
+| sleep | `moon` |
+| mood | `smile` |
+| activity | `zap` |
+
+- Display: first 50 chars of `description` + `…` if longer
+- Missing: `"dashboard.noDiaryEntry"` placeholder
+- i18n: `dashboard.lastDiaryEntry`, diary type keys
+
+**Card styling**: white rounded-2xl, border, shadow-soft, grid layout (2 cols on lg). Section headers use Lucide icons.
+
+### 3.3 `DashboardQuickActionsComponent`
+
+**Selector**: `app-dashboard-quick-actions`
+
+Renders 3 pill-style action buttons below the summary card:
+
+| Action | Icon | Route | i18n key |
+|--------|------|-------|----------|
+| + Temperature | `thermometer` | `/temperature` | `dashboard.addTemperature` |
+| + Diary Entry | `book-open` | `/diary` | `dashboard.addDiaryEntry` |
+| + Appointment | `calendar-plus` | `/records` | `dashboard.addAppointment` |
+
+- Buttons: small, secondary style, icon + label
+- Use `Router.navigate()` on click
+
+### 3.4 Home Component Integration
+
+In `home.component.ts`, import and add to template (replacing existing welcome hero for the child profile section):
 
 ```typescript
-// Dashboard
-'dashboard.title': { sq: 'Përmbledhje', en: 'Summary' },
-'dashboard.temperature': { sq: 'Temperatura', en: 'Temperature' },
-'dashboard.temperature.fever': { sq: 'Ka ethe!', en: 'Fever!' },
-'dashboard.temperature.high': { sq: 'Temperatura e lartë', en: 'High temperature' },
-'dashboard.weight': { sq: 'Pesha', en: 'Weight' },
-'dashboard.height': { sq: 'Gjatësia', en: 'Height' },
-'dashboard.vaccine.next': { sq: 'Vaksina tjetër', en: 'Next vaccine' },
-'dashboard.vaccine.overdue': { sq: 'e vonuar', en: 'overdue' },
-'dashboard.vaccine.inDays': { sq: 'në {n} ditë', en: 'in {n} days' },
-'dashboard.appointment.next': { sq: 'Termini tjetër', en: 'Next appointment' },
-'dashboard.appointment.overdue': { sq: 'i vonuar', en: 'overdue' },
-'dashboard.appointment.inDays': { sq: 'në {n} ditë', en: 'in {n} days' },
-'dashboard.diary.lastEntry': { sq: 'Hyrja e fundit', en: 'Last entry' },
-'dashboard.diary.none': { sq: 'Pa shënime', en: 'No entries yet' },
-'dashboard.growth.trendUp': { sq: 'Rritje', en: 'Growing' },
-'dashboard.growth.trendDown': { sq: 'Duke rënë', en: 'Declining' },
-'dashboard.growth.trendStable': { sq: 'I qëndrueshëm', en: 'Stable' },
-'dashboard.actions.addTemp': { sq: '+ Temperatura', en: '+ Temperature' },
-'dashboard.actions.addDiary': { sq: '+ Shënim Ditari', en: '+ Diary Entry' },
-'dashboard.actions.addAppointment': { sq: '+ Termin', en: '+ Appointment' },
-'dashboard.noChild': { sq: 'Zgjidhni një fëmijë për të parë përmbledhjen', en: 'Select a child to view summary' },
+import { ChildDashboardComponent } from './home/child-dashboard.component';
+// Keep WelcomeHeroComponent but wrap intelligently
 ```
+
+**Placement**: After `WelcomeHeroComponent` in `home.component.ts` template, inside the same `<div class="px-2 max-w-6xl mx-auto">`.
+
+Alternative: `WelcomeHeroComponent` already shows the child name/age. The new `ChildDashboardComponent` sits directly below it, creating a natural "profile + health snapshot" flow at the top of the home page.
 
 ---
 
-## 7. Edge Cases
+## 4. i18n (SQ + EN)
+
+All keys go into `I18nService` via `t()` calls. Labels must be bilingual.
+
+### Required i18n Keys
+
+```typescript
+// SQ labels
+dashboard: {
+  temperature: 'Temperatura',
+  feverAlert: 'Ethë',
+  weight: 'Pesha',
+  height: 'Gjatësia',
+  growthTrend: 'Trend i rritjes',
+  nextVaccine: 'Vaksina e radhës',
+  nextAppointment: 'Termini i radhës',
+  inDays: 'pas {{days}} ditësh',
+  dueToday: 'Sot',
+  overdue: 'Vonuar!',
+  lastDiaryEntry: 'Ditar i fundit',
+  noDiaryEntry: 'Nuk ka shënim',
+  addTemperature: 'Shto Temperaturë',
+  addDiaryEntry: 'Shto Shënim',
+  addAppointment: 'Shto Termin',
+  diaryTypes: {
+    symptom: 'Simptomë',
+    meal: 'Ndarkë',
+    sleep: 'Gjumë',
+    mood: 'Qëndrim',
+    activity: 'Aktivitet'
+  }
+}
+
+// EN labels (same structure with English values)
+dashboard: {
+  temperature: 'Temperature',
+  feverAlert: 'Fever',
+  weight: 'Weight',
+  height: 'Height',
+  growthTrend: 'Growth Trend',
+  nextVaccine: 'Next Vaccine',
+  nextAppointment: 'Next Appointment',
+  inDays: 'in {{days}} days',
+  dueToday: 'Today',
+  overdue: 'Overdue!',
+  lastDiaryEntry: 'Last Diary Entry',
+  noDiaryEntry: 'No entry',
+  addTemperature: 'Add Temperature',
+  addDiaryEntry: 'Add Entry',
+  addAppointment: 'Add Appointment',
+  diaryTypes: {
+    symptom: 'Symptom',
+    meal: 'Meal',
+    sleep: 'Sleep',
+    mood: 'Mood',
+    activity: 'Activity'
+  }
+}
+```
+
+**Where to add these**: The existing `I18nService` manages the translation dictionary — add the `dashboard` namespace to its internal translation map (same pattern as `home.*`, `records.*`, etc.).
+
+---
+
+## 5. Edge Cases
 
 | Scenario | Behavior |
 |----------|----------|
-| No child selected | Show placeholder message |
-| No temperature entries | Show "—" for temperature row |
-| Only 1 growth entry | Hide trend arrow |
-| No diary entries | Show empty state with icon |
-| No upcoming vaccines | Hide vaccine row |
-| No upcoming appointments | Hide appointment row |
-| Temperature ≥ 38°C | Fever alert styling (red card, warning icon) |
-| Vaccine overdue | "Overdue!" in red, show days overdue |
-| Appointment overdue | "Overdue!" in red |
-| All rows empty | Show minimal card with "No data yet" |
-| Offline mode | All data from localStorage signals — no changes needed |
+| No child selected | `ChildDashboardComponent` renders nothing (guards with `@if (activeChild())`) |
+| No temperature entries | Shows `"Temperature: —"` |
+| Fever temp (≥38.0°C) | Red color + warning icon + ⚠️ |
+| No weight OR height | Show only the available one, e.g. `"14.2 kg"` or `"— / 93 cm"` |
+| Fewer than 2 growth entries | Growth trend arrow hidden |
+| No vaccine records | Shows `"nextVaccine"` as `"—"` |
+| Vaccine overdue (days < 0) | Red + "Overdue!" text |
+| No appointments | Shows `"nextAppointment"` as `"—"` |
+| Appointment overdue | Red + "Overdue!" text |
+| No diary entries | Shows `noDiaryEntry` placeholder |
+| Diary description > 50 chars | Truncates with `…` |
+| Offline mode | All data from localStorage (already handled by DataService) |
 
 ---
 
-## 8. Execution Roadmap
+## 6. Execution Roadmap
 
-### Phase 1 — Scaffold & Models
-- [ ] Create `src/app/models/dashboard.models.ts`
-- [ ] Create `src/app/services/appointments.service.ts` (localStorage, signal-based)
-- [ ] Add dashboard i18n keys to `i18n.service.ts`
-- [ ] Add `appointments` to `DataService` via `switchChild()` loading
+### Step 1 — i18n dictionary
+Add `dashboard.*` keys to `I18nService` translation map (both SQ + EN).
 
-### Phase 2 — Dashboard Summary Component
-- [ ] Create `dashboard-summary.component.ts` (standalone, signal-based)
-- [ ] Create `dashboard-summary.component.html`
-- [ ] Create `dashboard-summary.component.scss`
-- [ ] Add to home tab template as first section
+### Step 2 — DashboardQuickActionsComponent
+Create `dashboard-quick-actions.component.ts` in `src/app/components/home/`. 3 buttons, Router navigation.
 
-### Phase 3 — Child Card Component
-- [ ] Create `dashboard-child-card.component.ts`
-- [ ] Create `dashboard-child-card.component.html`
-- [ ] Create `dashboard-child-card.component.scss`
-- [ ] Plug into dashboard-summary
+### Step 3 — DashboardSummaryCardComponent
+Create `dashboard-summary-card.component.ts`. All 6 rows, computed signals, fever alert logic, growth trend arrow, i18n throughout.
 
-### Phase 4 — Quick Actions & Navigation
-- [ ] Implement `+ Temperature` → navigate to temperature with add-form
-- [ ] Implement `+ Diary Entry` → navigate to diary with add-form
-- [ ] Implement `+ Appointment` → inline add-appointment modal OR navigate
+### Step 4 — ChildDashboardComponent
+Create `child-dashboard.component.ts`. Guards on active child, composes the card + quick actions.
 
-### Phase 5 — Polish & i18n
-- [ ] Verify SQ/EN translations render correctly
-- [ ] Responsive layout (mobile-first)
-- [ ] Verify zero fever alert regressions
+### Step 5 — Integrate into HomeComponent
+Add `ChildDashboardComponent` to `home.component.ts` imports and template, placed below `WelcomeHeroComponent`.
+
+### Step 6 — Verify no breaking changes
+Run `ng serve` and confirm the home page loads without errors. Check that existing children data renders correctly.
 
 ---
 
-## 9. Dependencies
+## 7. Dependencies (no new npm packages)
 
-| Item | Source |
-|------|--------|
-| `DataService` signals | existing |
-| `I18nService` | existing |
-| `LucideAngularModule` | existing (icons) |
-| `Appointment` interface | new |
-| `AppointmentsService` | new |
-| Dashboard i18n keys | new |
+- `Angular Router` (already in project) — for quick-action navigation
+- `LucideAngularModule` (already imported in all components) — icons
+- `DataService` (already injected everywhere) — all signal reads
+- `I18nService` (already in project) — i18n
 
 ---
 
-## 10. Not in Scope
+## 8. Non-Goals (out of scope for Sprint 9)
 
-- Backend/API changes
-- Offline service modifications
-- Analytics charts
-- Medication tracking
-- Lab results integration
-- Push notifications
+- Backend changes
+- New API endpoints
+- New data types or DTOs
+- Offline-specific logic (handled by existing services)
+- Multi-child grid view (future sprint)
+- Animations beyond existing fade-in patterns

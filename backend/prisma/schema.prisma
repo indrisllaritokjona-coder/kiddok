@@ -34,6 +34,7 @@ model Child {
   documentIssueDate  DateTime?
   medicalNotes       String?
   userId             String
+  avatarSeed          String?
   user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   healthRecords      HealthRecord[]
   vaccines           Vaccine[]

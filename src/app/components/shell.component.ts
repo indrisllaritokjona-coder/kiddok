@@ -49,6 +49,7 @@ import { OfflineIndicatorComponent } from './offline-indicator.component';
           (switchProfileRequested)="goToSelector()"
           (backRequested)="goToSelector()"
           (localeToggleRequested)="i18n.toggleLocale()"
+          [switching]="switching()"
         />
 
         <!-- Live region for dynamic announcements -->
@@ -62,7 +63,9 @@ import { OfflineIndicatorComponent } from './offline-indicator.component';
         <app-offline-indicator />
 
         <!-- Main Workspace -->
-        <div class="flex-1 overflow-y-auto w-full px-4 pt-6 pb-24 lg:px-12 lg:py-10 bg-slate-50/50 relative">
+        <div class="flex-1 overflow-y-auto w-full px-4 pt-6 pb-24 lg:px-12 lg:py-10 bg-slate-50/50 relative"
+             [class.animate-fade-in]="viewState() === 'app' && switching()"
+             [class.animate-slide-up]="viewState() === 'selector' || isAddingChild()">
 
           <!-- ===== CHILD SELECTOR SCREEN ===== -->
           @if (viewState() === 'selector') {
@@ -617,6 +620,7 @@ export class ShellComponent {
   showChildModal = signal(false);
   settingsSaved = signal(false);
   viewState = signal<'selector' | 'app'>('selector');
+  switching = signal(false);
 
   // ── Edit Child Modal signals ──────────────────────────────────
   editingChild = signal<ChildProfile | null>(null);
@@ -864,8 +868,10 @@ export class ShellComponent {
   }
 
   selectChild(id: string) {
+    this.switching.set(true);
     this.dataService.switchChild(id);
     this.viewState.set('app');
+    setTimeout(() => this.switching.set(false), 400);
   }
 
   navigateTo(tabId: string) {

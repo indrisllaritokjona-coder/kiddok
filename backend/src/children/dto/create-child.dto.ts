@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsNumber, IsDateString, Max } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsNumber, IsDateString } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class CreateChildDto {
@@ -9,6 +9,10 @@ export class CreateChildDto {
   @IsDateString()
   @IsNotEmpty()
   dateOfBirth: string;
+
+  @IsString()
+  @IsOptional()
+  avatarSeed?: string;
 
   @IsString()
   @IsOptional()

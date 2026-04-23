@@ -97,7 +97,9 @@ const translations = {
   'header.addNewMember': { sq: 'Shto Pjestar tÃ« Ri', en: 'Add New Member' },
   'header.noChildrenPlaceholder': { sq: 'Nuk ka fÃ«mijÃ«', en: 'No children added yet' },
   'header.profileLabel': { sq: 'Profili i FÃ«mijÃ«s', en: 'Child Profile' },
-  'nav.back': { sq: 'Kthehu', en: 'Back' },
+
+  'header.quickSwitch': { sq: 'Ndërrim i shpejtë', en: 'Quick Switch' },
+  'header.altShortcut': { sq: 'Alt+C', en: 'Alt+C' },  'nav.back': { sq: 'Kthehu', en: 'Back' },
   'child.goToSelector': { sq: 'Shko te Zgjidhni FÃ«mijÃ«n', en: 'Go to Child Selector' },
   'welcome.loggedIn': { sq: 'MirÃ«serdhje', en: 'Welcome back' },
   // Diary / Calendar

@@ -284,6 +284,17 @@ export class OfflineService {
 
   // ─── Sync Queue ───────────────────────────────────────────────
 
+  async getSyncQueueEntries(): Promise<SyncQueueEntry[]> {
+    const db = await this.getDb();
+    const tx = db.transaction(STORE_SYNC_QUEUE, 'readonly');
+    const store = tx.objectStore(STORE_SYNC_QUEUE);
+    return new Promise((resolve, reject) => {
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
   async addToSyncQueue(entry: Omit<SyncQueueEntry, 'id' | 'timestamp'>): Promise<void> {
     const db = await this.getDb();
     const tx = db.transaction(STORE_SYNC_QUEUE, 'readwrite');

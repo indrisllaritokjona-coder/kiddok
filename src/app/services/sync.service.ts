@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { OfflineService } from './offline.service';
 
 export interface SyncEntry {
   entityType: 'temperature' | 'growth' | 'vaccine' | 'diary';
@@ -37,6 +38,9 @@ export interface ConflictResolution {
 @Injectable({ providedIn: 'root' })
 export class SyncService {
   private http = inject(HttpClient);
+  private offline = inject(OfflineService);
+
+  conflicts = signal<SyncConflict[]>(this.loadConflictsFromStorage());
 
   private getHeaders() {
     const token = localStorage.getItem('kiddok_access_token');
@@ -45,26 +49,42 @@ export class SyncService {
     };
   }
 
-  /**
-   * Send a batch of offline entries to the server for conflict-detecting sync.
-   * Returns the sync result with any conflicts that need manual resolution.
-   */
   async syncPendingEntries(): Promise<SyncResult> {
+    const queueEntries = await this.offline.getSyncQueueEntries();
+    const entries: SyncEntry[] = queueEntries.map(entry => ({
+      entityType: entry.entity as any,
+      action: entry.action as any,
+      data: entry.body,
+      localTimestamp: entry.timestamp,
+    }));
+    return this.triggerFullSync(entries);
+  }
+
+  async triggerFullSync(entries: SyncEntry[]): Promise<SyncResult> {
+    if (entries.length === 0) {
+      return { success: true, syncedCount: 0, failedCount: 0, conflicts: [] };
+    }
     try {
       const result = await firstValueFrom(
-        this.http.post<SyncResult>(`${environment.apiUrl}/sync`, {}, this.getHeaders())
+        this.http.post<SyncResult>(
+          `${environment.apiUrl}/sync`,
+          { entries },
+          this.getHeaders()
+        )
       ) as SyncResult;
+      if (result.conflicts?.length > 0) {
+        for (const c of result.conflicts) {
+          this.addConflict(c);
+        }
+      }
       return result;
     } catch (err) {
-      console.error('[SyncService] syncPendingEntries failed:', err);
-      return { success: false, syncedCount: 0, failedCount: 1, conflicts: [] };
+      console.error('[SyncService] triggerFullSync failed:', err);
+      return { success: false, syncedCount: 0, failedCount: entries.length, conflicts: [] };
     }
   }
 
-  /**
-   * Submit a manual conflict resolution after user reviews a medical data conflict.
-   */
-  async resolveConflict(
+  async submitResolution(
     entityType: string,
     entityId: string,
     resolution: 'local_wins' | 'server_wins',
@@ -82,32 +102,36 @@ export class SyncService {
       );
       return result.success;
     } catch (err) {
-      console.error('[SyncService] resolveConflict failed:', err);
+      console.error('[SyncService] submitResolution failed:', err);
       return false;
     }
   }
 
-  /**
-   * Convenience: trigger sync for all pending offline entries.
-   * Called by OfflineService when coming online, or by SyncStatusComponent manually.
-   */
-  async triggerFullSync(entries: SyncEntry[]): Promise<SyncResult> {
-    if (entries.length === 0) {
-      return { success: true, syncedCount: 0, failedCount: 0, conflicts: [] };
-    }
+  // ─── Persistent conflict storage ──────────────────────────────
+  private readonly CONFLICTS_KEY = 'kiddok_sync_conflicts';
 
+  private loadConflictsFromStorage(): SyncConflict[] {
     try {
-      const result = await firstValueFrom(
-        this.http.post<SyncResult>(
-          `${environment.apiUrl}/sync`,
-          { entries },
-          this.getHeaders()
-        )
-      ) as SyncResult;
-      return result;
-    } catch (err) {
-      console.error('[SyncService] triggerFullSync failed:', err);
-      return { success: false, syncedCount: 0, failedCount: entries.length, conflicts: [] };
-    }
+      const raw = localStorage.getItem(this.CONFLICTS_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  }
+
+  private saveConflictsToStorage(conflicts: SyncConflict[]): void {
+    localStorage.setItem(this.CONFLICTS_KEY, JSON.stringify(conflicts));
+  }
+
+  addConflict(conflict: SyncConflict): void {
+    const current = this.conflicts();
+    const updated = [...current.filter(c => c.entityId !== conflict.entityId), conflict];
+    this.conflicts.set(updated);
+    this.saveConflictsToStorage(updated);
+  }
+
+  /** Remove a conflict from local storage (after user resolves it) */
+  dismissConflict(entityId: string): void {
+    const updated = this.conflicts().filter(c => c.entityId !== entityId);
+    this.conflicts.set(updated);
+    this.saveConflictsToStorage(updated);
   }
 }

@@ -47,7 +47,7 @@ export const appConfig: ApplicationConfig = {
         Baby, Database, Download, Heart, CalendarDays, CalendarCheck,
         Activity, FileCheck, Bell, ThermometerSun, FilePlus,
         ClipboardList, LayoutList, Shield, Scale, HeartPulse, Stethoscope,
-        Pill, Target, ChartBar, Waves, Palette, Info, CircleHelp
+        Pill, Target, ChartBar, Waves, Palette, Info, CircleHelp, WifiOff
       })
     ),
   ]
